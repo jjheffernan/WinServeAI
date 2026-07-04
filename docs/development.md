@@ -2,60 +2,28 @@
 
 ## Prerequisites
 
-* Rust 1.78+ (`rustup`)
+* Rust stable
 * Windows 10/11 (primary target)
-* Optional: Node 20+ for agent skill tooling scripts
+* `bin/llama-server.exe` from a pinned llama.cpp release
 
-## Workspace
-
-This is a Cargo workspace monorepo.
+## Build / run
 
 ```bash
-cargo check --workspace
-cargo test --workspace
-./scripts/check.sh
+cargo check -p winserve
+cargo run -p winserve -- print-cmd
+cargo run -p winserve -- start
 ```
 
-## Layout
+Override config: `WINSERVE_CONFIG=/path/to.yaml`
 
-```text
-apps/          # desktop, installer, updater
-packages/      # libraries (backend, launcher, config, …)
-docs/          # product and contributor docs
-scripts/       # developer scripts
-tests/         # cross-cutting test suites
-examples/      # sample configs
-vendor/        # bundled third-party (llama.cpp)
-.agents/skills # agent-agnostic skills (all agents)
+## Scripts
+
+```powershell
+.\scripts\start.ps1
+.\scripts\stop.ps1
+.\scripts\reset.ps1
 ```
 
-## Adding a Package
+## Architecture
 
-1. Create `packages/<name>/` with `Cargo.toml` and `src/lib.rs`
-2. Add to workspace `members` in root `Cargo.toml`
-3. Add a `winserve-<name>` path dependency under `[workspace.dependencies]`
-4. Document responsibility in `docs/architecture.md`
-
-## Coding Standards
-
-* Prefer small, focused crates over a monolith
-* UI must not import `winserve-llama` or know about llama.cpp flags
-* All orchestration goes through `winserve-launcher` (Server Manager)
-* Configuration stays human-readable YAML — no backend-specific flags
-* Stable over clever; optimize for contributors and future backends
-
-## Prior art
-
-Scaffolding recommendations from similar products and Windows process research live in [prior-art.md](prior-art.md).
-
-## Agent Skills
-
-Skills live in `.agents/skills/` (Agent Skills standard — agent-agnostic).
-
-```bash
-npm run skills:list
-npm run skills:update
-npm run skills:restore
-```
-
-See `AGENTS.md`.
+See [architecture.md](architecture.md). Do not reintroduce package-per-concern monorepo layers without a concrete second backend.

@@ -1,39 +1,30 @@
 # Configuration
 
-Human-readable YAML. Never expose raw llama.cpp flags.
-
-## Schema
+Source of truth: `config/default.yaml`.
 
 ```yaml
 server:
-  host: 0.0.0.0
   port: 8080
+  host: 127.0.0.1
 
 model:
-  path: D:\Models\model.gguf
+  path: D:\models\model.gguf
 
-performance:
-  context: auto
-  gpu_layers: auto
-  flash_attention: auto
+gpu:
+  auto: true
+  layers: auto
+
+runtime:
+  context: 32768
+  flash_attention: true
 
 logging:
-  level: info
+  dir: logs
 ```
 
 ## Rules
 
-* `auto` values are resolved by hardware detection at start time
-* Explicit values override auto
-* Schema validation runs on load and before start
-* Migrations (Phase 4) must preserve user intent across versions
-
-## Examples
-
-See `examples/config/`.
-
-## Research Notes
-
-* **YAML** chosen for readability and familiarity on Windows
-* TOML remains a possible alternate; migration strategy required if we ever switch
-* Schema validation lives in `packages/config`
+* No raw llama.cpp flags in YAML
+* Mapping to argv happens only in `app/src/runtime/llama.rs`
+* `gpu.auto` + `layers: auto` → prefer `--fit on` when a GPU is present; else `--n-gpu-layers 0`
+* Default host is localhost (safe). LAN bind (`0.0.0.0`) is opt-in and may need a firewall rule

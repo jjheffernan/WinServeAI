@@ -1,40 +1,10 @@
-# Backend
+# Runtime (llama.cpp)
 
-## Abstraction
+There is **no** backend abstraction layer.
 
-All inference engines implement `winserve_backend::Backend`:
+`app/src/runtime/llama.rs` is the only module that knows llama.cpp flags.
+`app/src/runtime/process.rs` spawns and stops `bin/llama-server.exe`.
 
-* `initialize`
-* `load_model`
-* `start`
-* `stop`
-* `status`
-* `metrics`
-* `health`
-* `version`
+OpenAI compatibility is provided by llama-server itself at `/v1`. WinServeAI ensures the process is up and ready (`GET /v1/models`).
 
-## Current: llama.cpp
-
-`packages/llama` adapts high-level config into `llama-server` process arguments.
-
-Bundled under `vendor/llama.cpp/`. Each stable release pins a vetted llama.cpp build.
-
-## Future Backends
-
-Drop-in replacements:
-
-* `OllamaBackend`
-* `vLLMBackend`
-* `TensorRTBackend`
-
-Plugins (Phase 5) load additional backends without changing the Server Manager or UI.
-
-## Process Management Research
-
-* Process spawning
-* stdout / stderr capture
-* Graceful shutdown
-* Crash detection
-* Restart policy
-
-Owned by `packages/process`; backends compose it rather than reimplementing it.
+Multi-backend support is explicitly out of scope until a real second backend exists.

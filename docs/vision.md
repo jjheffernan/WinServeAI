@@ -1,44 +1,42 @@
 # Vision
 
-> **A lightweight, Windows-native local AI server that turns any GPU-equipped PC into an OpenAI-compatible inference endpoint with one click.**
+> **A lightweight, Windows-native llama.cpp appliance** that turns a GPU PC into an OpenAI-compatible inference endpoint with one click.
 
-## Core Principles
+## Product category
+
+**Windows-native llama.cpp appliance wrapper** — not a mini LM Studio, not a multi-backend platform.
+
+## Core principles
 
 * Windows-first
-* API-first
+* API-first (OpenAI-compatible via llama-server)
 * Headless inference
 * Zero chat UI
 * Zero model management ecosystem
 * Stable over bleeding edge
 * Native installer
-* Predictable configuration
-* Backend-agnostic architecture
-* Small surface area
+* Predictable YAML configuration
+* Small surface area — one backend, one orchestrator
 
-## MVP Scope
-
-### Included
+## MVP included
 
 * Native Windows installer
-* Hardware detection
-* llama.cpp backend
-* OpenAI API serving
-* Start / Stop server
-* Model selection
+* Hardware detection (minimal)
+* llama.cpp only
+* Start / stop server
+* Model path in config
 * Settings persistence
 * Logging
-* Auto configuration
-* Health checks
+* Auto GPU defaults
+* Health / readiness (`/v1/models`)
 
-### Excluded
+## Explicitly excluded
 
 * Chat UI
-* Model downloads
-* HuggingFace integration
-* Agent framework
-* RAG
-* MCP
+* Model downloads / HuggingFace
+* Agent frameworks, RAG, MCP
 * Docker
 * Authentication
 * Dashboard metrics
 * Remote management
+* Multi-backend / plugins

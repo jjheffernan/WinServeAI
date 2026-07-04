@@ -1,21 +1,11 @@
 # Logging
 
-## Requirements
+Unified streams under `logs/`:
 
-* Rotating logs
-* Timestamps
-* Backend output (stdout/stderr)
-* Application logs
+| File | Contents |
+| --- | --- |
+| `server.log` | Manager lifecycle (start, stop, ready, errors) |
+| `llama.log` | llama-server stdout/stderr |
+| `error.log` | Failures, crash notes |
 
-## Design
-
-`packages/logging` owns the unified log stream.
-
-* Application events use `tracing`
-* Backend process lines are forwarded with `target = "backend"` (or `process.stdout` / `process.stderr`)
-* Level comes from `logging.level` in config (`info` default)
-* Env override: `WINSERVE_LOG` / `RUST_LOG`
-
-## Desktop
-
-The desktop displays the unified log stream. It does not parse backend-specific formats.
+Always capture: stdout, stderr, exit codes, restart reasons.

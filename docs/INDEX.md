@@ -12,6 +12,8 @@ Scorecards live under [readiness/](readiness/) (Design, Implementation, Tests, D
 
 Prioritized work from scores: [TODO.md](TODO.md).
 
+Apply-worktree audit (caveman/ponytail review + subagent scores): [audit/apply-review.md](audit/apply-review.md).
+
 Status legend:
 
 | Status | Meaning |

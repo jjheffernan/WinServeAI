@@ -1,0 +1,96 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Node / tooling
+node_modules/
+.npm/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build / release artifacts
+/dist/
+/out/
+*.exe
+*.msi
+*.msix
+*.appx
+*.pdb
+
+# Local config & runtime
+*.local.yaml
+*.local.yml
+.env
+.env.*
+!.env.example
+logs/
+*.log.*
+
+# Vendor binaries (source may be vendored; built artifacts are not)
+vendor/llama.cpp/build/
+vendor/llama.cpp/*.exe
+vendor/llama.cpp/*.dll
+
+# OS
+Desktop.ini
+$RECYCLE.BIN/
+
+# Agent skill caches (canonical skills live in .agents/skills/)
+.claude/
+.cursor/skills/
+skills/
+agent/
+data/skills/
+.aider-desk/
+.augment/
+.autohand/
+.bob/
+.codeartsdoer/
+.codebuddy/
+.codemaker/
+.codestudio/
+.commandcode/
+.continue/
+.cortex/
+.crush/
+.devin/
+.factory/
+.forge/
+.goose/
+.hermes/
+.iflow/
+.inferencesh/
+.jazz/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.lingma/
+.mcpjam/
+.moxby/
+.mux/
+.neovate/
+.ona/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.qwen/
+.reasonix/
+.roo/
+.rovodev/
+.tabnine/
+.terramind/
+.tinycloud/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+.adal/

@@ -22,10 +22,34 @@ Feature work: branch off `dev`, open PRs into `dev`. Releases: PR `dev` → `mai
 
 ## Prerequisites
 
-* Rust stable
+* Rust stable (`rustup` default host `x86_64-pc-windows-msvc` on Windows)
+* **MSVC linker** — Visual Studio **Build Tools** (or full VS) with the **Desktop development with C++** workload. Required so `link.exe` is on `PATH`. VS Code alone is **not** enough.
 * Windows 10/11 (primary target; CI runs on `windows-latest`)
 * `bin/llama-server.exe` from pinned llama.cpp **b9866** (see [bin/README.md](../bin/README.md))
 * A GGUF model path set in config (`model.path`)
+
+### Fix: `linker link.exe not found`
+
+Rust’s MSVC target needs the Visual C++ toolchain:
+
+1. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (2022 or later).
+2. In the installer, select **Desktop development with C++** (includes MSVC, Windows SDK, and `link.exe`).
+3. Close and reopen the terminal (or reboot), then confirm:
+
+```powershell
+where.exe link
+# expect something like:
+# C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\...\bin\Hostx64\x64\link.exe
+```
+
+4. Retry:
+
+```powershell
+rustup default stable-x86_64-pc-windows-msvc
+cargo build -p winserve
+```
+
+**Alternative (not recommended for this project):** `rustup default stable-x86_64-pc-windows-gnu` needs a separate MinGW toolchain and does not match CI (`windows-latest` MSVC). Prefer MSVC.
 
 ## Repo layout
 

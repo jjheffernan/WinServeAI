@@ -24,14 +24,15 @@ A2 stays **open** in PLAN until an operator has run the full Windows path (inclu
 ## Preconditions (manual setup)
 
 1. **Branch:** `dev`.
-2. **Pin:** Download llama.cpp **[b9866](https://github.com/ggml-org/llama.cpp/releases/tag/b9866)** Windows asset (CUDA build preferred when NVIDIA driver matches).
-3. Extract into `bin/`:
+2. **MSVC Build Tools** with **Desktop development with C++** so `link.exe` exists (see [development.md](../development.md) — *Fix: linker link.exe not found*). VS Code alone is not enough.
+3. **Pin:** Download llama.cpp **[b9866](https://github.com/ggml-org/llama.cpp/releases/tag/b9866)** Windows asset (CUDA build preferred when NVIDIA driver matches).
+4. Extract into `bin/`:
    - `bin/llama-server.exe`
    - CUDA runtime DLLs **beside** the exe (same directory).
-4. Edit `config/default.yaml` (or `WINSERVE_CONFIG`):
+5. Edit `config/default.yaml` (or `WINSERVE_CONFIG`):
    - Set `model.path` to a real `.gguf` on disk.
    - Default bind: `server.host: 127.0.0.1`, `server.port: 8080`.
-5. Build manager:
+6. Build manager:
 
 ```powershell
 cargo build -p winserve --release

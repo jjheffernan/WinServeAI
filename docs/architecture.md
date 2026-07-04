@@ -93,6 +93,6 @@ Abstractions for “many backends” come later *only if needed*.
 ### Upstream
 
 - [llama.cpp `tools/server`](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) — external OpenAI `/v1` server
-- [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) — intended orphan prevention (not yet implemented)
+- [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) — orphan prevention (`KILL_ON_JOB_CLOSE` in `runtime/process.rs`)
 
 Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

@@ -24,7 +24,7 @@ Feature work: branch off `dev`, open PRs into `dev`. Releases: PR `dev` → `mai
 
 * Rust stable
 * Windows 10/11 (primary target; CI runs on `windows-latest`)
-* `bin/llama-server.exe` from a pinned llama.cpp release (see [bin/README.md](../bin/README.md))
+* `bin/llama-server.exe` from pinned llama.cpp **b9866** (see [bin/README.md](../bin/README.md))
 * A GGUF model path set in config (`model.path`)
 
 ## Repo layout

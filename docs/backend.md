@@ -1,6 +1,6 @@
 # Runtime (llama.cpp)
 
-> **Readiness:** runtime-llama 2.8/5 (`mvp-partial`), runtime-process 2.4/5 (`scaffold`), server-manager 2.8/5 (`mvp-partial`) — details in [readiness/runtime-llama.md](./readiness/runtime-llama.md), [readiness/runtime-process.md](./readiness/runtime-process.md), [readiness/server-manager.md](./readiness/server-manager.md)
+> **Readiness:** runtime-llama 3.6/5 (`mvp-ready`), runtime-process 3.8/5 (`mvp-ready`), server-manager 3.4/5 (`mvp-partial`) — details in [readiness/runtime-llama.md](./readiness/runtime-llama.md), [readiness/runtime-process.md](./readiness/runtime-process.md), [readiness/server-manager.md](./readiness/server-manager.md)
 
 WinServeAI is a **process wrapper** around a pinned `llama-server` binary. There is **no** backend trait, plugin loader, or multi-provider layer.
 
@@ -63,10 +63,10 @@ load config → detect hardware → validate binary + model paths
 Process details (`runtime/process.rs`):
 
 - stdout and stderr are piped and forwarded line-by-line
-- Windows: `CREATE_NEW_PROCESS_GROUP` (for a future cooperative stop signal)
-- `kill_on_drop(true)` so a dropped manager handle does not leave an orphan **while the manager process is still exiting cooperatively**
+- Windows: `CREATE_NEW_PROCESS_GROUP`, Job Object (`KILL_ON_JOB_CLOSE`), and `CTRL_BREAK` to the process group on stop
+- `kill_on_drop(true)` as a cooperative safety net while the manager is exiting
 
-Port already in use is logged as a warning; MVP does not auto-kill foreign listeners. Missing binary or model fails before spawn (`Failed`).
+Port already in use **fails start** (preflight bind check). Missing binary or model fails before spawn (`Failed`).
 
 ### Argv (`llama.rs` only)
 
@@ -113,19 +113,17 @@ Stopping → grace (8s) → force kill → Stopped
 
 `ServerManager::stop` calls `ChildProcess::stop` with an 8-second grace period, records the exit code, then returns to `Stopped`. `stop` is the only supported shutdown path for UI/CLI.
 
-Today, cooperative console signaling on Windows is a stub: after grace, the child is force-killed. Unexpected exit while the manager still owns the child surfaces as `Crashed` on status poll.
+On Windows, stop sends `CTRL_BREAK` to the process group, waits grace (8s), then force-kills if still alive. Unexpected exit while the manager still owns the child surfaces as `Crashed` on status poll.
 
 Restart is `stop` then `start`.
 
 ## Windows process notes
 
-**Intended guarantee:** when the manager is force-killed (Task Manager), `llama-server` must not orphan. That requires a Windows [Job Object](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) with `KILL_ON_JOB_CLOSE` — spawn suspended, assign to the job, then resume; keep the job handle only in the manager (do not inherit it into the child). Prefer [`process-wrap`](https://docs.rs/process-wrap) over hand-rolled Win32.
+**Orphan prevention:** children are assigned to a Windows [Job Object](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) with `KILL_ON_JOB_CLOSE`. Closing the job handle (manager exit / `Drop`) terminates remaining children. Keep the job handle only in the manager (do not inherit it into the child). Implementation is hand-rolled Win32 in `runtime/process.rs` (not `process-wrap`).
 
-**Intended stop path:** `CTRL_BREAK` to the process group → wait grace → terminate job / drop handle. Do not use `CTRL_C_EVENT` with a non-zero group ID (no process receives it).
+**Stop path:** `AttachConsole` + `GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid)` → wait grace → `start_kill` / drop job handle. Do not use `CTRL_C_EVENT` with a non-zero group ID (no process receives it). Details: [research/01-windows-process.md](./research/01-windows-process.md).
 
-**Not implemented yet:** Job Objects and real `CTRL_BREAK`. Current code relies on grace + hard kill and Tokio `kill_on_drop`. Details and open questions: [research/01-windows-process.md](./research/01-windows-process.md).
-
-Job Objects do **not** fix a live-but-wedged `llama-server` after sleep/wake (port still held). Before spawn, treat port conflicts as errors or reclaim only PIDs we previously owned — never global `taskkill /IM llama-server.exe`.
+Job Objects do **not** fix a live-but-wedged `llama-server` after sleep/wake (port still held). Start **fails** if the configured port is not bindable — never global `taskkill /IM llama-server.exe`.
 
 ## Pin policy
 

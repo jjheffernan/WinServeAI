@@ -3,28 +3,28 @@
 | Field | Value |
 | --- | --- |
 | Path | `app/src/system/*` |
-| Overall | **1.6 / 5** |
-| Label | `scaffold` |
+| Overall | **3.6 / 5** |
+| Label | `mvp-ready` |
 | Reviewed | 2026-07-04 |
 
 ## Dimensions
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 3/5 | Modules `gpu`, `memory`, `network` and `HardwareInfo` / `detect()` in `app/src/system/mod.rs` match architecture layout and `docs/research/03-hardware-detection.md` intent. |
-| Implementation | 1/5 | `gpu::detect_gpus` returns `Vec::new()` with TODO for DXGI/NVML (`app/src/system/gpu.rs`). `memory::detect` returns `total_mb: 0` (`memory.rs`). Only real probes: `cpu_threads` via `available_parallelism`, and `network::port_available` via `TcpListener::bind`. |
-| Tests | 0/5 | No system tests. |
-| Docs | 3/5 | Research deep dive exists (`docs/research/03-hardware-detection.md`); no dedicated operator guide (covered lightly in configuration/backend). |
-| Windows readiness | 1/5 | Windows-specific DXGI/NVML not implemented; auto GPU defaults always see zero GPUs. |
+| Design | 4/5 | Modules `gpu`, `memory`, `network` and `HardwareInfo` / `detect()` in `app/src/system/mod.rs` match architecture and `docs/research/03-hardware-detection.md`. Inventory only — no layer calculator. |
+| Implementation | 4/5 | Windows: DXGI adapter enum + dedicated VRAM (`gpu.rs` `win::detect_dxgi`); optional `nvidia-smi` for device totals / fallback when DXGI empty. RAM via `sysinfo` (`memory.rs`). `network::port_available` via `TcpListener::bind`. Soft miss: empty GPU list → CPU path, never fails `detect()`. NVML FFI deferred. |
+| Tests | 3/5 | `port_available` bind/release; `memory::detect` reports RAM; `detect_gpus` does not panic. No DXGI-specific assertions (Windows-only path). |
+| Docs | 3/5 | Research deep dive (`docs/research/03-hardware-detection.md`); operator coverage in configuration/backend GPU rules. |
+| Windows readiness | 4/5 | DXGI + nvidia-smi path on Win10/11; CI compiles Windows code on `windows-latest`. |
 
 ## Gaps
 
-- Empty GPU list forces CPU-only argv (`--n-gpu-layers 0`) in auto mode.
-- Memory totals unused and always zero.
-- No tests for `port_available`.
+- NVML FFI not implemented (nvidia-smi CLI only for device-wide totals).
+- DXGI results not asserted in automated tests (no-panic only).
+- Memory totals not yet consumed by argv policy (inventory only).
 
 ## Next actions (ordered)
 
-1. Implement DXGI adapter enumeration (name + VRAM when available).
-2. Implement `GlobalMemoryStatusEx` or `sysinfo` for RAM.
-3. Unit-test `port_available` bind/release behavior.
+1. Optional NVML when nvidia-smi is insufficient.
+2. Assert non-empty GPU list on a known NVIDIA CI host (optional matrix).
+3. Keep auto policy in `runtime/llama.rs` only — no layer math here.

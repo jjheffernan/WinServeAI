@@ -1,6 +1,6 @@
 # Logging
 
-> **Readiness:** 2.6/5 (`mvp-partial`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
+> **Readiness:** 2.8/5 (`mvp-partial`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
 
 WinServeAI writes three append-only streams under one directory. `ServerManager` owns all writes; there is no separate logging package.
 
@@ -19,7 +19,7 @@ logging:
 | `llama.log` | `llama-server` stdout and stderr (line-tagged) |
 | `error.log` | Start failures, readiness failure, unexpected child exit |
 
-Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is flushed immediately. No log levels or timestamps.
+Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is prefixed with `ts=<unix-epoch-seconds>` and flushed immediately. No log levels or rotation.
 
 ## What is captured
 
@@ -29,7 +29,7 @@ Typical lines:
 
 - `config loaded; binary=…`
 - `hardware: N gpu(s), M threads`
-- `warning: port may already be in use` (best-effort port check)
+- port-in-use failures (start aborts when the configured port is not bindable)
 - `starting {program} {args…}` — full command line
 - `spawned pid=N`
 - `READY http://host:port/v1`

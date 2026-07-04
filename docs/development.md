@@ -1,6 +1,6 @@
 # Development
 
-> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 2.8/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
+> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 3.2/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
 WinServeAI is a **single Rust crate** (`winserve` in `app/`) that owns process lifecycle for an external `bin/llama-server.exe`. There is no `packages/` monorepo and no backend-trait workspace.
 
@@ -42,7 +42,7 @@ config/              # default.yaml
 logs/                # server.log, llama.log, error.log (created at runtime)
 models/              # your GGUF files (not shipped)
 installer/
-scripts/             # start.ps1, stop.ps1, reset.ps1, check.sh
+scripts/             # start/stop/reset.ps1, smoke-openai.ps1, smoke-check.sh, check.sh
 docs/
 ```
 
@@ -133,21 +133,29 @@ The child process working directory is `bin/` so CUDA and other runtime DLLs bes
 Run from anywhere; scripts locate the repo root from `scripts/`.
 
 ```powershell
-.\scripts\start.ps1   # WINSERVE_CONFIG=config\default.yaml; release winserve, else debug
-.\scripts\stop.ps1    # force-stop processes named winserve and llama-server
-.\scripts\reset.ps1   # stop.ps1 + clear files under logs/ (keeps config and models)
+.\scripts\start.ps1          # WINSERVE_CONFIG=config\default.yaml; release winserve, else debug
+.\scripts\stop.ps1           # force-stop processes named winserve and llama-server (last resort)
+.\scripts\reset.ps1          # stop.ps1 + clear files under logs/ (keeps config and models)
+.\scripts\smoke-openai.ps1   # A2: poll GET /v1/models (+ optional chat); needs binary + GGUF
+.\scripts\smoke-openai.ps1 -Start   # optional: start winserve in background, then poll
+```
+
+```bash
+./scripts/smoke-check.sh     # any host: cargo test + print-cmd + config preflight (no inference)
 ```
 
 `start.ps1` expects a prior `cargo build -p winserve` (release preferred) or `cargo build -p winserve` debug fallback.
 
+A2 operator checklist: [specs/A2-smoke.md](specs/A2-smoke.md). Prefer **Ctrl+C** on foreground `start` for cooperative stop; do not treat `stop.ps1` as the A2 pass path.
+
 ## Typical first run
 
-1. Place `llama-server.exe` in `bin/`.
+1. Place `llama-server.exe` (**b9866**) in `bin/`.
 2. Edit `config/default.yaml` → `model.path`.
 3. `cargo run -p winserve -- print-cmd` — confirm argv.
 4. `cargo run -p winserve -- start` — wait for `READY http://127.0.0.1:8080/v1`.
-5. Point any OpenAI-compatible client at that base URL.
-6. Ctrl+C (or `.\scripts\stop.ps1`) to free the GPU.
+5. `.\scripts\smoke-openai.ps1` (or any OpenAI-compatible client at that base URL).
+6. Ctrl+C to free the GPU (cooperative stop).
 
 ## Architecture reminder
 

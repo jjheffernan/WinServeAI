@@ -1,10 +1,10 @@
 # Installer
 
-> **Readiness:** installer 1.4/5 (`stub`), bin 1.8/5 (`scaffold`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
+> **Readiness:** installer 1.6/5 (`scaffold`), bin 2.2/5 (`scaffold`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
 
 Native Windows packaging for the WinServeAI appliance. Phase 3 deliverable: install → launch **winserve** → OpenAI-compatible API on the configured host/port.
 
-Deep research: [research/04-installer-licensing.md](./research/04-installer-licensing.md), [research/doc-build/installer.research.md](./research/doc-build/installer.research.md). Stub goals: [installer/README.md](../installer/README.md). Prior art: [prior-art.md](./prior-art.md).
+Deep research: [research/04-installer-licensing.md](./research/04-installer-licensing.md), [research/doc-build/installer.research.md](./research/doc-build/installer.research.md). Build spec (Phase 3, before Inno code): [specs/F-installer.md](./specs/F-installer.md). Stub goals: [installer/README.md](../installer/README.md). Prior art: [prior-art.md](./prior-art.md).
 
 ## Tool choice
 

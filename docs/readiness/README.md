@@ -13,14 +13,14 @@ Last reviewed: 2026-07-04
 | system | 3.6/5 | mvp-ready | NVML FFI deferred; DXGI not asserted in CI | [system.md](./system.md) |
 | api | 2.6/5 | mvp-partial | URL helpers only; no tests | [api.md](./api.md) |
 | cli | 2.6/5 | mvp-partial | `stop`/`restart` not implemented | [cli.md](./cli.md) |
-| bin | 1.8/5 | scaffold | No `llama-server.exe` committed; operator supplies **b9866** | [bin.md](./bin.md) |
-| installer | 1.4/5 | stub | README only; no Inno scripts | [installer.md](./installer.md) |
-| scripts-ops | 2.8/5 | mvp-partial | Force-kill only (not graceful) | [scripts-ops.md](./scripts-ops.md) |
+| bin | 2.2/5 | scaffold | No `llama-server.exe` committed; operator supplies **b9866** | [bin.md](./bin.md) |
+| installer | 1.6/5 | scaffold | Spec only; no Inno scripts | [installer.md](./installer.md) |
+| scripts-ops | 3.2/5 | mvp-partial | Force-kill stop.ps1; A2 needs operator Windows proof | [scripts-ops.md](./scripts-ops.md) |
 | scripts-pr-loop | 3.0/5 | mvp-partial | Dry-run only; no formal tests | [scripts-pr-loop.md](./scripts-pr-loop.md) |
-| docs | 3.8/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
+| docs | 4.0/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
 | ui | 0.4/5 | stub | Path missing; Phase 2 placeholder | [ui.md](./ui.md) |
 
 ## Summary
 
-- **Overall project maturity:** **3.0/5** (`mvp-partial`) — average of 14 modules, excluding `ui` (Phase 2 only).
-- **Phase alignment:** Phase 1 engine code is in place (`ServerManager` start → readiness → stop; Job Object + CTRL_BREAK; DXGI/sysinfo; unit tests). Still open: operator smoke with real `llama-server` (**A2**), long-running manager so CLI `stop`/`restart` work (**E3**), Phase 2 UI, and Phase 3 installer.
+- **Overall project maturity:** **3.1/5** (`mvp-partial`) — average of 14 modules, excluding `ui` (Phase 2 only).
+- **Phase alignment:** Phase 1 engine code is in place (`ServerManager` start → readiness → stop; Job Object + CTRL_BREAK; DXGI/sysinfo; unit tests). Operator smoke scripts/spec ready (**A2** still open until Windows + GGUF proof). Phase 2/3 have build specs (`E-desktop`, `F-installer`); UI and Inno implementation still open.

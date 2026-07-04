@@ -38,7 +38,7 @@
 | `cli` | `app/src/main.rs` | `development.md` |
 | `bin` | `bin/` | `backend.md`, `release-process.md` |
 | `installer` | `installer/` | `installer.md`, `research/04` |
-| `scripts-ops` | `scripts/{start,stop,reset}.ps1` | `development.md` |
+| `scripts-ops` | `scripts/{start,stop,reset}.ps1`, `smoke-openai.ps1`, `smoke-check.sh` | `development.md`, `specs/A2-smoke.md` |
 | `scripts-pr-loop` | `scripts/pr_review_loop/` | `scripts/pr_review_loop/README.md` |
 | `docs` | `docs/` | `INDEX.md` |
 | `ui` | `app/ui/` | (Phase 2) |

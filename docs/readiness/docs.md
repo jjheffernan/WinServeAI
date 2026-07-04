@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | Path | `docs/` |
-| Overall | **3.8 / 5** |
+| Overall | **4.0 / 5** |
 | Label | `mvp-ready` |
 | Reviewed | 2026-07-04 |
 
@@ -12,9 +12,9 @@
 | Dimension | Score | Evidence |
 | --- | --- | --- |
 | Design | 4/5 | Appliance architecture locked (`docs/architecture.md`, `docs/adr/0001-appliance-architecture.md`); INDEX status legend; research deep dives 01–05; roadmap phases; readiness scorecards. |
-| Implementation | 4/5 | Operator guides (`api`, `backend`, `configuration`, `development`, `logging`, `installer`) match current `app/src/**` paths. `docs/PLAN.md` / `docs/TODO.md` track implementation. |
+| Implementation | 5/5 | Operator guides match `app/src/**`. Build specs for A2 smoke, Phase 2 desktop, Phase 3 installer (`docs/specs/A2-smoke.md`, `E-desktop.md`, `F-installer.md`). `docs/PLAN.md` / `docs/TODO.md` track implementation. |
 | Tests | 3/5 | `scripts/check_doc_drift.py` enforces scorecard ↔ dashboard ↔ banner consistency and primary health probe claims (CI on `dev`/`main`). No full link checker. |
-| Docs | 5/5 | Guides + research briefs + ADR + examples (config YAML, CLI commands, pr_review_loop). Strongest module in the tree. |
+| Docs | 5/5 | Guides + research briefs + ADR + build specs + examples (config YAML, CLI commands, pr_review_loop). Strongest module in the tree. |
 | Windows readiness | 3/5 | Primary OS guidance throughout (`.exe`, PowerShell, Inno, firewall); accurate for current code maturity. |
 
 ## Gaps

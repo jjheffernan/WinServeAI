@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `scripts/{start,stop,reset}.ps1` |
-| Overall | **2.8 / 5** |
+| Path | `scripts/{start,stop,reset}.ps1`, `scripts/smoke-openai.ps1`, `scripts/smoke-check.sh` |
+| Overall | **3.2 / 5** |
 | Label | `mvp-partial` |
 | Reviewed | 2026-07-04 |
 
@@ -11,20 +11,20 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 3/5 | Thin PowerShell wrappers for local dev: start winserve, force-stop processes, reset logs. Aligns with development workflow in `docs/development.md`. |
-| Implementation | 3/5 | `start.ps1` sets `WINSERVE_CONFIG` and runs release then debug `winserve.exe`. `stop.ps1` force-stops processes named `winserve` and `llama-server`. `reset.ps1` calls stop and clears `logs/` files. Happy path for local Windows dev works; not graceful manager stop. |
-| Tests | 1/5 | Manual only. |
-| Docs | 4/5 | Documented in `docs/development.md` Scripts section with behavior notes. |
-| Windows readiness | 3/5 | Native PowerShell; appropriate for Win10/11 dev. Force-kill is blunt but effective. |
+| Design | 4/5 | Thin PowerShell wrappers for local dev plus A2 operator smoke: poll `GET /v1/models`, optional chat, pin **b9866** preflight. Aligns with `docs/specs/A2-smoke.md` and `docs/development.md`. |
+| Implementation | 4/5 | `start.ps1` / `stop.ps1` / `reset.ps1` for local Windows dev. `smoke-openai.ps1` reads host/port from YAML, polls readiness (≥120s), uses model id from `/v1/models`, port-busy check on `-Start`. `smoke-check.sh` runs tests + `print-cmd` without GGUF. |
+| Tests | 1/5 | Manual for PS1; `smoke-check.sh` is runnable preflight (not a formal script unit suite). |
+| Docs | 4/5 | Documented in `docs/development.md` Scripts section and `docs/specs/A2-smoke.md`. |
+| Windows readiness | 3/5 | Native PowerShell smoke path; force-kill `stop.ps1` remains blunt (not A2 pass criteria). |
 
 ## Gaps
 
 - `stop.ps1` uses `Stop-Process -Force`, not `ServerManager::stop`.
-- No check that build exists before start (falls through release → debug).
-- No automated script tests.
+- No check that build exists before `start.ps1` (falls through release → debug).
+- No automated script unit tests; full A2 still needs operator Windows + GGUF.
 
 ## Next actions (ordered)
 
 1. Prefer graceful stop if a manager IPC/PID file exists; keep force as fallback.
-2. Fail clearly when neither release nor debug binary is present.
-3. Optional: `scripts/check.sh` already gates cargo; leave PS1 as manual ops.
+2. Fail clearly when neither release nor debug binary is present (`start.ps1`).
+3. Close A2 after operator runs full Windows smoke (stop + orphan checks).

@@ -1,7 +1,7 @@
 # Implementation plan (action items)
 
 **Branch:** `dev` (work) · **`main`** = releases only  
-**Maturity:** [readiness/README.md](readiness/README.md) — **3.0/5** (`mvp-partial`)  
+**Maturity:** [readiness/README.md](readiness/README.md) — **3.1/5** (`mvp-partial`)  
 **Source backlog:** [TODO.md](TODO.md) · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Phase 0 (research + docs architecture) is **done**. Phase 1 engine code (A–D except operator smoke **A2**) is **done**; readiness refresh (**D6**) is **done**.
@@ -11,7 +11,7 @@ Phase 0 (research + docs architecture) is **done**. Phase 1 engine code (A–D e
 ## Milestone A — `winserve start` works (v0.1 engine)
 
 - [x] **A1.** Pin `llama-server` for local/dev: document exact `b####` in `bin/README.md`; place `bin/llama-server.exe` (binary not committed).
-- [ ] **A2.** Smoke path: `cargo run -p winserve -- start` → `GET /v1/models` 200 → OpenAI-compatible client against `/v1`. *(operator: needs Windows + binary + GGUF)*
+- [ ] **A2.** Smoke path: `cargo run -p winserve -- start` → `GET /v1/models` 200 → OpenAI-compatible client against `/v1`. *(operator: needs Windows + binary + GGUF; scripts/spec ready — [specs/A2-smoke.md](specs/A2-smoke.md), `scripts/smoke-openai.ps1`, `scripts/smoke-check.sh`)*
 - [x] **A3.** Fail clearly if binary or model path missing (messages already partial — verify and tighten).
 
 **Exit:** Developer on Windows can start API without reading research notes.
@@ -59,7 +59,8 @@ Phase 0 (research + docs architecture) is **done**. Phase 1 engine code (A–D e
 - [ ] **E2.** Model **path** picker (no downloads).
 - [ ] **E3.** Long-running manager so CLI/UI `stop`/`restart` work (lockfile+IPC or tray-owned process).
 
-**Exit:** No CLI required for basic use.
+**Exit:** No CLI required for basic use.  
+**Build spec (before code):** [specs/E-desktop.md](specs/E-desktop.md)
 
 ---
 
@@ -70,15 +71,16 @@ Phase 0 (research + docs architecture) is **done**. Phase 1 engine code (A–D e
 - [ ] **F3.** Firewall rule only when bind is non-loopback; delete on uninstall.
 - [ ] **F4.** `THIRD_PARTY_NOTICES` (llama.cpp MIT) in install payload ([research/04](research/04-installer-licensing.md)).
 
-**Exit:** Install → Start → API available.
+**Exit:** Install → Start → API available.  
+**Build spec (before code):** [specs/F-installer.md](specs/F-installer.md)
 
 ---
 
 ## Next steps
 
-1. **A2** — Operator smoke on Windows: place `bin/llama-server.exe` (**b9866**), set `model.path`, `cargo run -p winserve -- start` → `GET /v1/models` 200 → OpenAI client against `/v1`. Confirm CTRL_BREAK stop and no orphan after manager kill.
-2. **E** — Desktop shell (start/stop/status/logs/settings via `ServerManager` only) + model path picker; **E3** long-running manager so CLI/UI `stop`/`restart` attach.
-3. **F** — Inno Setup installer: ship `winserve.exe` + pinned `llama-server.exe` + config + notices; shortcut; firewall only for non-loopback.
+1. **A2** — Operator smoke on Windows (checkbox still open — needs real GGUF + **b9866** binary). Checklist: [specs/A2-smoke.md](specs/A2-smoke.md). Preflight (any host, no inference): `./scripts/smoke-check.sh`. Windows poll/chat: `.\scripts\smoke-openai.ps1` (optional `-Start`). Manual: CTRL_BREAK stop (Ctrl+C) and orphan check after force-kill of winserve.
+2. **E** — Implement Phase 2 from [specs/E-desktop.md](specs/E-desktop.md) (tray-owned manager + lockfile/IPC; UI only via `ServerManager`; model path picker; no chat/downloads).
+3. **F** — Implement Phase 3 from [specs/F-installer.md](specs/F-installer.md) (Inno layout, notices, firewall for non-loopback only, shortcut → manager/tray).
 
 ---
 

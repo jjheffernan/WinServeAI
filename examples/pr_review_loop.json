@@ -1,0 +1,14 @@
+{
+  "repo_path": ".",
+  "base_branch": "main",
+  "feature_branches": [
+    "feature/example-a"
+  ],
+  "max_iterations": 5,
+  "task_prompt": "Describe the feature work for the coder agent.",
+  "dry_run": true,
+  "push": false,
+  "coder_cmd": "python3 scripts/pr_review_loop/hooks/echo_coder.py",
+  "reviewer_cmd": "python3 scripts/pr_review_loop/hooks/echo_reviewer.py",
+  "fixer_cmd": "python3 scripts/pr_review_loop/hooks/echo_fixer.py"
+}

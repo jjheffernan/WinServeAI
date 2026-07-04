@@ -14,6 +14,8 @@ Prioritized work from scores: [TODO.md](TODO.md). Ordered milestones: [PLAN.md](
 
 Doc drift policy (readiness scores must match banners/dashboard): [policies/doc-drift.md](policies/doc-drift.md) · `python3 scripts/check_doc_drift.py`.
 
+Canonical external URL index: [policies/SOURCES.md](policies/SOURCES.md).
+
 Canonical external URLs (llama.cpp, DXGI, Job Objects, Inno, NVIDIA): [policies/SOURCES.md](policies/SOURCES.md).
 
 Apply-worktree audit (caveman/ponytail review + subagent scores): [audit/apply-review.md](audit/apply-review.md).

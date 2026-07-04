@@ -53,3 +53,10 @@ When an agent edits docs or readiness:
 1. Run `check_doc_drift.py` before finishing.
 2. If scores change, update scorecard → dashboard → banners in one change set.
 3. Prefer linking existing research over duplicating long explanations.
+4. Prefer [SOURCES.md](./SOURCES.md) or research notes for external URLs; do not invent citations.
+
+## See also
+
+- [SOURCES.md](./SOURCES.md) — canonical external URL index
+- [PLAN.md](../PLAN.md) — implementation milestones
+- [INDEX.md](../INDEX.md) — documentation map

@@ -1,0 +1,13 @@
+[package]
+name = "winserve-config"
+description = "Human-readable configuration load/store with schema validation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+winserve-shared = { workspace = true }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }

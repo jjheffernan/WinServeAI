@@ -1,10 +1,13 @@
 # Installer & Licensing
 
-Phase 0 research for Windows packaging: Inno Setup, firewall, CUDA DLL bundling, MIT notices. Builds on [installer.md](../installer.md), [prior-art.md](../prior-art.md), [apps/installer](../../apps/installer/README.md), [vendor/llama.cpp](../../vendor/llama.cpp/README.md). No production code.
+> **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
+> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+
+Phase 0 research for Windows packaging: Inno Setup, firewall, CUDA DLL bundling, MIT notices. Builds on [installer.md](../installer.md), [prior-art.md](../prior-art.md), installer scripts under `apps/installer` (if present). Pinned `llama-server` lives in **`bin/`** (version pin in release docs), not a `vendor/llama.cpp` tree. No production code.
 
 ---
 
-## Recommendations for apps/installer and vendor/
+## Recommendations for installer and `bin/`
 
 ### Inno Setup (`apps/installer/inno/`)
 
@@ -42,20 +45,22 @@ Reference community pattern: [d4-ollama-win-service](https://github.com/internet
 
 Aligns with [docs/installer.md](../installer.md) and prior-art: **localhost default, firewall only for LAN** ([GPT4All localhost-only](https://github.com/nomic-ai/gpt4all/wiki/Local-API-Server), exposed-Ollama caution).
 
-### CUDA DLL bundling (`vendor/` → install `bin/`)
+### CUDA DLL bundling (release `bin/` → install `bin/`)
 
 Ship `llama-server.exe` **and** its CUDA runtime DLLs **in the same directory** (`{app}\bin\`). Windows loads DLLs from the exe directory first; relying on system `PATH` / full CUDA Toolkit is a support trap ([Visokio Windows CUDA notes](https://help.visokio.com/support/solutions/articles/42000115649-how-to-run-local-llms-on-windows-with-nvidia-llama-cpp-cuda-)).
 
 **Build matrix (release packaging, not day-to-day commits):**
 
 ```text
-vendor/llama.cpp/
-├── README.md
-├── VERSION              # pinned upstream tag
-├── notices/             # LICENSE + AUTHORS snapshot for that pin
-└── bin/
-    ├── cpu/             # optional CPU-only build
-    └── cuda/            # llama-server.exe + redistributable CUDA DLLs
+bin/                     # repo / release artifact layout
+├── llama-server.exe     # pinned upstream b#### build
+├── cudart64_XX.dll      # CUDA build only; beside exe
+└── …                    # other Attachment A DLLs as needed
+
+# Optional release variants (packaging only):
+#   cpu/llama-server.exe
+#   cuda/llama-server.exe + CUDA DLLs
+# Version pin + notices: docs/release-process.md / docs/backend.md + notices/
 ```
 
 Installer copies the chosen variant into `{app}\bin\`. Pin toolkit version used to build; ship **exact** matching `cudart64_*.dll` (and any other Attachment A libs the binary links — often `cublas*`, `cublasLt*`, sometimes `cudart` only depending on build). Use `dumpbin /dependents` (or equivalent) on the release artifact to list required DLLs.
@@ -81,7 +86,7 @@ Minimum for each release:
 1. Full llama.cpp `LICENSE` text (copyright line as upstream ships — currently “ggml authors”).
 2. Prefer also `AUTHORS` (or equivalent attribution list) from the pinned tag.
 3. Notices for other bundled OSS (e.g. cpp-httplib if linked into `llama-server`, MSVC runtime if redistributed, NVIDIA note for CUDA DLLs).
-4. Refresh notices whenever `vendor/llama.cpp` pin changes.
+4. Refresh notices whenever the `bin/llama-server.exe` pin changes (record tag in release docs).
 
 Model weights are **out of scope** and have separate licenses ([llama.cpp discussion #472](https://github.com/ggml-org/llama.cpp/discussions/472)) — do not bundle models in the installer.
 
@@ -92,9 +97,9 @@ Model weights are **out of scope** and have separate licenses ([llama.cpp discus
 ```text
 {app}/                          # e.g. C:\Program Files\WinServeAI
 ├── bin/
-│   ├── winserve-launcher.exe   # Server Manager (process owner)
+│   ├── winserve.exe            # Server Manager (process owner)
 │   ├── winserve-tray.exe       # Phase 2; Start Menu / desktop target
-│   ├── llama-server.exe        # from vendor/llama.cpp
+│   ├── llama-server.exe        # pinned build from bin/
 │   ├── cudart64_XX.dll         # CUDA build only; beside exe
 │   └── cublas*.dll             # if linked; Attachment A only
 ├── config/
@@ -110,7 +115,7 @@ Model weights are **out of scope** and have separate licenses ([llama.cpp discus
 | Path | Role |
 | --- | --- |
 | `bin/` | All executables + private DLLs; no PATH mutation required |
-| `config/` | Default YAML; user edits stay human-readable ([packages/config](../../packages/config)) |
+| `config/` | Default YAML; user edits stay human-readable (`app/src/server/config.rs`) |
 | `notices/` | License compliance payload; also link from About / Start Menu optional “Third-party notices” icon |
 
 Shortcuts point at tray/manager in `bin/`, with `WorkingDir: "{app}"` or `"{app}\bin"` consistently. Do not put `llama-server.exe` on the Start Menu as a primary entry — users start the **manager**, which owns the backend.
@@ -119,7 +124,7 @@ Shortcuts point at tray/manager in `bin/`, with `WorkingDir: "{app}"` or `"{app}
 
 ## THIRD_PARTY_NOTICES requirements
 
-Ship as `{app}\notices\THIRD_PARTY_NOTICES.md` (and keep a monorepo copy under `vendor/llama.cpp/notices/` or repo-root `THIRD_PARTY_NOTICES.md` generated from the pin).
+Ship as `{app}\notices\THIRD_PARTY_NOTICES.md` (and keep a monorepo copy under `notices/` or repo-root `THIRD_PARTY_NOTICES.md` generated from the pin).
 
 **Must include:**
 
@@ -137,9 +142,9 @@ Ship as `{app}\notices\THIRD_PARTY_NOTICES.md` (and keep a monorepo copy under `
 
 - Rely solely on GitHub README credit
 - Strip notices from release CI artifacts
-- Treat monorepo `vendor/` LICENSE as sufficient for end-user installs
+- Treat a source-tree LICENSE alone as sufficient for end-user installs
 
-**Refresh process (minimal):** when bumping `vendor/llama.cpp/VERSION`, copy `LICENSE` (+ `AUTHORS`) into `notices/` and regenerate the rollup. Automate later if painful ([prior-art open Q #9](../prior-art.md)).
+**Refresh process (minimal):** when bumping the `bin/llama-server.exe` pin (tag in release docs), copy `LICENSE` (+ `AUTHORS`) into `notices/` and regenerate the rollup. Automate later if painful ([prior-art open Q #9](../prior-art.md)).
 
 ---
 
@@ -169,7 +174,7 @@ Ship as `{app}\notices\THIRD_PARTY_NOTICES.md` (and keep a monorepo copy under `
 1. **LAN rule timing** — Installer-only (wizard checkbox) vs Server Manager adds/removes rule whenever `host` changes in YAML?
 2. **Program vs port rule** — Stick to program-based for `llama-server.exe`, or also allow a fixed-port rule for locked-down enterprise images?
 3. **CPU vs CUDA installers** — One fat installer with both builds, two SKUs, or download CUDA DLLs on first GPU detect? (Fat install is simplest; size may push split SKUs.)
-4. **Exact CUDA DLL set** — Confirm with `dumpbin` on the pinned `llama-server` CUDA build; document in `vendor/llama.cpp/VERSION` notes.
+4. **Exact CUDA DLL set** — Confirm with `dumpbin` on the pinned `llama-server` CUDA build; document pin notes in release docs.
 5. **MSVC runtime** — Static link vs ship `vcruntime`/`msvcp` (VC++ Redistributable merge module / `vcredist` bootstrap)?
 6. **NVIDIA notice text** — Minimal EULA pointer in `notices/` sufficient, or any extra attribution NVIDIA expects for Attachment A files?
 7. **Per-user install** — Can firewall rules work without admin (`PrivilegesRequired=lowest`)? If not, LAN mode requires elevation path.

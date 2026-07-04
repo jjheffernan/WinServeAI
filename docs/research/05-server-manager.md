@@ -1,10 +1,13 @@
 # Server Manager State Machine
 
-Research note: lifecycle ownership and UI boundary for `packages/launcher` (Server Manager). No production code — decisions only.
+> **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
+> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 
-**Internal:** [architecture.md](../architecture.md), [prior-art.md](../prior-art.md), [backend.md](../backend.md), [api.md](../api.md), [apps/desktop/README.md](../../apps/desktop/README.md)
+Research note: lifecycle ownership and UI boundary for Server Manager (`app/src/server/manager.rs`). No production code — decisions only.
 
-**Scaffold today:** `ServerManager` exposes `start` / `stop` / `status` / `health` / `metrics` / `version` / config / hardware / endpoint (`packages/launcher`). `ServerState` in `packages/shared` is `Stopped | Starting | Running | Stopping | Unhealthy | Crashed` — **align to Ready / Failed** below (drop `Running` / `Unhealthy` as primary states). `LlamaBackend::start` currently flips `Starting → Running` on spawn alone; readiness must stay in Starting until `GET /health` is 200.
+**Internal:** [architecture.md](../architecture.md), [prior-art.md](../prior-art.md), [backend.md](../backend.md), [api.md](../api.md), desktop app (Phase 2)
+
+**Scaffold today:** `ServerManager` exposes `start` / `stop` / `status` / `health` / `metrics` / `version` / config / hardware / endpoint (`app/src/server/manager.rs`). Historical `ServerState` was `Stopped | Starting | Running | Stopping | Unhealthy | Crashed` — **align to Ready / Failed** below (drop `Running` / `Unhealthy` as primary states). Spawn alone must not flip to Ready; readiness must stay in Starting until **`GET /v1/models` is 200** (`app/src/server/health.rs`). Optional alternate: `GET /health` (503 loading / 200 ready) when present on the pin — not the only probe.
 
 ---
 
@@ -13,7 +16,7 @@ Research note: lifecycle ownership and UI boundary for `packages/launcher` (Serv
 Canonical MVP machine (matches [prior-art P1](../prior-art.md)):
 
 ```text
-Stopped ──start──► Starting ──health 200──► Ready
+Stopped ──start──► Starting ──/v1/models 200──► Ready
                       │
                       ├── spawn/load/timeout/exit ──► Failed
                       │
@@ -28,17 +31,17 @@ Failed|Crashed|Stopped ──start──► Starting   (retry)
 | --- | --- | --- | --- |
 | **Stopped** | Idle; no child | none | n/a |
 | **Starting** | Spawn + model load in progress | alive or spawning | refuse / **503** / not yet listening |
-| **Ready** | Accepting inference | alive | **200** on `/health` |
+| **Ready** | Accepting inference | alive | **200** on **`GET /v1/models`** (primary; see `app/src/server/health.rs`) |
 | **Failed** | Start did not complete (config, binary, model path, bind, readiness timeout, exit code 1 on load) | none (or already dead) | n/a |
 | **Stopping** | Graceful stop in flight | dying | ignore probes |
 | **Crashed** | Unexpected exit **after** Ready | none | n/a |
 
 **Rules**
 
-1. **Process alive ≠ Ready.** Steal llama-server semantics: [503 while loading, 200 when ok](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md); failed load → exit 1 ([PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056)). Under load, health can stall ([#20684](https://github.com/ggml-org/llama.cpp/issues/20684)) — use generous timeouts; optional PID+port liveness is *not* Ready.
+1. **Process alive ≠ Ready.** WinServeAI polls **`GET /v1/models`** until 200. Upstream may also expose `/health` (503 loading / 200 ready) — useful alternate, not the only probe ([server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)); failed load → exit 1 ([PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056)). Under load, probes can stall ([#20684](https://github.com/ggml-org/llama.cpp/issues/20684)) — use generous timeouts; optional PID+port liveness is *not* Ready.
 2. **Failed vs Crashed.** Failed = start path never reached Ready. Crashed = was Ready, then child died. Both are terminal until user/CLI starts again (or explicit ack → Stopped). Optional auto-restart is config-owned, default **off** ([prior-art](../prior-art.md)).
 3. **Idempotency.** `stop` on Stopped/Failed/Crashed → Stopped (no error). `start` while Starting/Stopping/Ready → reject (`already starting` / `already running` / `busy`).
-4. **Single owner.** Only Server Manager mutates state; `packages/process` reports exit codes; backend maps config → argv and probes health; UI only observes.
+4. **Single owner.** Only Server Manager mutates state; process runtime (`app/src/runtime/process.rs`) reports exit codes; llama runtime maps config → argv; readiness lives in `app/src/server/health.rs`; UI only observes.
 
 **Prior-art mapping (steal / avoid)**
 
@@ -54,7 +57,7 @@ Failed|Crashed|Stopped ──start──► Starting   (retry)
 stateDiagram-v2
   [*] --> Stopped
   Stopped --> Starting: start
-  Starting --> Ready: health 200
+  Starting --> Ready: /v1/models 200
   Starting --> Failed: error / timeout / exit
   Ready --> Stopping: stop
   Ready --> Crashed: unexpected exit
@@ -70,7 +73,7 @@ stateDiagram-v2
 
 ## Public API surface (what desktop/CLI may call)
 
-All entry points go through **`winserve-launcher::ServerManager`** (or a thin Tauri command / CLI wrapper that holds one `ServerManager`). Never call `Backend` or `ManagedProcess` from UI code.
+All entry points go through **`ServerManager`** in `app/src/server/manager.rs` (or a thin Tauri command / CLI wrapper that holds one `ServerManager`). Never call process/llama internals from UI code.
 
 | Call | Role | Notes |
 | --- | --- | --- |
@@ -86,30 +89,29 @@ All entry points go through **`winserve-launcher::ServerManager`** (or a thin Ta
 **Subscribe (implement when desktop lands)**
 
 - State change stream: `ServerState` + optional last error string.
-- Log lines: forwarded from `packages/logging` / process stdout-stderr (UI is a viewer).
+- Log lines: forwarded from `app/src/server/logs.rs` / process stdout-stderr (UI is a viewer).
 
-**Not public (internal to launcher → backend → process)**
+**Not public (internal to manager → runtime)**
 
-- `Backend::{initialize, load_model, start, stop, …}`
-- Argv / llama flags (`LlamaBackend::build_args`)
+- Argv / llama flags (`app/src/runtime/llama.rs`)
 - Job Object / PID / `taskkill`
-- Direct HTTP to `/health` for *ownership* of readiness (manager only)
+- Direct HTTP readiness probes for *ownership* of readiness (manager only via `app/src/server/health.rs`)
 
-**Tauri shape (Phase 2):** Rust commands invoke `ServerManager`; webview never uses `@tauri-apps/plugin-shell` or sidecar for `llama-server`. Bundle binary beside install dir; resolve path in launcher/llama, not frontend.
+**Tauri shape (Phase 2):** Rust commands invoke `ServerManager`; webview never uses `@tauri-apps/plugin-shell` or sidecar for `llama-server`. Bundle binary beside install dir; resolve path in manager/runtime, not frontend.
 
 ---
 
 ## What UI must never do
 
 1. **Spawn or kill `llama-server`** (or any backend binary) — including via Tauri sidecar, `Command`, or PowerShell.
-2. **Know backend-specific flags** (`-ngl`, `--fit`, `--ctx-size`, …) or import `winserve-llama`.
-3. **Own readiness** — no UI-side “poll `/health` then mark green” as source of truth; call `status`/`health` on the manager.
+2. **Know llama-specific flags** (`-ngl`, `--fit`, `--ctx-size`, …) or import runtime modules.
+3. **Own readiness** — no UI-side “poll `/v1/models` then mark green” as source of truth; call `status`/`health` on the manager.
 4. **Own crash recovery** — no UI auto-restart loops; optional restart policy lives in manager + config.
 5. **Bypass config** — no ad-hoc model path / port only in UI memory; persist through `update_config` / YAML.
 6. **Treat process start as Ready** — show Starting until manager reports Ready (or Failed).
 7. **Chat, downloads, HF, multi-session gateways** — out of MVP ([AGENTS.md](../../AGENTS.md)).
 
-Desktop responsibilities only ([apps/desktop/README.md](../../apps/desktop/README.md)): edit config, display logs, display state, start, stop. On quit: `stop()`; Job Object is the backstop if force-killed.
+Desktop responsibilities only (Phase 2 tray): edit config, display logs, display state, start, stop. On quit: `stop()`; Job Object is the backstop if force-killed.
 
 ---
 
@@ -118,12 +120,12 @@ Desktop responsibilities only ([apps/desktop/README.md](../../apps/desktop/READM
 | Topic | Link |
 | --- | --- |
 | Architecture layering | [docs/architecture.md](../architecture.md) |
-| Prior art (Job Objects, readiness, P1 launcher) | [docs/prior-art.md](../prior-art.md) |
-| Backend trait | [docs/backend.md](../backend.md), `packages/backend` |
-| Shared states (to realign) | `packages/shared` `ServerState` |
-| Server Manager scaffold | `packages/launcher` |
-| Process scaffold | `packages/process` |
-| llama-server `/health` | [tools/server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) |
+| Prior art (Job Objects, readiness, P1 manager) | [docs/prior-art.md](../prior-art.md) |
+| Runtime (no backend trait) | [docs/backend.md](../backend.md), `app/src/runtime/` |
+| Server Manager | `app/src/server/manager.rs` |
+| Process runtime | `app/src/runtime/process.rs` |
+| Readiness (`GET /v1/models`) | `app/src/server/health.rs` |
+| llama-server `/health` (optional alternate) | [tools/server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) |
 | Health ≠ slots free | [llama.cpp#9056](https://github.com/ggml-org/llama.cpp/pull/9056) |
 | Health under load | [llama.cpp#20684](https://github.com/ggml-org/llama.cpp/issues/20684) |
 | Ollama serve / PID cleanup | [app/server/server.go](https://github.com/ollama/ollama/blob/main/app/server/server.go) |
@@ -141,11 +143,11 @@ Desktop responsibilities only ([apps/desktop/README.md](../../apps/desktop/READM
 2. **Config changes while Ready** — Require stop-then-start, or support hot-reload of non-bind settings only?
 3. **Failed/Crashed → Stopped** — Auto-clear on next successful status poll, explicit `reset()`, or leave until `start`/`stop`?
 4. **Starting + user Stop** — Cancel in-flight readiness and go Stopping, or ignore stop until Ready|Failed?
-5. **Unhealthy overlay** — If process alive but `/health` fails after Ready (load stall [#20684](https://github.com/ggml-org/llama.cpp/issues/20684)), stay Ready with `healthy: false` in `HealthStatus`, or add a transient Unhealthy state? Recommendation: **keep Ready**, surface via `health().healthy`.
+5. **Unhealthy overlay** — If process alive but readiness fails after Ready (load stall [#20684](https://github.com/ggml-org/llama.cpp/issues/20684)), stay Ready with `healthy: false` in `HealthStatus`, or add a transient Unhealthy state? Recommendation: **keep Ready**, surface via `health().healthy`.
 6. **Port conflict / stale process** — Adopt Ollama-style reap-on-conflict once, or fail with a clear message and let the user stop the other instance?
 7. **Graceful stop on Windows** — Ctrl+Break vs terminate-after-timeout still open in [prior-art](../prior-art.md); state machine should treat both as Stopping → Stopped.
 8. **CLI and tray concurrency** — Single manager process (named pipe / local socket) vs in-process only until Phase 5 management API?
 
 ---
 
-*Actionable next steps when implementing: (1) rename `Running`→`Ready`, add `Failed`, demote `Unhealthy` to health flag; (2) hold Starting until `/health` 200; (3) exit watcher → Crashed; (4) Job Object in `packages/process`; (5) Tauri commands only wrap `ServerManager`.*
+*Actionable next steps when implementing: (1) rename `Running`→`Ready`, add `Failed`, demote `Unhealthy` to health flag; (2) hold Starting until `GET /v1/models` 200; (3) exit watcher → Crashed; (4) Job Object in `app/src/runtime/process.rs`; (5) Tauri commands only wrap `ServerManager`.*

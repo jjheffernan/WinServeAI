@@ -12,7 +12,7 @@ Architecture lock: appliance wrapper — `ServerManager` only, llama.cpp only, n
 | Affirmative `packages/*` layout | **PASS** — none in rebuilt guides |
 | “Backend interfaces” | **PASS** — none |
 | `packages/*` only as ban/warning | OK in `development.md`, `release-process.md` |
-| Phase-0 research `01–05` / `prior-art.md` | Still use old `packages/*` paths (historical notes; not PLAN rebuild targets) |
+| Phase-0 research `01–05` / `prior-art.md` | **PASS** — path-note banners + light `app/src/…` mapping (see leftover cleanup) |
 
 ## Per-file status
 
@@ -55,16 +55,23 @@ All PLAN targets have `*.research.md`:
 
 ## Remaining gaps
 
-1. **Phase-0 research path drift** — `research/01–05` and parts of `prior-art.md` still name `packages/launcher`, `packages/process`, `packages/backend`, etc. Operator guides are clean; deep dives are historical. Optional follow-up: add a one-line banner (“paths predate single-crate layout; map to `app/src/…`”) or light path renames.
-2. **Open research checklist items** — migration strategy, rotating logs, metrics endpoint, UI topics (intentional; not blocking doc-build).
-3. **Readiness probe wording** — architecture uses `/v1/models`; research/02 prefers `/health`. Rebuilt `api.md` / `backend.md` document both; keep consistent in code when implementing.
-4. **ADR backlog** — 0001 notes pin policy, Windows stop semantics, and installer choice as future ADRs (not required for this pass).
+1. **Open research checklist items** — migration strategy, rotating logs, metrics endpoint, UI topics (intentional; not blocking doc-build).
+2. **ADR backlog** — 0001 notes pin policy, Windows stop semantics, and installer choice as future ADRs (not required for this pass).
+
+## Leftover cleanup (follow-up)
+
+Completed after operator guides (11/11 PASS):
+
+1. **Path drift** — Added appliance path-note banners to `research/01–05` and `prior-art.md`. Light in-body fixes: broken `../../packages/…` links → `app/src/…`; recommendation headings map to `app/src/server`, `app/src/runtime`, `app/src/system`, `bin/`. Scaffolding P0/P1 in `prior-art.md` no longer prescribe `packages/*` or a Rust `Backend` trait. Pin references use `bin/llama-server.exe` + release-doc version tags (not `vendor/llama.cpp`).
+2. **Readiness consistency** — Primary probe documented as **`GET /v1/models`** (`app/src/server/health.rs`). `GET /health` (503 loading / 200 ready) is an optional alternate when present on the pin — not the only probe. Updated in `research/02-llama-readiness.md`, `prior-art.md`, and light touch-ups in `01` / `03` / `05`.
+
+Research notes were **not** fully rewritten; banners + path/readiness fixes only.
 
 ## Recommended next commits
 
 1. **`docs: appliance operator guides`** — rebuilt `api`, `backend`, `configuration`, `contributing`, `development`, `installer`, `logging`, `release-process`, `research`, `roadmap` + `doc-build/*.research.md`.
 2. **`docs: ADR 0001 and index`** — `adr/0001-appliance-architecture.md`, `adr/README.md`, `INDEX.md`, `doc-build/STATUS.md`.
-3. *(optional)* **`docs: banner phase-0 research paths`** — note single-crate mapping on `research/01–05` without full rewrite.
+3. **`docs: phase-0 research path banners`** — leftover cleanup on `research/01–05`, `prior-art.md`, this STATUS.
 4. *(optional)* **`docs: ADR 0002 Inno Setup`** — promote installer decision from research/04.
 
 Do **not** commit application code in these docs-only commits.

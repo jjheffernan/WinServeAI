@@ -1,12 +1,15 @@
 # Hardware Detection
 
-Windows-first inventory for auto config. Goal: fill `packages/hardware` so Server Manager can choose **CPU-only vs GPU path** and prefer llama.cpp **`--fit`** over hand-rolled layer math. Current stub: [`packages/hardware/src/lib.rs`](../../packages/hardware/src/lib.rs) (`detect()` returns zeros; `auto_gpu_layers` returns `99` if any `cuda_capable`). Prior art: [`docs/prior-art.md`](../prior-art.md) (Hardware section + P0 `packages/hardware`).
+> **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
+> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+
+Windows-first inventory for auto config. Goal: fill `app/src/system/` so Server Manager can choose **CPU-only vs GPU path** and prefer llama.cpp **`--fit`** over hand-rolled layer math. Historical stub lived under `packages/hardware` (`detect()` returns zeros; `auto_gpu_layers` returns `99` if any `cuda_capable`). Prior art: [`docs/prior-art.md`](../prior-art.md) (Hardware section + P0 system inventory).
 
 **Do not** implement a VRAM layer calculator in WinServeAI. Inventory + recommendation only.
 
 ---
 
-## Recommendations for packages/hardware
+## Recommendations for hardware inventory (`app/src/system/`)
 
 ### Probe order (Windows)
 
@@ -48,9 +51,9 @@ Use DXGI for **every** adapter (NVIDIA, AMD, Intel). Shared/iGPU budgets are sof
 - Prefer **`sysinfo`** (`System::cpus()`, `total_memory()`, `available_memory()`). Enough for auto config; no COM/WMI dependency.
 - WMI (`Win32_Processor`, `Win32_ComputerSystem`) only if you need a friendlier CPU marketing name and sysinfo is insufficient — defer.
 
-### Auto config policy (feeds `packages/llama`)
+### Auto config policy (feeds `app/src/runtime/llama.rs`)
 
-Today `LlamaBackend::build_args` always passes `--n-gpu-layers` from `auto_gpu_layers` ([`packages/llama/src/lib.rs`](../../packages/llama/src/lib.rs)). Align with prior art:
+Today argv building always passes `--n-gpu-layers` from `auto_gpu_layers` (`app/src/runtime/llama.rs`). Align with prior art:
 
 | Condition | Recommendation |
 | --- | --- |
@@ -64,7 +67,7 @@ Replace stub `auto_gpu_layers → 99` with either `0` (CPU) or a signal that mea
 
 1. `detect()` always `Ok(profile)` — probes return `Option` / empty vecs.
 2. No NVIDIA driver / no `nvcuda.dll` / DXGI lists only Microsoft Basic Render → `gpus` empty or all `cuda_capable: false`.
-3. Launcher starts **CPU** `llama-server` build (or CUDA build with `-ngl 0`); readiness still polls `/health`.
+3. Manager starts **CPU** `llama-server` build (or CUDA build with `-ngl 0`); readiness still polls **`GET /v1/models`** (optional alternate: `/health` when present).
 4. UI/logs: “No CUDA GPU detected; running CPU-only” — not a hard failure.
 
 ---
@@ -147,7 +150,7 @@ Minimal dep set for v1: `windows` + `sysinfo` + optional `nvml-wrapper` (or ~50 
 
 ## Open questions
 
-1. **`--fit` vs explicit `-ngl` in `packages/llama`** — Change `gpu: auto` to omit `-ngl` and pass `--fit`, or keep a numeric layers API for YAML? Prior art prefers `--fit`.
+1. **`--fit` vs explicit `-ngl` in `app/src/runtime/llama.rs`** — Change `gpu: auto` to omit `-ngl` and pass `--fit`, or keep a numeric layers API for YAML? Prior art prefers `--fit`.
 2. **Multi-GPU / iGPU+dGPU** — Report all DXGI adapters; default offload to first `cuda_capable` only, or expose selection later?
 3. **AMD/Intel Vulkan builds** — DXGI inventory only for v1, or detect Vulkan without vendor SDKs?
 4. **CUDA build vs capability** — How does installer/launcher pick CPU vs CUDA `llama-server.exe` when profile says `cuda_capable` but only CPU binary is installed?

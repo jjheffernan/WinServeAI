@@ -40,3 +40,13 @@
 * Dashboard metrics
 * Remote management
 * Multi-backend / plugins
+
+## See also
+
+- [architecture.md](./architecture.md) — runtime boundary and rules
+- [build-spec.md](./build-spec.md) — agent drop-in constraints
+- [roadmap.md](./roadmap.md) — phased plan
+- [PLAN.md](./PLAN.md) — ordered implementation milestones
+- [adr/0001-appliance-architecture.md](./adr/0001-appliance-architecture.md) — accepted decision
+- [policies/doc-drift.md](./policies/doc-drift.md) — keep claims aligned with code
+- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs

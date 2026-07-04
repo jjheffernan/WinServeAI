@@ -62,3 +62,13 @@ User can:
 3. server runs
 4. OpenAI client connects
 5. stop app to free GPU
+
+## See also
+
+- [vision.md](./vision.md) — product category and MVP in/out
+- [architecture.md](./architecture.md) — ServerManager layout and rules
+- [PLAN.md](./PLAN.md) — ordered milestones from this spec
+- [adr/0001-appliance-architecture.md](./adr/0001-appliance-architecture.md) — accepted decision
+- [readiness/README.md](./readiness/README.md) — module maturity
+- [policies/doc-drift.md](./policies/doc-drift.md) — score and claim consistency
+- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs

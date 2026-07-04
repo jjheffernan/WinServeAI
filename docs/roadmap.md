@@ -97,3 +97,14 @@ Alternate backends or a plugin system are **not** planned. Revisit only if a rea
 * Clear logging
 * Hardware-aware defaults
 * No CLI required
+
+## See also
+
+- [PLAN.md](./PLAN.md) — actionable milestones (code path)
+- [TODO.md](./TODO.md) — priority backlog from readiness scores
+- [vision.md](./vision.md) — MVP in/out
+- [architecture.md](./architecture.md) — appliance rules
+- [research.md](./research.md) — Phase 0 checklist
+- [readiness/README.md](./readiness/README.md) — current maturity
+- [policies/doc-drift.md](./policies/doc-drift.md) — keep scores and banners aligned
+- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs

@@ -67,3 +67,15 @@ See [research/01](research/01-windows-process.md), [research/05](research/05-ser
 * [ ] Dark mode
 * [ ] Tray support
 * [ ] Accessibility
+
+## See also
+
+- [prior-art.md](./prior-art.md) — external products and patterns
+- [research/01-windows-process.md](./research/01-windows-process.md) — Job Objects, graceful stop
+- [research/02-llama-readiness.md](./research/02-llama-readiness.md) — probes, `--fit`, pin policy
+- [research/03-hardware-detection.md](./research/03-hardware-detection.md) — DXGI / NVML
+- [research/04-installer-licensing.md](./research/04-installer-licensing.md) — Inno, notices
+- [research/05-server-manager.md](./research/05-server-manager.md) — state machine
+- [PLAN.md](./PLAN.md) — implementation milestones after Phase 0
+- [policies/doc-drift.md](./policies/doc-drift.md) — cite research, do not invent claims
+- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs

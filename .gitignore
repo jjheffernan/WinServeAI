@@ -42,12 +42,12 @@ vendor/llama.cpp/*.dll
 Desktop.ini
 $RECYCLE.BIN/
 
-# Agent skill caches (canonical skills live in .agents/skills/)
+# Per-agent skill copies (canonical skills live in .agents/skills/ and are tracked)
 .claude/
 .cursor/skills/
-skills/
-agent/
-data/skills/
+/skills/
+/agent/
+/data/skills/
 .aider-desk/
 .augment/
 .autohand/

@@ -1,4 +1,6 @@
 //! Spawn, capture stdout/stderr, graceful stop, force kill.
+//!
+//! Windows: Job Object (`KILL_ON_JOB_CLOSE`) + `CTRL_BREAK_EVENT` to process group.
 
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -23,6 +25,8 @@ pub enum ProcessError {
 pub struct ChildProcess {
     child: Child,
     pub pid: u32,
+    #[cfg(windows)]
+    job: Option<windows::Win32::Foundation::HANDLE>,
 }
 
 impl ChildProcess {
@@ -42,7 +46,7 @@ impl ChildProcess {
             cmd.current_dir(dir);
         }
 
-        // Windows: new process group so we can send CTRL_BREAK later.
+        // Windows: new process group so we can send CTRL_BREAK to the group id (pid).
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
@@ -55,6 +59,9 @@ impl ChildProcess {
             .map_err(|e| ProcessError::Spawn(format!("{}: {e}", program.display())))?;
 
         let pid = child.id().unwrap_or(0);
+
+        #[cfg(windows)]
+        let job = win::assign_to_kill_on_close_job(pid).ok();
 
         if let Some(stdout) = child.stdout.take() {
             let tx = log_tx.clone();
@@ -76,20 +83,23 @@ impl ChildProcess {
             });
         }
 
-        Ok(Self { child, pid })
+        Ok(Self {
+            child,
+            pid,
+            #[cfg(windows)]
+            job,
+        })
     }
 
     pub fn is_running(&mut self) -> bool {
         matches!(self.child.try_wait(), Ok(None))
     }
 
-    /// Graceful stop: console control event on Windows, kill elsewhere; then force.
+    /// Graceful stop: CTRL_BREAK on Windows process group, then force kill after grace.
     pub async fn stop(&mut self, grace: Duration) -> Result<Option<i32>, ProcessError> {
-        // Best-effort graceful signal.
         #[cfg(windows)]
         {
-            // CTRL_BREAK_EVENT to process group (pid). Force kill if still alive.
-            let _ = send_ctrl_break(self.pid);
+            let _ = win::send_ctrl_break(self.pid);
         }
         #[cfg(not(windows))]
         {
@@ -98,11 +108,17 @@ impl ChildProcess {
 
         let wait = tokio::time::timeout(grace, self.child.wait()).await;
         match wait {
-            Ok(Ok(status)) => Ok(status.code()),
+            Ok(Ok(status)) => {
+                #[cfg(windows)]
+                self.close_job();
+                Ok(status.code())
+            }
             Ok(Err(e)) => Err(ProcessError::Io(e)),
             Err(_) => {
                 let _ = self.child.start_kill();
                 let status = self.child.wait().await?;
+                #[cfg(windows)]
+                self.close_job();
                 Ok(status.code())
             }
         }
@@ -111,12 +127,104 @@ impl ChildProcess {
     pub async fn try_exit_code(&mut self) -> Option<i32> {
         self.child.try_wait().ok().flatten().and_then(|s| s.code())
     }
+
+    #[cfg(windows)]
+    fn close_job(&mut self) {
+        if let Some(job) = self.job.take() {
+            win::close_handle(job);
+        }
+    }
 }
 
 #[cfg(windows)]
-fn send_ctrl_break(pid: u32) -> std::io::Result<()> {
-    // GenerateConsoleCtrlEvent requires attachment gymnastics; for MVP we rely on
-    // kill_on_drop / start_kill after grace. Hook real CTRL_BREAK in Phase 1 hardening.
-    let _ = pid;
-    Ok(())
+impl Drop for ChildProcess {
+    fn drop(&mut self) {
+        // Closing the job with KILL_ON_JOB_CLOSE terminates remaining children.
+        self.close_job();
+    }
+}
+
+#[cfg(windows)]
+mod win {
+    use windows::core::PCWSTR;
+    use windows::Win32::Foundation::{CloseHandle, HANDLE, INVALID_HANDLE_VALUE};
+    use windows::Win32::System::Console::{
+        AttachConsole, FreeConsole, GenerateConsoleCtrlEvent, SetConsoleCtrlHandler,
+        CTRL_BREAK_EVENT,
+    };
+    use windows::Win32::System::JobObjects::{
+        AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+        SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+    };
+    use windows::Win32::System::Threading::{OpenProcess, PROCESS_ALL_ACCESS};
+
+    pub fn assign_to_kill_on_close_job(pid: u32) -> windows::core::Result<HANDLE> {
+        unsafe {
+            let job = CreateJobObjectW(None, PCWSTR::null())?;
+            let mut info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
+            info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                &info as *const _ as *const _,
+                std::mem::size_of_val(&info) as u32,
+            )?;
+
+            let process = OpenProcess(PROCESS_ALL_ACCESS, false, pid)?;
+            let assign = AssignProcessToJobObject(job, process);
+            let _ = CloseHandle(process);
+            assign?;
+            Ok(job)
+        }
+    }
+
+    pub fn close_handle(handle: HANDLE) {
+        unsafe {
+            if handle != INVALID_HANDLE_VALUE && !handle.is_invalid() {
+                let _ = CloseHandle(handle);
+            }
+        }
+    }
+
+    /// Send CTRL_BREAK to the process group (group id == root pid when CREATE_NEW_PROCESS_GROUP).
+    pub fn send_ctrl_break(pid: u32) -> std::io::Result<()> {
+        unsafe {
+            let _ = FreeConsole();
+            AttachConsole(pid).map_err(|e| std::io::Error::other(e.message()))?;
+            // Ignore break in this process while we generate the event.
+            let _ = SetConsoleCtrlHandler(None, true);
+            let result = GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid);
+            let _ = SetConsoleCtrlHandler(None, false);
+            let _ = FreeConsole();
+            result.map_err(|e| std::io::Error::other(e.message()))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn spawn_and_stop_sleep_command() {
+        let (tx, _rx) = mpsc::unbounded_channel();
+        #[cfg(windows)]
+        let program = PathBuf::from("cmd");
+        #[cfg(windows)]
+        let args = vec!["/C".into(), "ping".into(), "-n".into(), "5".into(), "127.0.0.1".into()];
+        #[cfg(not(windows))]
+        let program = PathBuf::from("sleep");
+        #[cfg(not(windows))]
+        let args = vec!["5".into()];
+
+        let mut child = ChildProcess::spawn(program, args, None, tx)
+            .await
+            .expect("spawn");
+        assert!(child.is_running());
+        let code = child.stop(Duration::from_secs(2)).await.expect("stop");
+        // Killed processes may have various codes; just ensure stop returns.
+        let _ = code;
+        assert!(!child.is_running());
+    }
 }

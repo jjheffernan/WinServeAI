@@ -4,6 +4,7 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -52,9 +53,18 @@ fn open_append(path: PathBuf) -> Result<File, LogError> {
     Ok(OpenOptions::new().create(true).append(true).open(path)?)
 }
 
+fn timestamp() -> String {
+    let secs = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    // ISO-ish UTC epoch seconds; keep deps minimal (no chrono).
+    format!("ts={secs}")
+}
+
 fn write_line(file: &Mutex<File>, line: &str) {
     if let Ok(mut f) = file.lock() {
-        let _ = writeln!(f, "{line}");
+        let _ = writeln!(f, "{} {line}", timestamp());
         let _ = f.flush();
     }
 }

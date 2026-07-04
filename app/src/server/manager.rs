@@ -59,6 +59,9 @@ impl ServerManager {
         let binary = default_binary(&root);
         let logs = LogSinks::open(&config.logging.dir)?;
         logs.server(&format!("config loaded; binary={}", binary.display()));
+        for w in config.warnings() {
+            logs.server(&format!("warning: {w}"));
+        }
         Ok(Self {
             root,
             config,
@@ -120,8 +123,13 @@ impl ServerManager {
         }
 
         if !network::port_available(&self.config.server.host, self.config.server.port) {
-            // Binding 0.0.0.0 vs 127.0.0.1 is imperfect; still a useful guard.
-            self.logs.server("warning: port may already be in use");
+            self.status = Status::Failed;
+            let msg = format!(
+                "port {}:{} is not available (in use or not bindable); stop the other process or change server.port",
+                self.config.server.host, self.config.server.port
+            );
+            self.logs.error(&msg);
+            return Err(ManagerError::Other(msg));
         }
 
         let (program, args) = self.build_command();

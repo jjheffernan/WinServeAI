@@ -139,7 +139,38 @@ impl Config {
         if self.model.path.as_os_str().is_empty() {
             return Err(ConfigError::Validate("model.path is required".into()));
         }
+        if self.server.host.trim().is_empty() {
+            return Err(ConfigError::Validate("server.host is required".into()));
+        }
+        if self.gpu.layers != "auto" && self.gpu.layers.parse::<u32>().is_err() {
+            return Err(ConfigError::Validate(
+                "gpu.layers must be \"auto\" or a non-negative integer".into(),
+            ));
+        }
+        if self.runtime.context == 0 {
+            return Err(ConfigError::Validate(
+                "runtime.context must be non-zero".into(),
+            ));
+        }
         Ok(())
+    }
+
+    /// Soft checks for operator warnings (do not fail load).
+    pub fn warnings(&self) -> Vec<String> {
+        let mut w = Vec::new();
+        if !self.model.path.exists() {
+            w.push(format!(
+                "model.path does not exist yet: {}",
+                self.model.path.display()
+            ));
+        }
+        if self.server.port < 1024 {
+            w.push(format!(
+                "server.port {} may require elevated privileges on some systems",
+                self.server.port
+            ));
+        }
+        w
     }
 
     pub fn base_url(&self) -> String {
@@ -148,5 +179,45 @@ impl Config {
 
     pub fn openai_v1_url(&self) -> String {
         format!("{}/v1", self.base_url())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_config_validates() {
+        Config::default().validate().unwrap();
+    }
+
+    #[test]
+    fn rejects_zero_port() {
+        let mut c = Config::default();
+        c.server.port = 0;
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_bad_gpu_layers() {
+        let mut c = Config::default();
+        c.gpu.layers = "lots".into();
+        assert!(c.validate().is_err());
+    }
+
+    #[test]
+    fn accepts_numeric_gpu_layers() {
+        let mut c = Config::default();
+        c.gpu.layers = "32".into();
+        c.validate().unwrap();
+    }
+
+    #[test]
+    fn roundtrip_yaml() {
+        let c = Config::default();
+        let text = serde_yaml::to_string(&c).unwrap();
+        let parsed: Config = serde_yaml::from_str(&text).unwrap();
+        assert_eq!(parsed.server.port, 8080);
+        assert_eq!(parsed.gpu.layers, "auto");
     }
 }

@@ -34,3 +34,16 @@ pub async fn wait_until_ready(base_url: &str, timeout: Duration) -> Result<(), H
         tokio::time::sleep(Duration::from_millis(250)).await;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn times_out_when_nothing_listens() {
+        let err = wait_until_ready("http://127.0.0.1:59999", Duration::from_millis(400))
+            .await
+            .unwrap_err();
+        assert!(matches!(err, HealthError::Timeout));
+    }
+}

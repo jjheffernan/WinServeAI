@@ -53,3 +53,59 @@ pub fn build_command(config: &Config, hardware: &HardwareInfo, binary: &Path) ->
 
     (binary.to_path_buf(), args)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::server::config::Config;
+    use crate::system::gpu::GpuInfo;
+    use crate::system::memory::MemoryInfo;
+    use crate::system::HardwareInfo;
+
+    fn hw_cpu() -> HardwareInfo {
+        HardwareInfo {
+            gpus: vec![],
+            memory: MemoryInfo::default(),
+            cpu_threads: 4,
+        }
+    }
+
+    fn hw_gpu() -> HardwareInfo {
+        HardwareInfo {
+            gpus: vec![GpuInfo {
+                name: "Test GPU".into(),
+                vram_mb: 8192,
+            }],
+            memory: MemoryInfo::default(),
+            cpu_threads: 8,
+        }
+    }
+
+    #[test]
+    fn auto_cpu_uses_zero_layers() {
+        let cfg = Config::default();
+        let (_bin, args) = build_command(&cfg, &hw_cpu(), Path::new("llama-server"));
+        let joined = args.join(" ");
+        assert!(joined.contains("--n-gpu-layers 0"), "{joined}");
+        assert!(!joined.contains("--fit"), "{joined}");
+    }
+
+    #[test]
+    fn auto_gpu_uses_fit() {
+        let cfg = Config::default();
+        let (_bin, args) = build_command(&cfg, &hw_gpu(), Path::new("llama-server"));
+        let joined = args.join(" ");
+        assert!(joined.contains("--fit on"), "{joined}");
+        assert!(!joined.contains("--n-gpu-layers"), "{joined}");
+    }
+
+    #[test]
+    fn explicit_layers() {
+        let mut cfg = Config::default();
+        cfg.gpu.auto = false;
+        cfg.gpu.layers = "12".into();
+        let (_bin, args) = build_command(&cfg, &hw_gpu(), Path::new("llama-server"));
+        let joined = args.join(" ");
+        assert!(joined.contains("--n-gpu-layers 12"), "{joined}");
+    }
+}

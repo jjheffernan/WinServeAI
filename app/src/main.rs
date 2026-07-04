@@ -31,8 +31,9 @@ async fn main() -> ExitCode {
     let cfg_path = config_path(&root);
 
     if !cfg_path.exists() {
-        eprintln!("missing config at {}", cfg_path.display());
-        eprintln!("copy config/default.yaml and set model.path");
+        eprintln!("error: missing config at {}", cfg_path.display());
+        eprintln!("hint: copy config/default.yaml and set model.path");
+        eprintln!("hint: override with WINSERVE_CONFIG=/path/to.yaml");
         return ExitCode::FAILURE;
     }
 
@@ -40,7 +41,9 @@ async fn main() -> ExitCode {
         "start" => match run_start(&root, &cfg_path).await {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
-                eprintln!("start failed: {e}");
+                eprintln!("error: start failed: {e}");
+                eprintln!("hint: place pinned llama-server in bin/ (see bin/README.md)");
+                eprintln!("hint: set model.path in config to an existing .gguf file");
                 ExitCode::FAILURE
             }
         },

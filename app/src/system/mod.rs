@@ -14,7 +14,7 @@ pub struct HardwareInfo {
     pub cpu_threads: u32,
 }
 
-/// Detect what we need for auto GPU defaults. Stubs until DXGI/NVML land.
+/// Detect host resources for auto GPU defaults.
 pub fn detect() -> HardwareInfo {
     HardwareInfo {
         gpus: gpu::detect_gpus(),

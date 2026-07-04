@@ -1,0 +1,15 @@
+[package]
+name = "winserve-llama"
+description = "llama.cpp / llama-server backend adapter"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+winserve-shared = { workspace = true }
+winserve-backend = { workspace = true }
+winserve-config = { workspace = true }
+winserve-process = { workspace = true }
+winserve-hardware = { workspace = true }
+async-trait = { workspace = true }

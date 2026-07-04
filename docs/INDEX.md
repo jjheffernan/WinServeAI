@@ -10,7 +10,11 @@ WinServeAI docs for the **llama.cpp appliance** architecture (`ServerManager` on
 
 Scorecards live under [readiness/](readiness/) (Design, Implementation, Tests, Docs, Windows readiness). Primary operator guides also carry a short **Readiness** block at the top.
 
-Prioritized work from scores: [TODO.md](TODO.md).
+Prioritized work from scores: [TODO.md](TODO.md). Ordered milestones: [PLAN.md](PLAN.md).
+
+Doc drift policy (readiness scores must match banners/dashboard): [policies/doc-drift.md](policies/doc-drift.md) · `python3 scripts/check_doc_drift.py`.
+
+Canonical external URLs (llama.cpp, DXGI, Job Objects, Inno, NVIDIA): [policies/SOURCES.md](policies/SOURCES.md).
 
 Apply-worktree audit (caveman/ponytail review + subagent scores): [audit/apply-review.md](audit/apply-review.md).
 

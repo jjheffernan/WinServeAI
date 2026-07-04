@@ -1,7 +1,8 @@
 # Project TODO (from module readiness)
 
 **Source:** [readiness/README.md](readiness/README.md) · **Project maturity:** **2.5/5** (`mvp-partial`)  
-**Branch context:** appliance layout (`app/`, `bin/`, `config/`)
+**Branch context:** appliance layout (`app/`, `bin/`, `config/`) · **Ordered plan:** [PLAN.md](PLAN.md)  
+**Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md) · `python3 scripts/check_doc_drift.py`
 
 ## Phase 1 — Core engine (priority)
 
@@ -42,3 +43,12 @@
 ## How to refresh scores
 
 Re-run the readiness review (see [readiness/PLAN.md](readiness/PLAN.md)) after material code changes; update scorecards and the **Readiness** blocks at the top of operator guides.
+
+## See also
+
+- [PLAN.md](./PLAN.md) — ordered implementation milestones
+- [readiness/README.md](./readiness/README.md) — maturity dashboard
+- [readiness/PLAN.md](./readiness/PLAN.md) — scoring rubric
+- [roadmap.md](./roadmap.md) — phased product plan
+- [policies/doc-drift.md](./policies/doc-drift.md) — scorecards must match banners
+- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs

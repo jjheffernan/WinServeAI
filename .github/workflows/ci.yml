@@ -26,3 +26,6 @@ jobs:
 
       - name: Test
         run: cargo test -p winserve
+
+      - name: Doc drift
+        run: python scripts/check_doc_drift.py

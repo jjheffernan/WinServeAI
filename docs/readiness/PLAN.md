@@ -1,6 +1,6 @@
 # Module readiness review plan
 
-**Branch:** `refactor/minimal-appliance`  
+**Branch:** `dev` (work) · `main` (releases)  
 **Goal:** Score each owned module for completeness and code maturity so status is visible at a glance.
 
 ## Scoring rubric (0–5 each dimension)

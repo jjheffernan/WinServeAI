@@ -32,11 +32,13 @@ Day-to-day work and PRs go to **`dev`**. Promote `dev` → `main` only for relea
 
 ## Quick start (dev)
 
+On Windows, install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with **Desktop development with C++** first (`link.exe` is required even for `print-cmd`). Details: [docs/development.md](docs/development.md).
+
 ```bash
 git checkout dev
 git pull
 
-# 1. Put llama-server in bin/
+# 1. Put llama-server in bin/ (see bin/README.md — pin b9866)
 # 2. Edit config/default.yaml → model.path
 cargo run -p winserve -- print-cmd
 cargo run -p winserve -- start

@@ -1,5 +1,7 @@
 # Architecture
 
+> **Module readiness dashboard:** [readiness/README.md](./readiness/README.md)
+
 WinServeAI is a **Windows-native llama.cpp appliance wrapper**, not a multi-backend platform.
 
 ```text

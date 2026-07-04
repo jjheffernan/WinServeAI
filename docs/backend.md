@@ -1,5 +1,7 @@
 # Runtime (llama.cpp)
 
+> **Readiness:** runtime-llama 2.8/5 (`mvp-partial`), runtime-process 2.4/5 (`scaffold`), server-manager 2.8/5 (`mvp-partial`) — details in [readiness/runtime-llama.md](./readiness/runtime-llama.md), [readiness/runtime-process.md](./readiness/runtime-process.md), [readiness/server-manager.md](./readiness/server-manager.md)
+
 WinServeAI is a **process wrapper** around a pinned `llama-server` binary. There is **no** backend trait, plugin loader, or multi-provider layer.
 
 ```text

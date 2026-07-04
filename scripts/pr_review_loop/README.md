@@ -1,5 +1,7 @@
 # PR Worktree Review Loop
 
+> **Readiness:** 3.0/5 (`mvp-partial`) — details in [../../docs/readiness/scripts-pr-loop.md](../../docs/readiness/scripts-pr-loop.md)
+
 Automate feature development + PR review using git worktrees and a review/fix loop until the PR is clean (or `max_iterations` is hit).
 
 ## Layout

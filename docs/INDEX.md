@@ -2,6 +2,16 @@
 
 WinServeAI docs for the **llama.cpp appliance** architecture (`ServerManager` only, no backend traits).
 
+## Module readiness
+
+| Doc | Purpose |
+| --- | --- |
+| [readiness/README.md](readiness/README.md) | Maturity at-a-glance: per-module overall score, label, top gap, and links to scorecards |
+
+Scorecards live under [readiness/](readiness/) (Design, Implementation, Tests, Docs, Windows readiness). Primary operator guides also carry a short **Readiness** block at the top.
+
+Prioritized work from scores: [TODO.md](TODO.md).
+
 Status legend:
 
 | Status | Meaning |

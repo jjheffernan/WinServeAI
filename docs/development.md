@@ -1,5 +1,7 @@
 # Development
 
+> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 2.8/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
+
 WinServeAI is a **single Rust crate** (`winserve` in `app/`) that owns process lifecycle for an external `bin/llama-server.exe`. There is no `packages/` monorepo and no backend-trait workspace.
 
 See [architecture.md](architecture.md) for the runtime boundary and rules.

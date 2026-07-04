@@ -1,5 +1,7 @@
 # Configuration
 
+> **Readiness:** 2.8/5 (`mvp-partial`) — details in [readiness/server-config.md](./readiness/server-config.md)
+
 Human-readable YAML is the source of truth. Schema and defaults live in `config/default.yaml` and `app/src/server/config.rs`.
 
 **No raw llama.cpp flags in YAML.** Mapping to argv happens only in `app/src/runtime/llama.rs`.

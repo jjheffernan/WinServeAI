@@ -1,5 +1,7 @@
 # Logging
 
+> **Readiness:** 2.6/5 (`mvp-partial`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
+
 WinServeAI writes three append-only streams under one directory. `ServerManager` owns all writes; there is no separate logging package.
 
 Default directory is `logs/` (config: `logging.dir`). The manager creates the directory on open.

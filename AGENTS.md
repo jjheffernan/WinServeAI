@@ -17,6 +17,15 @@ App/CLI → ServerManager → runtime (llama + process) → bin/llama-server.exe
 
 Read `docs/architecture.md` and `docs/build-spec.md` before structural changes.
 
+## Branches
+
+| Branch | Purpose |
+| --- | --- |
+| **`dev`** | Default working branch — experimental / preview. Land work here. |
+| **`main`** | Releases only. Do not commit day-to-day changes on `main`. |
+
+Open PRs against **`dev`**. Release promotions are PRs from `dev` → `main`.
+
 ## Layout
 
 | Path | Role |

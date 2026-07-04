@@ -17,8 +17,25 @@ Thanks for helping build WinServeAI. This is infrastructure software — prefer 
 
 Dev setup and commands: [`development.md`](development.md).
 
+## Branches
+
+| Branch | Purpose |
+| --- | --- |
+| **`dev`** | Default working branch — experimental / preview. Open PRs here. |
+| **`main`** | Releases only — stable tags and release artifacts. |
+
+```bash
+git checkout dev
+git pull
+git checkout -b feature/your-change
+# ... work, then PR into dev
+```
+
+Promote to release with a PR from `dev` → `main` (see [release-process.md](release-process.md)). Do not commit day-to-day work on `main`.
+
 ## Pull Requests
 
+* Target **`dev`**, not `main` (except release promotions)
 * One concern per PR
 * Update docs when behavior or architecture changes
 * Add tests at the appropriate layer (unit → runtime/process → integration → hardware → installer)

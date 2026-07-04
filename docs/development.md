@@ -6,6 +6,20 @@ WinServeAI is a **single Rust crate** (`winserve` in `app/`) that owns process l
 
 See [architecture.md](architecture.md) for the runtime boundary and rules.
 
+## Branches
+
+| Branch | Purpose |
+| --- | --- |
+| **`dev`** | Default working branch — experimental / preview integration |
+| **`main`** | Releases only — do not develop here |
+
+```bash
+git checkout dev
+git pull origin dev
+```
+
+Feature work: branch off `dev`, open PRs into `dev`. Releases: PR `dev` → `main` (see [release-process.md](release-process.md)).
+
 ## Prerequisites
 
 * Rust stable

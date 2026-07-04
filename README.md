@@ -21,9 +21,21 @@ scripts/       start.ps1, stop.ps1, reset.ps1
 docs/          architecture, prior-art, build-spec
 ```
 
+## Branches
+
+| Branch | Purpose |
+| --- | --- |
+| **`dev`** | Default working branch — experimental / preview |
+| **`main`** | Releases only — stable tags and release artifacts |
+
+Day-to-day work and PRs go to **`dev`**. Promote `dev` → `main` only for releases (see [docs/release-process.md](docs/release-process.md)).
+
 ## Quick start (dev)
 
 ```bash
+git checkout dev
+git pull
+
 # 1. Put llama-server in bin/
 # 2. Edit config/default.yaml → model.path
 cargo run -p winserve -- print-cmd

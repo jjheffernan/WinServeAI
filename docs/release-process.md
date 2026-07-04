@@ -6,23 +6,39 @@ See [architecture.md](architecture.md). Deep dives: [research/02-llama-readiness
 
 ---
 
+## Branches
+
+| Branch | Role |
+| --- | --- |
+| **`main`** | **Releases only.** Stable tags, release candidates, and release artifacts ship from here. Do not land day-to-day work directly on `main`. |
+| **`dev`** | **Default working branch.** Experimental / preview integration. Feature branches PR into `dev`. |
+
+```text
+feature/* ──PR──► dev ──release PR──► main ──tag──► stable
+                    │
+                    └── preview builds / soak (optional)
+```
+
+Day-to-day development happens on `dev` (or short-lived branches off `dev`). Promote `dev` → `main` only when cutting a release.
+
 ## Channels
 
 ```text
+dev
+  │
+  ├── preview   # experimental / RC soak from dev (or release PR)
+  │
 main
   │
-  ├── nightly   # CI / soak from tip of main
-  ├── preview   # RC before stable
-  └── stable    # supported release
+  └── stable    # supported release (tags on main only)
 ```
 
-| Channel | When | Pin | Support |
-| --- | --- | --- | --- |
-| **nightly** | Scheduled or on-demand from `main` | Known-good `b####` (may move often) | Best-effort |
-| **preview** | Feature-complete candidate | Fixed `b####` | Soak only |
-| **stable** | After checklist | Fixed `b####`, validated | Supported |
+| Channel | Branch | When | Pin | Support |
+| --- | --- | --- | --- | --- |
+| **preview** | `dev` (or RC tag) | Ongoing integration / release candidate | Known-good `b####` (may move on `dev`) | Best-effort / soak |
+| **stable** | `main` | After checklist + release PR | Fixed `b####`, validated | Supported |
 
-Stable and preview never ship `master` or an unrecorded llama-server build.
+Stable never ships an unrecorded llama-server build. Preview builds may track `dev` tip.
 
 ---
 

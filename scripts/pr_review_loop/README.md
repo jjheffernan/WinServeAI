@@ -81,7 +81,7 @@ Example hooks (no-op stubs) live in `hooks/`. Swap them for Cursor Agent CLI, a 
 | Field | Meaning |
 | --- | --- |
 | `repo_path` | Repository root |
-| `base_branch` | Protected base (default `main`) |
+| `base_branch` | Protected base (default `dev` for day-to-day; use `main` only for release PRs) |
 | `feature_branches` | Branches to process in parallel |
 | `max_iterations` | Review/fix cycles (default `5`) |
 | `task_prompt` | Instructions for the coder step |

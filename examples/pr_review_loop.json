@@ -1,6 +1,6 @@
 {
   "repo_path": ".",
-  "base_branch": "main",
+  "base_branch": "dev",
   "feature_branches": [
     "feature/example-a"
   ],

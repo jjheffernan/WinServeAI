@@ -30,6 +30,9 @@ Status legend:
 | [vision.md](vision.md) | Product category, MVP in/out, principles | canonical |
 | [build-spec.md](build-spec.md) | Drop-in agent prompt for the minimal appliance | canonical |
 | [roadmap.md](roadmap.md) | Phased plan and version milestones (appliance path) | canonical |
+| [release-process.md](release-process.md) | Branches (`dev` = work, `main` = releases), channels, pin policy | canonical |
+
+**Branches:** `dev` is the default working branch (experimental / preview). `main` is releases only.
 
 ## Operator & developer guides
 

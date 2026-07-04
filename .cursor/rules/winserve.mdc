@@ -1,0 +1,30 @@
+---
+description: WinServeAI architecture and scope constraints for all agents
+alwaysApply: true
+---
+
+# WinServeAI
+
+Infrastructure product: Windows-native local AI server. Stable, small surface area, backend-agnostic.
+
+## Architecture
+
+```
+UI → Server Manager (packages/launcher) → Backend trait → concrete backend
+```
+
+- UI must not import `winserve-llama` or know llama.cpp flags
+- Process ownership only via Server Manager
+- Config is human-readable YAML; no raw backend flags
+
+## MVP excludes
+
+Chat UI, model downloads, HuggingFace, agents, RAG, MCP, Docker, auth, metrics dashboards, remote management.
+
+## Skills
+
+Canonical path: `.agents/skills/` (agent-agnostic). Do not copy skills into per-agent folders.
+
+## Docs
+
+Read `docs/architecture.md` and `docs/vision.md` before structural changes.

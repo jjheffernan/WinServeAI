@@ -44,7 +44,7 @@ Status legend:
 | [research/04-installer-licensing.md](research/04-installer-licensing.md) | Inno Setup, firewall, CUDA DLLs, MIT notices | canonical |
 | [research/05-server-manager.md](research/05-server-manager.md) | State machine and public manager API | canonical |
 
-Phase-0 deep dives may still mention pre-appliance `packages/*` paths; map those to `app/src/…` (see [STATUS.md](research/doc-build/STATUS.md)).
+Phase-0 deep dives carry a path-note banner mapping historical `packages/*` paths to `app/src/…` (see [STATUS.md](research/doc-build/STATUS.md)).
 
 ## Doc-build pipeline
 

@@ -1,48 +1,43 @@
 # Agent Instructions
 
-WinServeAI is a **Windows-native local AI server** monorepo. Treat it as infrastructure software: small surface area, stable defaults, backend-agnostic core.
-
-## Architecture (non-negotiable)
+WinServeAI is a **Windows-native llama.cpp appliance wrapper**.
 
 ```text
-UI → Server Manager (packages/launcher) → Backend trait → concrete backend (llama)
+App/CLI → ServerManager → runtime (llama + process) → bin/llama-server.exe → /v1
 ```
 
-* Never let UI code depend on llama.cpp or backend-specific flags
-* All process ownership goes through `winserve-launcher` (Server Manager)
-* Config is human-readable YAML only (`packages/config`)
+## Do not mess this up
 
-Read `docs/architecture.md` and `docs/vision.md` before large changes.
+1. **One backend only** — llama.cpp. No backend traits, plugins, or multi-provider layers.
+2. **One orchestrator** — `ServerManager` (`app/src/server/manager.rs`). UI/CLI only call it.
+3. **Raw llama flags only in** `app/src/runtime/llama.rs`.
+4. **YAML config is source of truth** (`config/default.yaml`).
+5. **External boundary is explicit** — `bin/llama-server.exe` is not our code.
+6. **No** model downloads, chat UI, Docker, agent frameworks, or dashboards.
 
-## Skills (agent-agnostic)
+Read `docs/architecture.md` and `docs/build-spec.md` before structural changes.
 
-Canonical skills live in **`.agents/skills/`** (Agent Skills standard). They are not Cursor-only.
+## Layout
+
+| Path | Role |
+| --- | --- |
+| `app/src/server/` | Manager, config, health, logs |
+| `app/src/runtime/` | Process + llama argv |
+| `app/src/system/` | GPU / memory / network probes |
+| `app/src/api/` | OpenAI URL helpers (passthrough) |
+| `bin/` | External llama-server binary |
+| `config/` | default.yaml |
+| `logs/` | server.log, llama.log, error.log |
+
+## Skills
+
+Canonical skills: `.agents/skills/` (agent-agnostic).
 
 | Skill | Use when |
 | --- | --- |
-| `grill-me` / `grilling` | Stress-test a plan or design before building |
-| `ponytail` | Prefer the laziest correct solution (YAGNI) |
-| `caveman` | Ultra-compressed communication (token efficiency) |
-| `design-an-interface` | Explore module/API shapes |
-| `handoff` | Compact context for another agent |
-| `ubiquitous-language` | Harden domain terminology |
-
-Restore / update:
+| `pr-worktree-review` | PR worktree review loop |
+| `grill-me` / `ponytail` / `caveman` | Planning / minimalism / brevity |
 
 ```bash
-npm run skills:restore
-npm run skills:update
+python3 -m scripts.pr_review_loop --config examples/pr_review_loop.json --dry-run --no-push
 ```
-
-Do **not** install skills into per-agent directories (`.claude/skills`, `.windsurf/skills`, etc.). Keep a single agent-agnostic copy under `.agents/skills/`.
-
-## Scope discipline
-
-MVP excludes chat UI, model downloads, HuggingFace, agents, RAG, MCP, Docker, auth, metrics dashboards, and remote management. Push those to Phase 5+ unless explicitly requested.
-
-## Language / stack
-
-* Core: Rust Cargo workspace
-* Desktop: Tauri (Phase 2)
-* Installer: Inno Setup preferred starting point (Phase 3)
-* Primary OS: Windows

@@ -22,7 +22,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Check
-        run: cargo check --workspace
+        run: cargo check -p winserve
 
       - name: Test
-        run: cargo test --workspace
+        run: cargo test -p winserve

@@ -1,0 +1,17 @@
+server:
+  port: 8080
+  host: 127.0.0.1
+
+model:
+  path: D:\models\model.gguf
+
+gpu:
+  auto: true
+  layers: auto
+
+runtime:
+  context: 32768
+  flash_attention: true
+
+logging:
+  dir: logs

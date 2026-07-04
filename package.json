@@ -9,7 +9,9 @@
     "skills:add:caveman": "npx skills add JuliusBrussee/caveman --agent cursor --skill '*' --copy -y",
     "skills:add:ponytail": "npx skills add DietrichGebert/ponytail --agent cursor --skill '*' --copy -y",
     "skills:add:grill": "npx skills add mattpocock/skills --agent cursor --skill grill-me --skill grilling --skill design-an-interface --skill handoff --skill ubiquitous-language --copy -y",
-    "skills:restore": "npx skills experimental_install"
+    "skills:restore": "npx skills experimental_install",
+    "pr-review-loop": "python3 -m scripts.pr_review_loop",
+    "pr-review-loop:dry": "python3 -m scripts.pr_review_loop --config examples/pr_review_loop.json --dry-run --no-push"
   },
   "engines": {
     "node": ">=20"

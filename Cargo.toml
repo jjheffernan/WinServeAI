@@ -1,49 +1,11 @@
 [workspace]
 resolver = "2"
-members = [
-    "packages/shared",
-    "packages/logging",
-    "packages/config",
-    "packages/hardware",
-    "packages/process",
-    "packages/api",
-    "packages/backend",
-    "packages/llama",
-    "packages/launcher",
-    "apps/updater",
-]
-# Desktop (Tauri) is added when Phase 2 begins:
-# "apps/desktop/src-tauri"
+members = ["app"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/jjheffernan/WinServeAI"
-authors = ["WinServeAI Contributors"]
-rust-version = "1.78"
-
-[workspace.dependencies]
-# Internal crates
-winserve-shared = { path = "packages/shared" }
-winserve-logging = { path = "packages/logging" }
-winserve-config = { path = "packages/config" }
-winserve-hardware = { path = "packages/hardware" }
-winserve-process = { path = "packages/process" }
-winserve-api = { path = "packages/api" }
-winserve-backend = { path = "packages/backend" }
-winserve-llama = { path = "packages/llama" }
-winserve-launcher = { path = "packages/launcher" }
-
-# External
-serde = { version = "1", features = ["derive"] }
-serde_yaml = "0.9"
-thiserror = "2"
-anyhow = "1"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tokio = { version = "1", features = ["full"] }
-async-trait = "0.1"
 
 [profile.release]
 lto = true

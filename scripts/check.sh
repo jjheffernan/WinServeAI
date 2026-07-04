@@ -4,9 +4,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 echo "==> cargo check"
-cargo check --workspace
+cargo check -p winserve
 
 echo "==> cargo test"
-cargo test --workspace
+cargo test -p winserve
 
 echo "OK"

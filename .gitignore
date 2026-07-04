@@ -2,6 +2,15 @@
 /target/
 **/*.rs.bk
 
+# PR review loop worktrees (created by scripts/pr_review_loop)
+/worktrees/
+.pr_loop_*
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+
 # Node / tooling
 node_modules/
 .npm/
@@ -30,13 +39,14 @@ Thumbs.db
 .env
 .env.*
 !.env.example
-logs/
+logs/*
+!logs/.gitkeep
+models/*
+!models/.gitkeep
+bin/*
+!bin/README.md
+!bin/.gitkeep
 *.log.*
-
-# Vendor binaries (source may be vendored; built artifacts are not)
-vendor/llama.cpp/build/
-vendor/llama.cpp/*.exe
-vendor/llama.cpp/*.dll
 
 # OS
 Desktop.ini

@@ -19,7 +19,7 @@ logging:
 | `llama.log` | `llama-server` stdout and stderr (line-tagged) |
 | `error.log` | Start failures, readiness failure, unexpected child exit |
 
-Implementation: `app/src/server/logs.rs` (`LogSinks`). Each file is opened append-only; every line is flushed immediately. No log levels or timestamps.
+Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is flushed immediately. No log levels or timestamps.
 
 ## What is captured
 
@@ -37,7 +37,7 @@ Typical lines:
 
 ### Child stdio (`llama.log`)
 
-`app/src/runtime/process.rs` pipes both streams and forwards each line with a prefix:
+[`app/src/runtime/process.rs`](../app/src/runtime/process.rs) pipes both streams and forwards each line with a prefix:
 
 ```text
 [stdout] …
@@ -66,3 +66,22 @@ Not implemented. Files grow for as long as the process appends to them. Size lim
 4. **Reproduce a bad start** — copy the `starting …` line from `server.log` and run that command manually beside `bin/`.
 
 See [architecture.md](architecture.md) for the unified-logs rule and process ownership.
+
+## Sources / See also
+
+### Internal
+
+- [architecture.md](./architecture.md) — unified logs under `logs/`
+- [backend.md](./backend.md) — spawn pipes stdout/stderr
+- [configuration.md](./configuration.md) — `logging.dir`
+- [api.md](./api.md) — readiness failures surface in `error.log`
+- [research/01-windows-process.md](./research/01-windows-process.md) — exit codes and crash signals
+- [research/05-server-manager.md](./research/05-server-manager.md) — lifecycle ownership
+- [`app/src/server/logs.rs`](../app/src/server/logs.rs)
+- [`app/src/runtime/process.rs`](../app/src/runtime/process.rs)
+
+### Upstream
+
+- [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) — child process chatter often on stderr
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

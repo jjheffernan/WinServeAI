@@ -134,6 +134,7 @@ Desktop responsibilities only (Phase 2 tray): edit config, display logs, display
 | Jan router lifecycle (Rust-owned) | [janhq/jan#8130 commit](https://github.com/janhq/jan/commit/37f5ab630529d2cd05d180815852fce3a08cc655) |
 | Tauri Job Object patterns | [OpenCode](https://github.com/anomalyco/opencode/commit/ddd9c71cca1f30a8214174fc10975e2ff3bb4635), [CodeNomad](https://github.com/NeuralNomadsAI/CodeNomad/commit/1ce58b9dd914e78728eabf40b5fcc645e885300f), [process-wrap](https://docs.rs/process-wrap) |
 | Readiness mental model (liveness vs ready) | [llm-d readiness-probes](https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md) |
+| Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---
 

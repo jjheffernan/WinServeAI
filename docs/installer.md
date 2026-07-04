@@ -98,6 +98,29 @@ Copy notices into every installer and portable/zip release. Refresh when the `ve
 
 1. User runs the installer.
 2. Desktop or Start Menu shortcut starts **winserve**.
-3. Server Manager spawns `bin/llama-server.exe`, waits for readiness, exposes `/v1`.
+3. Server Manager spawns `bin/llama-server.exe`, waits for readiness (`GET /v1/models`), exposes `/v1`.
 4. Stopping winserve stops the backend and frees the GPU.
 5. Uninstall removes files and any firewall rule the installer (or manager) created.
+
+## Sources / See also
+
+### Internal
+
+- [research/04-installer-licensing.md](./research/04-installer-licensing.md) — Inno, firewall, CUDA DLLs, MIT notices
+- [prior-art.md](./prior-art.md) — product analogues and installer patterns
+- [release-process.md](./release-process.md) — pin + notices checklist
+- [configuration.md](./configuration.md) — localhost vs LAN bind
+- [backend.md](./backend.md) — `bin/` layout and DLL co-location
+- [installer/README.md](../installer/README.md) — stub goals
+- [bin/README.md](../bin/README.md) — external binary pin
+
+### Upstream
+
+- [Inno Setup `[Icons]`](https://jrsoftware.org/ishelp/topic_iconssection.htm)
+- [Inno admin install mode](https://jrsoftware.org/ishelp/topic_admininstallmode.htm)
+- [Netsh AdvFirewall](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-r2-and-2008/dd734783(v=ws.10))
+- [CUDA Toolkit EULA (Attachment A)](https://docs.nvidia.com/cuda/eula/) — redistributable DLLs only
+- [llama.cpp LICENSE](https://github.com/ggml-org/llama.cpp/blob/master/LICENSE) (MIT)
+- [ollama#3185](https://github.com/ollama/ollama/issues/3185) — binary distributions need notices
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

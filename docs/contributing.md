@@ -38,6 +38,7 @@ Promote to release with a PR from `dev` → `main` (see [release-process.md](rel
 * Target **`dev`**, not `main` (except release promotions)
 * One concern per PR
 * Update docs when behavior or architecture changes
+* For doc or readiness changes, run `python3 scripts/check_doc_drift.py` and fix failures before merge (see [policies/doc-drift.md](policies/doc-drift.md))
 * Add tests at the appropriate layer (unit → runtime/process → integration → hardware → installer)
 * Do **not** introduce:
   * Chat UI
@@ -74,3 +75,22 @@ Details: [`scripts/pr_review_loop/README.md`](../scripts/pr_review_loop/README.m
 ## Code of Conduct
 
 Be respectful. Assume good intent. Optimize for long-term maintainability.
+
+## Sources / See also
+
+### Internal
+
+- [vision.md](./vision.md) — product category and MVP in/out
+- [architecture.md](./architecture.md) — non-negotiable rules
+- [development.md](./development.md) — build, CLI, scripts
+- [release-process.md](./release-process.md) — branches and channels
+- [PLAN.md](./PLAN.md) — ordered milestones (do not invent features absent from PLAN)
+- [policies/doc-drift.md](./policies/doc-drift.md) — readiness scores and technical claims
+- [adr/0001-appliance-architecture.md](./adr/0001-appliance-architecture.md) — accepted appliance decision
+- [INDEX.md](./INDEX.md) — full doc map
+
+### Upstream
+
+- [llama.cpp](https://github.com/ggml-org/llama.cpp) — sole backend; pin under `bin/`
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

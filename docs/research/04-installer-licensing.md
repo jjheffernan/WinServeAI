@@ -166,6 +166,9 @@ Ship as `{app}\notices\THIRD_PARTY_NOTICES.md` (and keep a monorepo copy under `
 | HN on notices | https://news.ycombinator.com/item?id=44003741 |
 | Code MIT vs model licenses | https://github.com/ggml-org/llama.cpp/discussions/472 |
 | NSSM + firewall prior art | https://github.com/internetics-net/d4-ollama-win-service |
+| Operator installer guide | [docs/installer.md](../installer.md) |
+| Release pin + notices | [docs/release-process.md](../release-process.md) |
+| Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---
 

@@ -71,6 +71,10 @@ Local gate (same as CI intent):
 ./scripts/check.sh
 ```
 
+## Doc checks
+
+After readiness or primary-doc edits: `python3 scripts/check_doc_drift.py` (see [policies/doc-drift.md](policies/doc-drift.md)).
+
 ## Config
 
 Default path: `config/default.yaml` (relative to the process current directory).
@@ -152,4 +156,26 @@ CLI (winserve) → ServerManager (app/server) → runtime/llama + runtime/proces
                                               → bin/llama-server.exe → /v1
 ```
 
-Raw llama.cpp flags exist only in `app/src/runtime/llama.rs`. UI and config must not invent flags.
+Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs). UI and config must not invent flags.
+
+## Sources / See also
+
+### Internal
+
+- [architecture.md](./architecture.md) — runtime boundary and rules
+- [configuration.md](./configuration.md) — YAML schema and `WINSERVE_CONFIG`
+- [api.md](./api.md) — readiness (`GET /v1/models`) and client examples
+- [logging.md](./logging.md) — `logs/` streams
+- [contributing.md](./contributing.md) — PR and branch rules
+- [release-process.md](./release-process.md) — `dev` vs `main`, pin policy
+- [PLAN.md](./PLAN.md) — ordered implementation milestones
+- [policies/doc-drift.md](./policies/doc-drift.md) — `python3 scripts/check_doc_drift.py`
+- [bin/README.md](../bin/README.md) — place `llama-server.exe`
+- [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
+
+### Upstream
+
+- [llama.cpp releases (`b####`)](https://github.com/ggml-org/llama.cpp/releases) — pin source for `bin/`
+- [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

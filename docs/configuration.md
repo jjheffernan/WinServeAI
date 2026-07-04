@@ -196,5 +196,27 @@ gpu:
 
 1. YAML is the only user-facing config format.
 2. No raw llama.cpp flags in YAML — only high-level fields above.
-3. Argv mapping lives solely in `app/src/runtime/llama.rs`.
+3. Argv mapping lives solely in [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs).
 4. UI / CLI talk to `ServerManager`; they do not invent flags ([architecture.md](architecture.md)).
+
+## Sources / See also
+
+### Internal
+
+- [architecture.md](./architecture.md) — config is YAML source of truth
+- [api.md](./api.md) — base URL from `server.host` / `server.port`
+- [backend.md](./backend.md) — argv mapping and pin notes
+- [logging.md](./logging.md) — `logging.dir`
+- [installer.md](./installer.md) — firewall only for non-loopback bind
+- [research/02-llama-readiness.md](./research/02-llama-readiness.md) — fit flags and readiness
+- [research/03-hardware-detection.md](./research/03-hardware-detection.md) — GPU inventory (no layer math)
+- [`config/default.yaml`](../config/default.yaml) — shipped defaults
+- [`app/src/server/config.rs`](../app/src/server/config.rs) — schema and validation
+- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — YAML → argv
+
+### Upstream
+
+- [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) — flag names on the pinned build
+- [Discussion #18049 — `--fit`](https://github.com/ggml-org/llama.cpp/discussions/18049) — why auto omits `-ngl`
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

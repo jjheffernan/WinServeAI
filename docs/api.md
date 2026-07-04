@@ -57,7 +57,7 @@ GET http://{host}:{port}/v1/models
 | Connection refused / other errors | Not listening yet — keep waiting |
 | No success within **120s** | Startup fails (timeout) |
 
-Poll interval is ~250ms. Implementation: `app/src/server/health.rs`.
+Poll interval is ~250ms. Implementation: [`app/src/server/health.rs`](../app/src/server/health.rs) (`wait_until_ready` polls `GET {base}/v1/models`).
 
 On success the manager logs and the CLI prints:
 
@@ -66,6 +66,8 @@ READY http://127.0.0.1:8080/v1
 ```
 
 Liveness (process alive) is not the same as readiness (model loaded). If the child exits during load, startup fails — do not treat a dead process as “still starting.”
+
+llama-server may also expose `GET /health` (503 while loading, 200 when ready) on many builds — a **useful alternate**, not WinServeAI’s gate. Upstream semantics: [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), [PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056).
 
 ## Client examples
 
@@ -143,8 +145,24 @@ WinServeAI does not ship:
 
 Those belong to external clients and later phases, not this appliance’s HTTP surface.
 
-## Related
+## Sources / See also
+
+### Internal
 
 - [architecture.md](./architecture.md) — process ownership and startup sequence
 - [configuration.md](./configuration.md) — `server.host` / `server.port` and model path
 - [backend.md](./backend.md) — llama-server binary and pin notes
+- [research/02-llama-readiness.md](./research/02-llama-readiness.md) — probes, `--fit`, pin policy
+- [research/05-server-manager.md](./research/05-server-manager.md) — Ready vs Starting state machine
+- [prior-art.md](./prior-art.md) — liveness vs readiness patterns
+- [`app/src/server/health.rs`](../app/src/server/health.rs) — primary probe implementation
+- [`app/src/api/`](../app/src/api/) — OpenAI URL helpers (passthrough only)
+
+### Upstream
+
+- [llama.cpp `tools/server` README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) — `/v1` routes, optional `/health`
+- [PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056) — `/health` is not “slot free”; load fail → exit 1
+- [Issue #20684](https://github.com/ggml-org/llama.cpp/issues/20684) — probes can stall under load
+- [llm-d readiness probes](https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md) — mental model: liveness ≠ readiness
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

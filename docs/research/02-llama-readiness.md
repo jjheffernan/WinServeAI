@@ -9,9 +9,9 @@ Upstream: [ggml-org/llama.cpp `tools/server`](https://github.com/ggml-org/llama.
 
 ## WinServeAI readiness (product)
 
-**WinServeAI readiness probe today = `GET /v1/models`** (see `app/src/server/health.rs`). Poll until **200**; treat connection refused / non-200 as still starting; overall timeout (e.g. 120s). Process alive ≠ ready.
+**WinServeAI readiness probe today = `GET /v1/models`** (see [`app/src/server/health.rs`](../../app/src/server/health.rs)). Poll until **200**; treat connection refused / non-200 as still starting; overall timeout (e.g. 120s). Process alive ≠ ready.
 
-`GET /health` (503 while loading, 200 when ready) is a **useful alternate** when present on the pinned `llama-server` build — do **not** treat it as the only probe, and do not document it as WinServeAI’s gate.
+`GET /health` (503 while loading, 200 when ready) is a **useful alternate** when present on the pinned `llama-server` build — do **not** treat it as the only probe, and do not document it as WinServeAI’s gate. Operator surface: [api.md](../api.md).
 
 ## Upstream facts
 
@@ -166,6 +166,9 @@ Human YAML only; never store raw llama flags.
 | Ollama port-in-use (Windows) | https://github.com/ollama/ollama/issues/3575 |
 | Ollama port / HNS edge cases | https://github.com/ollama/ollama/issues/12206 |
 | Prior art (this repo) | [docs/prior-art.md](../prior-art.md) |
+| Operator API guide | [docs/api.md](../api.md) |
+| Product readiness code | [`app/src/server/health.rs`](../../app/src/server/health.rs) |
+| Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---
 

@@ -38,6 +38,16 @@ Open PRs against **`dev`**. Release promotions are PRs from `dev` → `main`.
 | `config/` | default.yaml |
 | `logs/` | server.log, llama.log, error.log |
 
+## Doc drift
+
+After any readiness scorecard or primary-doc edit (including readiness banners), run:
+
+```bash
+python3 scripts/check_doc_drift.py
+```
+
+Policy: [`docs/policies/doc-drift.md`](docs/policies/doc-drift.md). Never change a readiness banner without updating the scorecard and dashboard in the same change set.
+
 ## Skills
 
 Canonical skills: `.agents/skills/` (agent-agnostic).

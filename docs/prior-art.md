@@ -242,4 +242,12 @@ Ordered for Phase 0–1. Do **not** implement chat, downloads, or multi-backend 
 
 ---
 
+## See also
+
+- Phase-0 deep dives: [research/01](./research/01-windows-process.md) · [02](./research/02-llama-readiness.md) · [03](./research/03-hardware-detection.md) · [04](./research/04-installer-licensing.md) · [05](./research/05-server-manager.md)
+- Product readiness: [`app/src/server/health.rs`](../app/src/server/health.rs) (`GET /v1/models`)
+- Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md)
+
+---
+
 *Generated for scaffolding decisions. Prefer updating this file when a linked upstream behavior changes (especially readiness probes and `--fit`).*

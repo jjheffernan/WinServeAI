@@ -53,7 +53,7 @@ Use DXGI for **every** adapter (NVIDIA, AMD, Intel). Shared/iGPU budgets are sof
 
 ### Auto config policy (feeds `app/src/runtime/llama.rs`)
 
-Today argv building always passes `--n-gpu-layers` from `auto_gpu_layers` (`app/src/runtime/llama.rs`). Align with prior art:
+Product argv in [`app/src/runtime/llama.rs`](../../app/src/runtime/llama.rs): when `gpu.auto` and `layers: auto`, pass **`--fit on`** if any GPU is present, else **`--n-gpu-layers 0`**. Explicit `layers` still maps to `--n-gpu-layers {N}`. Historical monorepo stubs always passed `-ngl 99` (disables fit). Inventory policy:
 
 | Condition | Recommendation |
 | --- | --- |
@@ -61,7 +61,7 @@ Today argv building always passes `--n-gpu-layers` from `auto_gpu_layers` (`app/
 | CUDA-capable + `gpu: auto` | Prefer **omit `-ngl`** and pass **`--fit`** ([llama.cpp discussion #18049](https://github.com/ggml-org/llama.cpp/discussions/18049)); do **not** invent layer counts from VRAM |
 | User sets explicit layers | Pass through as today |
 
-Replace stub `auto_gpu_layers → 99` with either `0` (CPU) or a signal that means “use `--fit`” (e.g. `recommended.use_fit`), not a magic layer count.
+Inventory should expose `recommended.use_fit` (or empty `gpus` → CPU), not a magic layer count. DXGI/NVML remain diagnostics only.
 
 ### CPU-only graceful path
 
@@ -144,7 +144,10 @@ Minimal dep set for v1: `windows` + `sysinfo` + optional `nvml-wrapper` (or ~50 
 | ollama NVML usage | https://github.com/ollama/ollama/blob/main/ml/backend/ggml/ggml/src/mem_nvml.cpp |
 | candle-mi DXGI-first | https://docs.rs/candle-mi/latest/src/candle_mi/memory.rs.html |
 | llama.cpp `--fit` | https://github.com/ggml-org/llama.cpp/discussions/18049 |
+| DXGI overview | https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/d3d10-graphics-programming-guide-dxgi |
+| Product argv (`--fit` / `-ngl`) | [`app/src/runtime/llama.rs`](../../app/src/runtime/llama.rs) |
 | Internal prior art | [docs/prior-art.md](../prior-art.md) |
+| Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---
 

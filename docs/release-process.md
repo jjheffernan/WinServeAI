@@ -139,3 +139,27 @@ git tag -a vX.Y.Z -m "vX.Y.Z (llama.cpp b####)"
 git push origin vX.Y.Z
 # attach installer + zip + checksums on the GitHub release
 ```
+
+## Sources / See also
+
+### Internal
+
+- [architecture.md](./architecture.md) — single-crate appliance boundary
+- [backend.md](./backend.md) — pin policy and argv drift
+- [installer.md](./installer.md) — install payload and firewall
+- [development.md](./development.md) — build/test commands
+- [contributing.md](./contributing.md) — PR target is `dev`
+- [research/02-llama-readiness.md](./research/02-llama-readiness.md) — pin checklist (`/v1/models`, fit flags)
+- [research/03-hardware-detection.md](./research/03-hardware-detection.md) — hardware matrix inventory
+- [research/04-installer-licensing.md](./research/04-installer-licensing.md) — notices and CUDA DLLs
+- [policies/doc-drift.md](./policies/doc-drift.md) — run `check_doc_drift.py` after material changes
+- [bin/README.md](../bin/README.md)
+
+### Upstream
+
+- [llama.cpp releases (`b####`)](https://github.com/ggml-org/llama.cpp/releases)
+- [API changelog #9291](https://github.com/ggml-org/llama.cpp/issues/9291) — REST surface drift on pin bump
+- [llama.cpp LICENSE](https://github.com/ggml-org/llama.cpp/blob/master/LICENSE)
+- [ollama#3185](https://github.com/ollama/ollama/issues/3185) — notices must ship with binaries
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

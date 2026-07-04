@@ -232,6 +232,9 @@ pub struct RestartPolicy {
 | CTRL_C group ID pitfall | https://github.com/dotnet/docs/issues/53173 |
 | Job + signal split | https://comcomponent.com/en/blog/2026/03/20/001-windows-app-safe-child-process-handling-job-object-exit-propagation-stdio-watchdog/ |
 | Internal prior art | [docs/prior-art.md](../prior-art.md) |
+| Product process code (stub stop) | [`app/src/runtime/process.rs`](../../app/src/runtime/process.rs) |
+| Operator runtime guide | [docs/backend.md](../backend.md) |
+| Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---
 

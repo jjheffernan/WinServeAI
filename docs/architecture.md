@@ -74,3 +74,25 @@ docs/
 6. **No model downloads, chat UI, Docker, or multi-provider support.**
 
 Abstractions for “many backends” come later *only if needed*.
+
+## Sources / See also
+
+### Internal
+
+- [adr/0001-appliance-architecture.md](./adr/0001-appliance-architecture.md) — accepted decision
+- [vision.md](./vision.md) — product category
+- [backend.md](./backend.md) — runtime boundary
+- [api.md](./api.md) — OpenAI surface and readiness
+- [research/05-server-manager.md](./research/05-server-manager.md) — state machine
+- [research/01-windows-process.md](./research/01-windows-process.md) — Job Objects
+- [research/02-llama-readiness.md](./research/02-llama-readiness.md) — `GET /v1/models`
+- [prior-art.md](./prior-art.md) — external analogues
+- [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
+- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — argv only here
+
+### Upstream
+
+- [llama.cpp `tools/server`](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) — external OpenAI `/v1` server
+- [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) — intended orphan prevention (not yet implemented)
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

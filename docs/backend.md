@@ -139,7 +139,9 @@ Auto-restart after crash is **off** for MVP.
 
 Multi-backend support, backend traits, plugins, chat UI, model downloads, and remote management. Abstractions for “many backends” only if a real second backend appears.
 
-## See also
+## Sources / See also
+
+### Internal
 
 - [architecture.md](./architecture.md) — layering and ServerManager API
 - [configuration.md](./configuration.md) — YAML schema
@@ -147,3 +149,19 @@ Multi-backend support, backend traits, plugins, chat UI, model downloads, and re
 - [api.md](./api.md) — OpenAI client surface
 - [research/01-windows-process.md](./research/01-windows-process.md) — Job Objects, graceful stop
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — readiness and fit flags
+- [research/05-server-manager.md](./research/05-server-manager.md) — state machine
+- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — only place with llama flags
+- [`app/src/runtime/process.rs`](../app/src/runtime/process.rs) — spawn / stop
+- [`app/src/server/health.rs`](../app/src/server/health.rs) — `GET /v1/models` readiness
+
+### Upstream
+
+- [llama.cpp `tools/server` README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) — flags, `/v1`, optional `/health`
+- [Discussion #18049 — `--fit`](https://github.com/ggml-org/llama.cpp/discussions/18049) — auto VRAM; `-ngl` disables fit for layers
+- [Discussion #20648](https://github.com/ggml-org/llama.cpp/discussions/20648) — Win11 sleep/wake port zombies
+- [Job Objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects) — `KILL_ON_JOB_CLOSE`
+- [`GenerateConsoleCtrlEvent`](https://learn.microsoft.com/en-us/windows/console/generateconsolectrlevent) — `CTRL_BREAK` to process group
+- [process-wrap](https://docs.rs/process-wrap) — preferred Job Object wrapper ([crates.io](https://crates.io/crates/process-wrap))
+- [llama.cpp releases (`b####`)](https://github.com/ggml-org/llama.cpp/releases)
+
+Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md).

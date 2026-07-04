@@ -30,26 +30,57 @@ Feature work: branch off `dev`, open PRs into `dev`. Releases: PR `dev` → `mai
 
 ### Fix: `linker link.exe not found`
 
-Rust’s MSVC target needs the Visual C++ toolchain:
+Rust’s MSVC target needs the Visual C++ toolchain. Installing Build Tools is not enough if `link.exe` is not on `PATH` in **this** terminal (Cursor’s integrated terminal often does not load VS vars).
 
-1. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (2022 or later).
-2. In the installer, select **Desktop development with C++** (includes MSVC, Windows SDK, and `link.exe`).
-3. Close and reopen the terminal (or reboot), then confirm:
+#### 1. Confirm the C++ workload is installed
+
+1. Open **Visual Studio Installer** → **Modify** on Build Tools 2022 (or later).
+2. Enable **Desktop development with C++**.
+3. On the right, ensure **MSVC v143** (or latest) and **Windows 10/11 SDK** are checked.
+4. Apply, then **fully quit and reopen** Cursor (or reboot).
+
+#### 2. Prefer a VS developer shell
+
+From the Start menu open one of:
+
+- **Developer PowerShell for VS 2022**, or
+- **x64 Native Tools Command Prompt for VS 2022**
+
+Then:
 
 ```powershell
+cd path\to\WinServeAI
 where.exe link
-# expect something like:
-# C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\...\bin\Hostx64\x64\link.exe
+rustup show
+cargo run -p winserve -- print-cmd
 ```
 
-4. Retry:
+`where.exe link` must print a path under `...\VC\Tools\MSVC\...\link.exe`. If it still fails, the C++ workload is incomplete — go back to step 1.
+
+#### 3. Or inject VS vars into the current PowerShell
+
+```powershell
+# Adjust year/edition if needed (BuildTools vs Community)
+$vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
+  -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+  -property installationPath
+cmd /c "`"$vs\VC\Auxiliary\Build\vcvars64.bat`" && set" | ForEach-Object {
+  if ($_ -match '^(.*?)=(.*)$') { Set-Item -Path "env:$($matches[1])" -Value $matches[2] }
+}
+where.exe link
+cargo run -p winserve -- print-cmd
+```
+
+#### 4. Confirm Rust target
 
 ```powershell
 rustup default stable-x86_64-pc-windows-msvc
-cargo build -p winserve
+rustup show
 ```
 
-**Alternative (not recommended for this project):** `rustup default stable-x86_64-pc-windows-gnu` needs a separate MinGW toolchain and does not match CI (`windows-latest` MSVC). Prefer MSVC.
+Host should be `x86_64-pc-windows-msvc`, not `gnu`.
+
+**Alternative (not recommended):** `stable-x86_64-pc-windows-gnu` needs MinGW and does not match CI. Prefer MSVC.
 
 ## Repo layout
 

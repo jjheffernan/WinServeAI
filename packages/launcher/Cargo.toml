@@ -1,0 +1,18 @@
+[package]
+name = "winserve-launcher"
+description = "Server Manager — single owner of the inference process lifecycle"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+winserve-shared = { workspace = true }
+winserve-backend = { workspace = true }
+winserve-config = { workspace = true }
+winserve-hardware = { workspace = true }
+winserve-logging = { workspace = true }
+winserve-llama = { workspace = true }
+winserve-api = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }

@@ -73,6 +73,7 @@ Sample config: [`examples/config/default.yaml`](examples/config/default.yaml)
 | [configuration.md](docs/configuration.md) | Config schema |
 | [backend.md](docs/backend.md) | Backend abstraction |
 | [contributing.md](docs/contributing.md) | Contributor guide |
+| [prior-art.md](docs/prior-art.md) | Similar apps, patterns, scaffolding recs |
 
 ## Agent skills
 

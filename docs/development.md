@@ -44,6 +44,10 @@ vendor/        # bundled third-party (llama.cpp)
 * Configuration stays human-readable YAML — no backend-specific flags
 * Stable over clever; optimize for contributors and future backends
 
+## Prior art
+
+Scaffolding recommendations from similar products and Windows process research live in [prior-art.md](prior-art.md).
+
 ## Agent Skills
 
 Skills live in `.agents/skills/` (Agent Skills standard — agent-agnostic).

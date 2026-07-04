@@ -1,5 +1,7 @@
 # Research Checklist (Phase 0)
 
+Prior art and external references: [prior-art.md](prior-art.md).
+
 ## Installer
 
 * [ ] NSIS

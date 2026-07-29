@@ -4,6 +4,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::sync::mpsc;
+use winserve::ipc::lockfile::{self, LockGuard};
 use winserve::server::config::Config;
 use winserve::server::resident::{self, Command, CommandKind};
 use winserve::ServerManager;
@@ -105,6 +106,14 @@ async fn main() -> ExitCode {
 
 /// Resident owner: holds the manager across backend stop/crash until Ctrl+C.
 async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let (lock, info) = LockGuard::acquire_default(lockfile::DEFAULT_PIPE_NAME)?;
+    println!(
+        "serve: lock {} (pid={}, pipe={})",
+        lock.path().display(),
+        info.pid,
+        info.pipe
+    );
+
     let mut mgr = ServerManager::load_config(root, cfg_path)?;
     let (tx, mut rx) = mpsc::channel::<Command>(8);
 
@@ -126,6 +135,7 @@ async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result
     resident::run(&mut mgr, &mut rx).await;
     signal.abort();
     mgr.stop().await?;
+    drop(lock);
     Ok(())
 }
 

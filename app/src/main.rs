@@ -1,9 +1,11 @@
-//! CLI entry: start | stop | status | restart
+//! CLI entry: serve | start | stop | status | restart
 
 use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use tokio::sync::mpsc;
 use winserve::server::config::Config;
+use winserve::server::resident::{self, Command, CommandKind};
 use winserve::ServerManager;
 
 fn repo_root() -> PathBuf {
@@ -38,6 +40,13 @@ async fn main() -> ExitCode {
     }
 
     match cmd.as_str() {
+        "serve" => match run_serve(&root, &cfg_path).await {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("error: serve failed: {e}");
+                ExitCode::FAILURE
+            }
+        },
         "start" => match run_start(&root, &cfg_path).await {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
@@ -80,17 +89,44 @@ async fn main() -> ExitCode {
         },
         "stop" | "restart" => {
             eprintln!(
-                "{cmd}: requires a long-running manager process (tray/service). \
-                 For MVP, stop the `winserve start` process (Ctrl+C)."
+                "{cmd}: requires a resident manager process. Run `winserve serve`; \
+                 CLI attach lands with the manager IPC. \
+                 For now, stop the resident process (Ctrl+C)."
             );
             ExitCode::FAILURE
         }
         other => {
             eprintln!("unknown command: {other}");
-            eprintln!("usage: winserve <start|status|print-config|print-cmd>");
+            eprintln!("usage: winserve <serve|start|status|print-config|print-cmd>");
             ExitCode::FAILURE
         }
     }
+}
+
+/// Resident owner: holds the manager across backend stop/crash until Ctrl+C.
+async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let mut mgr = ServerManager::load_config(root, cfg_path)?;
+    let (tx, mut rx) = mpsc::channel::<Command>(8);
+
+    match mgr.start().await {
+        Ok(()) => println!("READY {}", mgr.openai_base()),
+        Err(e) => eprintln!("warning: start failed, staying resident: {e}"),
+    }
+    println!("serve: resident manager; Ctrl+C to stop");
+
+    let signal = tokio::spawn(async move {
+        if tokio::signal::ctrl_c().await.is_ok() {
+            let (cmd, ack) = Command::new(CommandKind::Stop);
+            if tx.send(cmd).await.is_ok() {
+                let _ = ack.await;
+            }
+        }
+    });
+
+    resident::run(&mut mgr, &mut rx).await;
+    signal.abort();
+    mgr.stop().await?;
+    Ok(())
 }
 
 async fn run_start(root: &std::path::Path, cfg_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {

@@ -1,55 +1,71 @@
-# Project TODO (from module readiness)
+# Project TODO — MVP build
 
-**Source:** [readiness/README.md](readiness/README.md) · **Project maturity:** **3.1/5** (`mvp-partial`)  
-**Branch context:** appliance layout (`app/`, `bin/`, `config/`) · **Ordered plan:** [PLAN.md](PLAN.md)  
-**Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md) · `python3 scripts/check_doc_drift.py`
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.1/5**  
+**Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
-## Phase 1 — Remaining
+Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.
 
-| Priority | Module | Score | Action |
-| --- | --- | --- | --- |
-| P0 | operator | — | **A2** smoke on Windows: `start` → `GET /v1/models` with **b9866** + GGUF ([specs/A2-smoke.md](specs/A2-smoke.md)) |
-| P1 | `server-manager` | 3.4 mvp-partial | Long-running manager so CLI `stop`/`restart` work (**E3**) |
-| P1 | `cli` | 2.6 mvp-partial | Wire `stop`/`restart` once manager is resident (tray/service or lockfile+IPC) |
-| P2 | `server-logs` | 2.8 mvp-partial | Rotation; unit tests for `ts=` lines |
-| P2 | `server-health` | 3.4 mvp-partial | Optional `/health` fallback; 503→200 mock test |
-| P2 | `bin` | 2.2 scaffold | Optional fetch script for **b9866**; `THIRD_PARTY_NOTICES` |
-| P2 | `scripts-ops` | 3.2 mvp-partial | Prefer graceful stop over `Stop-Process -Force` when IPC exists |
-| P2 | `api` | 2.6 mvp-partial | Unit tests for URL helpers |
+## MVP build
 
-## Phase 2 — Desktop
+Ordered for after-hours / feature-spec drains. One PR per letter-number when possible.
 
-| Priority | Module | Score | Action |
-| --- | --- | --- | --- |
-| P3 | `ui` | 0.4 stub | Tauri (or chosen) shell per [specs/E-desktop.md](specs/E-desktop.md): start/stop/logs/status only via ServerManager |
-| P3 | `cli` / manager | — | **E3** long-running owner for stop/restart |
+### Now — Resident manager (G)
 
-## Phase 3 — Installer
+- [ ] **G1** Long-lived `winserve serve` embeds `ServerManager`
+- [ ] **G2** Lockfile under `%LOCALAPPDATA%\WinServeAI\manager.lock` (PID + pipe); stale if PID dead
+- [ ] **G3** Named-pipe IPC: `status` / `start` / `stop` / `restart` (+ health/endpoint)
+- [ ] **G4** CLI `stop` / `restart` / `status` attach to resident owner
+- [ ] **G5** Single-instance: second serve/tray fails “already running”
 
-| Priority | Module | Score | Action |
-| --- | --- | --- | --- |
-| P3 | `installer` | 1.6 scaffold | Inno Setup per [specs/F-installer.md](specs/F-installer.md): shortcut, firewall only for non-loopback, notices |
+### Next — Engine product gaps (H)
 
-## Already stronger (Phase 1 code)
+- [ ] **H1** CREATE_SUSPENDED → assign Job Object → resume
+- [ ] **H2** Log rotation under `logs/`
+- [ ] **H3** Optional `/health` readiness fallback (keep `/v1/models` primary)
+- [ ] **H4** Pin fetch helper + `notices/THIRD_PARTY_NOTICES` stub
+- [ ] **H5** `scripts/stop.ps1` prefers IPC graceful stop when lockfile exists
 
-| Module | Score | Note |
-| --- | --- | --- |
-| `runtime-process` | 3.8 mvp-ready | Job Object + CTRL_BREAK; spawn/stop unit test |
-| `system` | 3.6 mvp-ready | DXGI + nvidia-smi + sysinfo RAM |
-| `runtime-llama` | 3.6 mvp-ready | `--fit` / `-ngl 0` argv tests |
-| `server-config` | 3.6 mvp-ready | Validation + warnings + unit tests |
-| `docs` | 4.0 mvp-ready | Scorecards + build specs (A2/E/F) + `check_doc_drift.py` |
-| `scripts-pr-loop` | 3.0 mvp-partial | Dry-run works; wire real agent cmds when needed |
+### Then — Desktop (E)
 
-## How to refresh scores
+- [ ] **E1a** Tauri 2 `winserve-tray`; commands → `ServerManager` only
+- [ ] **E1b** Start / stop / status UI (canonical states only)
+- [ ] **E1c** Log viewer
+- [ ] **E1d** Settings → YAML validate/write
+- [ ] **E2** Model path picker (local `.gguf` only)
+- [ ] **E1e** Quit → `stop()`; Job Object backstop
 
-Re-run the readiness review (see [readiness/PLAN.md](readiness/PLAN.md)) after material code changes; update scorecards and the **Readiness** blocks at the top of operator guides.
+### Then — Installer (F)
+
+- [ ] **F0** Release layout script (exe + tray + bin + config + notices)
+- [ ] **F1** Inno Setup script
+- [ ] **F2** Desktop + Start Menu → tray/manager
+- [ ] **F3** Firewall only for non-loopback; remove on uninstall
+- [ ] **F4** Notices payload (llama.cpp MIT; CUDA notice if needed)
+- [ ] **F5** First-run model path guidance
+
+### Ship — Exit polish (I)
+
+- [ ] **I1** Docs: tray + IPC in development / architecture / installer
+- [ ] **I2** Readiness re-score + `check_doc_drift.py`
+- [ ] **I3** Safe default.yaml + empty model.path guidance
+- [ ] **I4** Record shipped `b####` pin in release docs
+
+## Non-blocking / later
+
+| Item | Note |
+| --- | --- |
+| **A2** Windows smoke | Operator proof; do not gate G–F |
+| Unit / CI expansion | Phase 4 or opportunistic |
+| NVML FFI | Keep nvidia-smi until needed |
+| Phase 4 stability | Crash recovery polish, config migration |
+| Phase 5 | Auto-update, service mode, metrics |
+
+## Explicitly do not schedule
+
+* Chat UI, model downloads, multi-backend, Docker, auth, remote management
 
 ## See also
 
-- [PLAN.md](./PLAN.md) — ordered implementation milestones
-- [readiness/README.md](./readiness/README.md) — maturity dashboard
-- [readiness/PLAN.md](readiness/PLAN.md) — scoring rubric
-- [roadmap.md](./roadmap.md) — phased product plan
-- [policies/doc-drift.md](./policies/doc-drift.md) — scorecards must match banners
-- [policies/SOURCES.md](./policies/SOURCES.md) — canonical external URLs
+- [PLAN.md](./PLAN.md) — full MVP sequence and exit checklist
+- [specs/E-desktop.md](./specs/E-desktop.md) · [specs/F-installer.md](./specs/F-installer.md)
+- [roadmap.md](./roadmap.md) · [vision.md](./vision.md)

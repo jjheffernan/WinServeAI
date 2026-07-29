@@ -67,9 +67,9 @@ fn detect_nvidia_smi() -> Vec<GpuInfo> {
 #[cfg(windows)]
 mod win {
     use super::GpuInfo;
+    use windows::core::Interface;
     use windows::Win32::Graphics::Dxgi::{
-        CreateDXGIFactory1, IDXGIAdapter3, IDXGIFactory1, DXGI_ADAPTER_DESC1,
-        DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
+        CreateDXGIFactory1, IDXGIAdapter3, IDXGIFactory1, DXGI_MEMORY_SEGMENT_GROUP_LOCAL,
     };
 
     pub fn detect_dxgi() -> Vec<GpuInfo> {
@@ -86,14 +86,13 @@ mod win {
                     Err(_) => break,
                 };
                 i += 1;
-                let mut desc = DXGI_ADAPTER_DESC1::default();
-                if adapter.GetDesc1(&mut desc).is_err() {
-                    continue;
-                }
-                // Skip software adapters (WARP).
-                let flags = desc.Flags.0;
-                if flags & 2 != 0 {
-                    // DXGI_ADAPTER_FLAG_SOFTWARE = 2
+                let desc = match adapter.GetDesc1() {
+                    Ok(d) => d,
+                    Err(_) => continue,
+                };
+                // Skip software adapters (WARP). DXGI_ADAPTER_FLAG_SOFTWARE = 2
+                // windows 0.58: Flags is already u32 (not a newtype with .0).
+                if (desc.Flags & 2) != 0 {
                     continue;
                 }
                 let name = String::from_utf16_lossy(

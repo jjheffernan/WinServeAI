@@ -104,3 +104,8 @@ $RECYCLE.BIN/
 .windsurf/
 .zencoder/
 .adal/
+
+# after-hours loop session artifacts (do not commit live run state)
+.cursor/after-hours-loop.state.json
+.cursor/after-hours-morning-brief.md
+.cursor/after-hours-runs/

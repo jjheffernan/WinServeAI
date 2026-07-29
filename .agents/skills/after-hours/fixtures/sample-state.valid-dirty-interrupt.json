@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-13T22:00:00Z",
+  "stoppedAt": "2026-07-13T22:40:00Z",
+  "stopReason": "blocked",
+  "stopDetail": "dirty-interrupt",
+  "sources": [
+    {
+      "type": "github-issues",
+      "config": "label ready-for-agent limit 5"
+    }
+  ],
+  "queue": [
+    {
+      "id": "github:42",
+      "title": "Fix login redirect",
+      "source": "github-issues",
+      "executor": "pr-slice",
+      "ref": "https://github.com/example/app/issues/42",
+      "status": "blocked",
+      "blockReason": "interrupted",
+      "granularity": "single-pr",
+      "outcomeKind": "draft-pr",
+      "notes": "IDE abort mid-edit; tree unrecovered"
+    }
+  ],
+  "prs": [],
+  "maxPrs": 3,
+  "tick": 1,
+  "priority": "github-first",
+  "baseBranch": "main",
+  "consecutiveBlocked": 1,
+  "megaPr": false
+}

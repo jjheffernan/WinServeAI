@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-14T01:00:00Z",
+  "parkedReason": "maxPrs",
+  "sources": [
+    {
+      "type": "todo-md",
+      "config": "section Now"
+    }
+  ],
+  "queue": [
+    {
+      "id": "todo:export-csv",
+      "title": "Export CSV",
+      "source": "todo-md",
+      "executor": "pr-slice",
+      "status": "done",
+      "granularity": "single-pr",
+      "outcomeKind": "draft-pr"
+    }
+  ],
+  "prs": [
+    {
+      "url": "https://github.com/example/app/pull/1",
+      "itemId": "todo:export-csv",
+      "branch": "after-hours/export-csv",
+      "draft": true
+    }
+  ],
+  "maxPrs": 1,
+  "tick": 1,
+  "priority": "todo-first",
+  "baseBranch": "dev",
+  "consecutiveBlocked": 0,
+  "megaPr": false
+}

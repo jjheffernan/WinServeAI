@@ -12,7 +12,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 ### Now — Resident manager (G)
 
 - [x] **G1** Long-lived `winserve serve` embeds `ServerManager`
-- [ ] **G2** Lockfile under `%LOCALAPPDATA%\WinServeAI\manager.lock` (PID + pipe); stale if PID dead
+- [x] **G2** Lockfile under `%LOCALAPPDATA%\WinServeAI\manager.lock` (PID + pipe); stale if PID dead
 - [ ] **G3** Named-pipe IPC: `status` / `start` / `stop` / `restart` (+ health/endpoint)
 - [ ] **G4** CLI `stop` / `restart` / `status` attach to resident owner
 - [ ] **G5** Single-instance: second serve/tray fails “already running”

@@ -177,7 +177,8 @@ async fn listen_windows(pipe_name: String, commands: mpsc::Sender<Command>) -> R
     loop {
         let mut opts = ServerOptions::new();
         if first {
-            opts = opts.first_pipe_instance(true);
+            // first_pipe_instance returns &mut Self — do not reassign.
+            opts.first_pipe_instance(true);
             first = false;
         }
         let server = opts.create(&endpoint)?;

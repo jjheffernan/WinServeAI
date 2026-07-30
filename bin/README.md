@@ -17,6 +17,24 @@ bin/llama-server       # non-Windows (optional for local experiments)
 
 ### Setup
 
+**Helper (preferred):**
+
+```powershell
+# Windows — CPU build into bin/ (default pin b9866)
+.\scripts\fetch-llama-pin.ps1
+
+# Or CUDA / Vulkan
+.\scripts\fetch-llama-pin.ps1 -Variant cuda-12.4
+.\scripts\fetch-llama-pin.ps1 -Variant vulkan
+```
+
+```bash
+# macOS/Linux helper (can also fetch Windows zips into bin/)
+./scripts/fetch-llama-pin.sh --variant win-cpu
+```
+
+**Manual:**
+
 1. Download the release asset for **b9866** from GitHub Releases.
 2. Extract `llama-server.exe` (and CUDA runtime DLLs if present) into this `bin/` directory.
 3. Keep DLLs **beside** `llama-server.exe` (PATH is unreliable on Windows).
@@ -24,10 +42,11 @@ bin/llama-server       # non-Windows (optional for local experiments)
 
 Do **not** commit the binary or DLLs (gitignored). Document pin bumps in [release-process.md](../docs/release-process.md).
 
-Ship MIT notices for llama.cpp with the installer (`THIRD_PARTY_NOTICES`).
+Ship MIT notices for llama.cpp with the installer — stub: [`notices/THIRD_PARTY_NOTICES.md`](../notices/THIRD_PARTY_NOTICES.md).
 
 ## See also
 
 - [docs/backend.md](../docs/backend.md)
 - [docs/release-process.md](../docs/release-process.md)
 - [docs/research/02-llama-readiness.md](../docs/research/02-llama-readiness.md)
+- [docs/research/04-installer-licensing.md](../docs/research/04-installer-licensing.md)

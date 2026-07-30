@@ -190,6 +190,56 @@
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         word-break: break-all;
       }
+      .form {
+        display: grid;
+        gap: 0.55rem;
+      }
+      .form label {
+        display: grid;
+        gap: 0.2rem;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      .form label span {
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .form input[type="text"],
+      .form input[type="number"] {
+        background: #0b0f14;
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.4rem 0.55rem;
+        font: inherit;
+      }
+      .form .check {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: var(--text);
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 0.85rem;
+      }
+      .form .check input {
+        margin: 0;
+      }
+      #settings-note {
+        color: var(--muted);
+        font-size: 0.75rem;
+        margin: 0.35rem 0 0;
+        min-height: 1.1em;
+      }
+      #settings-note.warn {
+        color: #fbbf24;
+      }
+      #settings-note.err {
+        color: #f87171;
+      }
+      #settings-note.ok {
+        color: #4ade80;
+      }
     </style>
   </head>
   <body>
@@ -237,12 +287,54 @@
         <p class="log-dir" id="log-dir"></p>
       </section>
 
+      <section class="panel" aria-label="Settings">
+        <form id="settings-form" class="form">
+          <label>
+            <span>server.host</span>
+            <input id="set-host" name="host" type="text" autocomplete="off" />
+          </label>
+          <label>
+            <span>server.port</span>
+            <input id="set-port" name="port" type="number" min="1" max="65535" />
+          </label>
+          <label>
+            <span>model.path</span>
+            <input id="set-model" name="modelPath" type="text" autocomplete="off" />
+          </label>
+          <label class="check">
+            <input id="set-gpu-auto" name="gpuAuto" type="checkbox" />
+            gpu.auto
+          </label>
+          <label>
+            <span>gpu.layers</span>
+            <input id="set-gpu-layers" name="gpuLayers" type="text" placeholder="auto or integer" />
+          </label>
+          <label>
+            <span>runtime.context</span>
+            <input id="set-context" name="context" type="number" min="1" />
+          </label>
+          <label class="check">
+            <input id="set-fa" name="flashAttention" type="checkbox" />
+            runtime.flash_attention
+          </label>
+          <div class="row">
+            <button id="btn-save-settings" type="submit">Save settings</button>
+            <button id="btn-reload-settings" class="secondary" type="button">
+              Reload
+            </button>
+          </div>
+          <p id="settings-note"></p>
+          <p class="log-dir" id="settings-path"></p>
+        </form>
+      </section>
+
       <p class="canon">
         Canonical states:
         <strong>Stopped</strong>, <strong>Starting</strong>, <strong>Ready</strong>,
         <strong>Failed</strong>, <strong>Stopping</strong>, <strong>Crashed</strong>.
         There is no “Running” label — use Ready after readiness. Log viewer is
-        read-only (tails <code>logs/</code>).
+        read-only (tails <code>logs/</code>). Settings require Stopped / Failed /
+        Crashed (stop first while Starting / Ready / Stopping).
       </p>
     </main>
     <script src="/main.js"></script>

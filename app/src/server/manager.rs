@@ -55,6 +55,7 @@ pub enum ManagerError {
 
 pub struct ServerManager {
     root: PathBuf,
+    config_path: PathBuf,
     config: Config,
     hardware: HardwareInfo,
     binary: PathBuf,
@@ -67,7 +68,8 @@ pub struct ServerManager {
 impl ServerManager {
     pub fn load_config(root: impl AsRef<Path>, config_path: impl AsRef<Path>) -> Result<Self, ManagerError> {
         let root = root.as_ref().to_path_buf();
-        let config = Config::load(config_path)?;
+        let config_path = config_path.as_ref().to_path_buf();
+        let config = Config::load(&config_path)?;
         let hardware = system::detect();
         let binary = default_binary(&root);
         let logs = LogSinks::open(&config.logging)?;
@@ -77,6 +79,7 @@ impl ServerManager {
         }
         Ok(Self {
             root,
+            config_path,
             config,
             hardware,
             binary,
@@ -91,12 +94,43 @@ impl ServerManager {
         &self.config
     }
 
+    pub fn config_path(&self) -> &Path {
+        &self.config_path
+    }
+
     pub fn hardware(&self) -> &HardwareInfo {
         &self.hardware
     }
 
     pub fn status(&self) -> Status {
         self.status
+    }
+
+    /// Validate + write YAML, then replace in-memory config.
+    ///
+    /// Rejected while Starting / Ready / Stopping — stop first (E1d).
+    pub fn apply_config(&mut self, next: Config) -> Result<(), ManagerError> {
+        let _ = self.get_status();
+        match self.status {
+            Status::Starting | Status::Ready | Status::Stopping => {
+                return Err(ManagerError::Other(
+                    "stop the server before editing settings (Starting/Ready/Stopping)".into(),
+                ));
+            }
+            Status::Stopped | Status::Failed | Status::Crashed => {}
+        }
+        next.validate()?;
+        next.save(&self.config_path)?;
+        self.config = next;
+        self.logs.server(&format!(
+            "config saved {}; endpoint will be {}",
+            self.config_path.display(),
+            self.config.openai_v1_url()
+        ));
+        for w in self.config.warnings() {
+            self.logs.server(&format!("warning: {w}"));
+        }
+        Ok(())
     }
 
     pub fn detect_hardware(&mut self) {
@@ -210,5 +244,53 @@ impl ServerManager {
 
     pub fn root(&self) -> &Path {
         &self.root
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::server::config::Config;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_cfg() -> (PathBuf, PathBuf, Config) {
+        let root = std::env::temp_dir().join(format!(
+            "winserve-mgr-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(root.join("config")).unwrap();
+        std::fs::create_dir_all(root.join("logs")).unwrap();
+        let path = root.join("config").join("default.yaml");
+        let mut cfg = Config::default();
+        cfg.logging.dir = root.join("logs");
+        cfg.model.path = root.join("missing.gguf");
+        cfg.save(&path).unwrap();
+        (root, path, cfg)
+    }
+
+    #[test]
+    fn apply_config_writes_yaml_when_stopped() {
+        let (root, path, mut cfg) = temp_cfg();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        cfg.server.port = 9090;
+        cfg.server.host = "127.0.0.1".into();
+        mgr.apply_config(cfg).unwrap();
+        let reloaded = Config::load(&path).unwrap();
+        assert_eq!(reloaded.server.port, 9090);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn apply_config_rejects_while_ready() {
+        let (root, path, cfg) = temp_cfg();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        mgr.status = Status::Ready;
+        let err = mgr.apply_config(cfg).unwrap_err().to_string();
+        assert!(err.contains("stop the server"), "got {err}");
+        let _ = std::fs::remove_dir_all(root);
     }
 }

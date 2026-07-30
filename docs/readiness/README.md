@@ -18,7 +18,7 @@ Last reviewed: 2026-07-04
 | scripts-ops | 3.6/5 | mvp-ready | start.ps1 unclear if binary missing; A2 needs operator Windows proof | [scripts-ops.md](./scripts-ops.md) |
 | scripts-pr-loop | 3.0/5 | mvp-partial | Dry-run only; no formal tests | [scripts-pr-loop.md](./scripts-pr-loop.md) |
 | docs | 4.0/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
-| ui | 2.6/5 | mvp-partial | No settings/path picker/quit→stop yet | [ui.md](./ui.md) |
+| ui | 3.0/5 | mvp-partial | No path picker / quit→stop / tray lockfile owner | [ui.md](./ui.md) |
 
 ## Summary
 

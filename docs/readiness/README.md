@@ -6,7 +6,7 @@ Last reviewed: 2026-07-04
 | --- | --- | --- | --- | --- |
 | server-manager | 3.4/5 | mvp-partial | Long-running manager for CLI stop/restart | [server-manager.md](./server-manager.md) |
 | server-config | 3.6/5 | mvp-ready | No migration; model path only warns at load | [server-config.md](./server-config.md) |
-| server-health | 3.4/5 | mvp-partial | No `/health` fallback; no 503→200 mock test | [server-health.md](./server-health.md) |
+| server-health | 3.8/5 | mvp-ready | Timeout does not surface last HTTP status | [server-health.md](./server-health.md) |
 | server-logs | 3.6/5 | mvp-ready | Write failures swallowed; epoch timestamps only | [server-logs.md](./server-logs.md) |
 | runtime-llama | 3.6/5 | mvp-ready | No binary version probe; A2 smoke open | [runtime-llama.md](./runtime-llama.md) |
 | runtime-process | 3.8/5 | mvp-ready | Assign-after-spawn race; no orphan integration test | [runtime-process.md](./runtime-process.md) |

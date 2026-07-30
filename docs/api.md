@@ -1,6 +1,6 @@
 # API
 
-> **Readiness:** api 2.6/5 (`mvp-partial`), server-health 3.4/5 (`mvp-partial`) — details in [readiness/api.md](./readiness/api.md), [readiness/server-health.md](./readiness/server-health.md)
+> **Readiness:** api 2.6/5 (`mvp-partial`), server-health 3.8/5 (`mvp-ready`) — details in [readiness/api.md](./readiness/api.md), [readiness/server-health.md](./readiness/server-health.md)
 
 WinServeAI is an **appliance wrapper** around `llama-server.exe`. It does not implement an OpenAI HTTP stack of its own. Clients talk to **llama-server’s OpenAI-compatible routes** at `/v1` once `ServerManager` reports READY.
 
@@ -57,7 +57,11 @@ GET http://{host}:{port}/v1/models
 | Connection refused / other errors | Not listening yet — keep waiting |
 | No success within **120s** | Startup fails (timeout) |
 
-Poll interval is ~250ms. Implementation: [`app/src/server/health.rs`](../app/src/server/health.rs) (`wait_until_ready` polls `GET {base}/v1/models`).
+Poll interval is ~250ms. Implementation: [`app/src/server/health.rs`](../app/src/server/health.rs) (`wait_until_ready`).
+
+**Primary:** `GET {base}/v1/models` — HTTP 2xx ⇒ ready.  
+**Fallback:** if models is not yet ready, try `GET {base}/health` — HTTP 2xx ⇒ ready (many llama-server builds return 503 while loading, 200 when ready).  
+Either probe returning 503 (or connection errors) means keep waiting until the overall deadline.
 
 On success the manager logs and the CLI prints:
 
@@ -67,7 +71,7 @@ READY http://127.0.0.1:8080/v1
 
 Liveness (process alive) is not the same as readiness (model loaded). If the child exits during load, startup fails — do not treat a dead process as “still starting.”
 
-llama-server may also expose `GET /health` (503 while loading, 200 when ready) on many builds — a **useful alternate**, not WinServeAI’s gate. Upstream semantics: [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), [PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056).
+llama-server may also expose `GET /health` (503 while loading, 200 when ready) on many builds. WinServeAI uses it as a **fallback** readiness signal when `/v1/models` is not yet succeeding; `/v1/models` remains the primary probe. Upstream semantics: [llama.cpp server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), [PR #9056](https://github.com/ggml-org/llama.cpp/pull/9056).
 
 ## Client examples
 

@@ -1,10 +1,14 @@
 # Development
 
-> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 3.6/5 (`mvp-ready`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
+> **Readiness:** cli 3.2/5 (`mvp-partial`), scripts-ops 3.6/5 (`mvp-ready`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
-WinServeAI is a **single Rust crate** (`winserve` in `app/`) that owns process lifecycle for an external `bin/llama-server.exe`. There is no `packages/` monorepo and no backend-trait workspace.
+WinServeAI owns process lifecycle for an external `bin/llama-server.exe` via
+**`ServerManager`**. The manager crate is `winserve` (`app/`); the optional
+desktop shell is `winserve-tray` (`apps/desktop/`). There is no backend-trait
+workspace and no `packages/` monorepo.
 
-See [architecture.md](architecture.md) for the runtime boundary and rules.
+See [architecture.md](architecture.md) for the runtime boundary, lockfile, and
+named-pipe IPC. First-run model path: [first-run.md](first-run.md).
 
 ## Branches
 
@@ -85,30 +89,32 @@ Host should be `x86_64-pc-windows-msvc`, not `gnu`.
 ## Repo layout
 
 ```text
-app/                 # only workspace member — package name winserve
-  src/main.rs        # CLI
-  src/lib.rs
-  src/server/        # ServerManager, config, health, logs
-  src/runtime/       # llama argv + process spawn (external boundary)
-  src/system/        # GPU / memory / network probes
-  src/api/           # OpenAI URL helpers (passthrough)
-bin/                 # llama-server.exe (not built by this repo)
-config/              # default.yaml
-logs/                # server.log, llama.log, error.log (created at runtime)
-models/              # your GGUF files (not shipped)
-installer/
-scripts/             # start/stop/reset.ps1, smoke-openai.ps1, smoke-check.sh, check.sh
+app/                       # package winserve — ServerManager + CLI
+  src/main.rs              # CLI: serve | start | stop | status | restart | …
+  src/server/              # manager, config, health, logs, resident loop
+  src/ipc/                 # lockfile + named-pipe (Windows) / loopback TCP (dev)
+  src/runtime/             # llama argv + process spawn (external boundary)
+  src/system/              # GPU / memory / network probes
+  src/api/                 # OpenAI URL helpers (passthrough)
+apps/desktop/              # Tauri 2 shell → winserve-tray (wraps ServerManager)
+bin/                       # llama-server.exe (not built by this repo)
+config/                    # default.yaml (empty model.path until first run)
+logs/                      # server.log, llama.log, error.log (created at runtime)
+models/                    # your GGUF files (not shipped)
+installer/inno/            # Inno Setup script + staged files/
+scripts/                   # start/stop/reset, stage-release, smoke, check
 docs/
 ```
 
-Root `Cargo.toml` is a one-member workspace:
+Root workspace:
 
 ```toml
 [workspace]
-members = ["app"]
+members = ["app", "apps/desktop/src-tauri"]
 ```
 
-Do **not** reintroduce `packages/config`, `packages/launcher`, or other package-per-concern crates without a concrete second backend.
+Do **not** reintroduce `packages/config`, `packages/launcher`, or other
+package-per-concern crates without a concrete second backend.
 
 ## Build / check / test
 
@@ -118,9 +124,11 @@ From the repo root:
 cargo check -p winserve
 cargo test -p winserve
 cargo build -p winserve --release
+# Desktop shell (needs Tauri host toolchain):
+cargo build -p winserve-tray --release
 ```
 
-Local gate (same as CI intent):
+Local gate (same as CI intent for the manager crate):
 
 ```bash
 ./scripts/check.sh
@@ -144,7 +152,9 @@ export WINSERVE_CONFIG=/path/to.yaml
 $env:WINSERVE_CONFIG = "D:\path\to.yaml"
 ```
 
-Minimum edit before first start: set `model.path` to a real GGUF. Schema and mapping rules: [configuration.md](configuration.md). Logs: [logging.md](logging.md).
+Minimum edit before first start: set `model.path` to a real GGUF (shipped
+default is empty — [first-run.md](first-run.md)). Schema:
+[configuration.md](configuration.md). Logs: [logging.md](logging.md).
 
 ## CLI
 
@@ -153,24 +163,58 @@ Binary name: `winserve`. Default command is `start` if you pass no subcommand.
 ```bash
 cargo run -p winserve -- print-cmd
 cargo run -p winserve -- print-config
-cargo run -p winserve -- status
-cargo run -p winserve -- start
+cargo run -p winserve -- serve          # resident owner (lockfile + IPC)
+cargo run -p winserve -- status         # attach to resident, else Stopped
+cargo run -p winserve -- stop
+cargo run -p winserve -- restart
+cargo run -p winserve -- start          # one-shot foreground (no IPC owner)
 ```
 
 | Command | Purpose |
 | --- | --- |
-| `print-cmd` | Print the resolved `llama-server` path and argv (no spawn). Use this to verify config → flags before starting. |
+| `print-cmd` | Print resolved `llama-server` path + argv (no spawn). |
 | `print-config` | Load and print the effective YAML config. |
-| `status` | Print manager status and OpenAI base URL. Without a long-running manager process this is usually `Stopped`. |
-| `start` | Spawn `bin/llama-server.exe`, wait until `/v1/models` is ready, print `READY http://host:port/v1`, then block until Ctrl+C. |
+| `serve` | **Resident owner:** acquire lockfile, listen on IPC, start backend, stay up until Ctrl+C. Second `serve`/tray refuses with “already running”. |
+| `start` | One-shot: spawn backend, print READY, block until Ctrl+C — **does not** take the lock / IPC. Prefer `serve` or the tray for day-to-day. |
+| `status` | Attach to resident via IPC when present; otherwise print `Stopped` + configured endpoint. |
+| `stop` / `restart` | Attach to resident (`serve` or tray). Fail with a clear error if none is running. |
 
-`stop` and `restart` are not implemented on the CLI for MVP (they need a long-running tray/service owner). Stop a foreground `start` with **Ctrl+C**, or use `scripts/stop.ps1`.
+### Resident lock + IPC
 
-Release binary (what the PowerShell scripts prefer):
+| Item | Windows | Dev (non-Windows) |
+| --- | --- | --- |
+| Lockfile | `%LOCALAPPDATA%\WinServeAI\manager.lock` | `$XDG_RUNTIME_DIR` / `$TMPDIR` / `/tmp` + `WinServeAI/manager.lock` |
+| Pipe name | `winserve-manager` → `\\.\pipe\winserve-manager` | Same logical name; loopback TCP + `.port` file beside the lock |
+| Owners | `winserve serve` **or** `winserve-tray` | Same |
+
+`scripts/stop.ps1` prefers `winserve stop` when the lock is live; `-Force` falls
+back to process-name kill.
+
+Release binaries (PowerShell scripts prefer release):
 
 ```text
 target/release/winserve.exe
+target/release/winserve-tray.exe   # or CARGO_TARGET_DIR equivalent
 ```
+
+## Desktop tray (`winserve-tray`)
+
+Tauri 2 shell under `apps/desktop/`. Webview commands call **`ServerManager`
+only** — never spawn `llama-server` from JS. While running, the tray holds the
+same lockfile + IPC pipe so CLI `status|stop|restart` attach.
+
+```bash
+cd apps/desktop && npm install && npm run dev
+# or from repo root:
+cargo run -p winserve-tray
+```
+
+Canonical status labels: Stopped / Starting / Ready / Failed / Stopping /
+Crashed. Settings + `.gguf` Browse require Stopped / Failed / Crashed. Quit
+calls `stop()`; Job Object remains the orphan backstop.
+
+Details: [apps/desktop/README.md](../apps/desktop/README.md),
+[specs/E-desktop.md](specs/E-desktop.md).
 
 ## External binary
 
@@ -205,18 +249,25 @@ A2 operator checklist: [specs/A2-smoke.md](specs/A2-smoke.md). Prefer **Ctrl+C**
 
 ## Typical first run
 
-1. Place `llama-server.exe` (**b9866**) in `bin/`.
-2. Edit `config/default.yaml` → `model.path`.
+1. Place `llama-server.exe` (**b9866**) in `bin/` (`.\scripts\fetch-llama-pin.ps1`).
+2. Set `model.path` to a local `.gguf` (edit YAML or tray Settings → Browse).
 3. `cargo run -p winserve -- print-cmd` — confirm argv.
-4. `cargo run -p winserve -- start` — wait for `READY http://127.0.0.1:8080/v1`.
-5. `.\scripts\smoke-openai.ps1` (or any OpenAI-compatible client at that base URL).
-6. Ctrl+C to free the GPU (cooperative stop).
+4. Prefer resident owner:
+   - `cargo run -p winserve -- serve`, **or**
+   - `cargo run -p winserve-tray` / Start Menu shortcut after install
+5. Wait for Ready / `READY http://127.0.0.1:8080/v1`.
+6. `.\scripts\smoke-openai.ps1` (or any OpenAI-compatible client).
+7. Stop: tray Stop / quit, `winserve stop`, or Ctrl+C on `serve`.
+
+Foreground `winserve start` remains useful for quick one-shot debug (Ctrl+C
+stop); it does not accept CLI `stop`/`restart` attach.
 
 ## Architecture reminder
 
 ```text
-CLI (winserve) → ServerManager (app/server) → runtime/llama + runtime/process
-                                              → bin/llama-server.exe → /v1
+CLI / tray ──► ServerManager ──► runtime/llama + process ──► bin/llama-server.exe ──► /v1
+     │                ▲
+     └── IPC attach ──┘   (serve or tray owns lockfile + pipe)
 ```
 
 Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs). UI and config must not invent flags.
@@ -225,16 +276,20 @@ Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtim
 
 ### Internal
 
-- [architecture.md](./architecture.md) — runtime boundary and rules
+- [architecture.md](./architecture.md) — runtime boundary, lockfile, IPC
+- [first-run.md](./first-run.md) — empty `model.path` → set `.gguf`
+- [installer.md](./installer.md) — stage-release + Inno shortcuts → tray
 - [configuration.md](./configuration.md) — YAML schema and `WINSERVE_CONFIG`
 - [api.md](./api.md) — readiness (`GET /v1/models`) and client examples
 - [logging.md](./logging.md) — `logs/` streams
+- [apps/desktop/README.md](../apps/desktop/README.md) — tray commands
 - [contributing.md](./contributing.md) — PR and branch rules
 - [release-process.md](./release-process.md) — `dev` vs `main`, pin policy
 - [PLAN.md](./PLAN.md) — ordered implementation milestones
 - [policies/doc-drift.md](./policies/doc-drift.md) — `python3 scripts/check_doc_drift.py`
 - [bin/README.md](../bin/README.md) — place `llama-server.exe`
 - [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
+- [`app/src/ipc/`](../app/src/ipc/) — lockfile + pipe
 
 ### Upstream
 

@@ -37,7 +37,7 @@ Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive h
 | **C** DXGI / nvidia-smi / `--fit` vs `-ngl 0` | Done |
 | **D** unit tests + validation + readiness docs | Done |
 | **A2** operator smoke on Windows | Open — **non-blocking** |
-| **E** desktop + resident manager | Not started ([specs/E-desktop.md](specs/E-desktop.md)) |
+| **E** desktop + resident manager | Shipped in draft stack (E1a–E1e, E2); tray wraps ServerManager + lockfile/IPC |
 | **F** Inno installer | Not started ([specs/F-installer.md](specs/F-installer.md)) |
 
 ---

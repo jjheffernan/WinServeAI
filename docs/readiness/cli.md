@@ -3,28 +3,26 @@
 | Field | Value |
 | --- | --- |
 | Path | `app/src/main.rs` |
-| Overall | **2.6 / 5** |
+| Overall | **3.2 / 5** |
 | Label | `mvp-partial` |
-| Reviewed | 2026-07-04 |
+| Reviewed | 2026-07-30 |
 
 ## Dimensions
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 3/5 | CLI is a thin caller of `ServerManager` (`app/src/main.rs`); matches architecture (UI/CLI → manager only). No IPC for multi-command control. |
-| Implementation | 2/5 | `start` loads config, starts manager, prints READY, blocks on Ctrl+C then `stop`. `status` / `print-config` / `print-cmd` work on a fresh manager (status is usually `Stopped` — no attach to running process). `stop` and `restart` print an error and exit failure (lines 78–84). |
+| Design | 4/5 | CLI is a thin caller of `ServerManager` (`app/src/main.rs`); `serve` owns lockfile+IPC; `status|stop|restart` attach. Matches architecture (UI/CLI → manager only). |
+| Implementation | 4/5 | `serve` resident owner; `start` one-shot foreground; attach path for `status|stop|restart`; `print-config` / `print-cmd` as before. |
 | Tests | 1/5 | Manual only (documented in `docs/development.md`); no CLI tests. |
-| Docs | 4/5 | `docs/development.md` documents commands and explicitly notes stop/restart MVP limits. |
-| Windows readiness | 3/5 | `tokio::signal::ctrl_c` works on Windows for foreground stop; PowerShell scripts invoke `winserve.exe`. |
+| Docs | 4/5 | `docs/development.md` documents serve / attach / tray and lockfile paths. |
+| Windows readiness | 3/5 | Named pipe + `%LOCALAPPDATA%\WinServeAI\manager.lock`; PowerShell scripts invoke `winserve.exe`. |
 
 ## Gaps
 
-- `stop` / `restart` not implemented (need long-running manager process).
-- `status` does not observe an already-running `winserve start`.
-- No automated CLI smoke tests.
+- No automated CLI smoke tests for attach vs one-shot `start`.
+- Operator Windows proof that tray + CLI attach share one owner.
 
 ## Next actions (ordered)
 
-1. Document/implement a single-instance or PID file so status/stop can attach.
-2. Implement `stop`/`restart` against that owner, or keep CLI start-only and rely on scripts.
-3. Smoke-test script: `print-cmd` then `start` with a mock binary.
+1. Smoke-test script: `serve` + attach `status|stop`, and one-shot `start` Ctrl+C.
+2. Optional: document recovery when lockfile is stale (already reclaimed on read).

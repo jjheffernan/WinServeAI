@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | Path | `apps/desktop/` (`winserve-tray`) |
-| Overall | **3.6 / 5** |
-| Label | `mvp-ready` |
+| Overall | **3.2 / 5** |
+| Label | `mvp-partial` |
 | Reviewed | 2026-07-30 |
 
 ## Dimensions
@@ -14,7 +14,7 @@
 | Design | 4/5 | Tauri commands wrap `ServerManager` only; tray is G owner (lockfile + IPC); quit → `stop()` with Job Object backstop. |
 | Implementation | 4/5 | Status/start/stop/logs/settings/`.gguf` picker; `ExitRequested` / `CloseRequested` call `stop()`; lockfile + pipe listen for CLI attach. |
 | Tests | 2/5 | Manager/log unit tests; no automated tray quit/IPC integration test. |
-| Docs | 3/5 | `apps/desktop/README.md` + TODO E1a–E1e / E2. |
+| Docs | 4/5 | `apps/desktop/README.md` + `docs/development.md` / `architecture.md` / `installer.md` cover tray + IPC. |
 | Windows readiness | 2/5 | Compiles with Tauri host toolchain; Win10/11 tray + dialog + quit path still need operator proof. |
 
 ## Gaps

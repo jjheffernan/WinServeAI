@@ -51,6 +51,9 @@ pub fn build_command(config: &Config, hardware: &HardwareInfo, binary: &Path) ->
         args.push("on".into());
     }
 
+    // Appliance is API-only — disable llama-server embedded Web UI (b9866: --no-ui).
+    args.push("--no-ui".into());
+
     (binary.to_path_buf(), args)
 }
 
@@ -88,6 +91,7 @@ mod tests {
         let joined = args.join(" ");
         assert!(joined.contains("--n-gpu-layers 0"), "{joined}");
         assert!(!joined.contains("--fit"), "{joined}");
+        assert!(joined.contains("--no-ui"), "{joined}");
     }
 
     #[test]

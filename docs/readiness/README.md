@@ -23,4 +23,4 @@ Last reviewed: 2026-07-30
 ## Summary
 
 - **Overall project maturity:** **3.4/5** (`mvp-partial`) — average of 14 modules, excluding `ui`.
-- **Phase alignment:** G/H resident IPC, E tray, and F installer/first-run are implemented in the draft PR stack. Remaining exit polish: I4 pin record, A2 Windows+GGUF smoke, optional ISCC CI. Scorecards refreshed 2026-07-30 (I2).
+- **Phase alignment:** G/H resident IPC, E tray, F installer/first-run, and I1–I4 polish are merged on `dev`. Remaining gates: A2 Windows+GGUF smoke, optional ISCC CI, orphan-free quit proof. Scorecards refreshed 2026-07-30 (I2).

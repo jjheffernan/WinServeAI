@@ -63,3 +63,60 @@ pub async fn run(manager: &mut ServerManager, commands: &mut mpsc::Receiver<Comm
         let _ = reply.send(handle(manager, kind).await);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::server::config::Config;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn temp_mgr() -> (PathBuf, ServerManager) {
+        let root = std::env::temp_dir().join(format!(
+            "winserve-res-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(root.join("config")).unwrap();
+        std::fs::create_dir_all(root.join("logs")).unwrap();
+        let path = root.join("config").join("default.yaml");
+        let mut cfg = Config::default();
+        cfg.logging.dir = root.join("logs");
+        cfg.model.path = root.join("missing.gguf");
+        cfg.save(&path).unwrap();
+        let mgr = ServerManager::load_config(&root, &path).unwrap();
+        (root, mgr)
+    }
+
+    #[tokio::test]
+    async fn status_and_endpoint_without_start() {
+        let (root, mut mgr) = temp_mgr();
+        let reply = handle(&mut mgr, CommandKind::Status).await;
+        assert_eq!(reply.status, Status::Stopped);
+        assert!(reply.error.is_none());
+        assert!(reply.endpoint.ends_with("/v1"));
+        let reply = handle(&mut mgr, CommandKind::Endpoint).await;
+        assert_eq!(reply.status, Status::Stopped);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn start_command_surfaces_missing_binary() {
+        let (root, mut mgr) = temp_mgr();
+        let reply = handle(&mut mgr, CommandKind::Start).await;
+        assert_eq!(reply.status, Status::Failed);
+        assert!(
+            reply
+                .error
+                .as_deref()
+                .unwrap_or("")
+                .contains("llama-server not found"),
+            "{:?}",
+            reply.error
+        );
+        let _ = std::fs::remove_dir_all(root);
+    }
+}

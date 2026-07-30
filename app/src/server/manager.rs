@@ -300,4 +300,76 @@ mod tests {
         assert!(err.contains("stop the server"), "got {err}");
         let _ = std::fs::remove_dir_all(root);
     }
+
+    #[tokio::test]
+    async fn start_fails_when_binary_missing() {
+        let (root, path, _) = temp_cfg();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        let err = mgr.start().await.unwrap_err().to_string();
+        assert!(err.contains("llama-server not found"), "got {err}");
+        assert_eq!(mgr.status(), Status::Failed);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn start_fails_when_model_path_empty() {
+        let (root, path, mut cfg) = temp_cfg();
+        std::fs::create_dir_all(root.join("bin")).unwrap();
+        let bin = root.join("bin").join(if cfg!(windows) {
+            "llama-server.exe"
+        } else {
+            "llama-server"
+        });
+        std::fs::write(&bin, b"stub").unwrap();
+        cfg.model.path = PathBuf::new();
+        cfg.save(&path).unwrap();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        let err = mgr.start().await.unwrap_err().to_string();
+        assert!(err.contains("model.path is empty"), "got {err}");
+        assert_eq!(mgr.status(), Status::Failed);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn start_fails_when_model_file_missing() {
+        let (root, path, _) = temp_cfg();
+        std::fs::create_dir_all(root.join("bin")).unwrap();
+        let bin = root.join("bin").join(if cfg!(windows) {
+            "llama-server.exe"
+        } else {
+            "llama-server"
+        });
+        std::fs::write(&bin, b"stub").unwrap();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        let err = mgr.start().await.unwrap_err().to_string();
+        assert!(err.contains("model not found"), "got {err}");
+        assert_eq!(mgr.status(), Status::Failed);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[tokio::test]
+    async fn start_fails_when_port_busy() {
+        let (root, path, mut cfg) = temp_cfg();
+        std::fs::create_dir_all(root.join("bin")).unwrap();
+        let bin = root.join("bin").join(if cfg!(windows) {
+            "llama-server.exe"
+        } else {
+            "llama-server"
+        });
+        std::fs::write(&bin, b"stub").unwrap();
+        let gguf = root.join("model.gguf");
+        std::fs::write(&gguf, b"fake").unwrap();
+        cfg.model.path = gguf;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        cfg.server.host = "127.0.0.1".into();
+        cfg.server.port = port;
+        cfg.save(&path).unwrap();
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        let err = mgr.start().await.unwrap_err().to_string();
+        assert!(err.contains("not available"), "got {err}");
+        assert_eq!(mgr.status(), Status::Failed);
+        drop(listener);
+        let _ = std::fs::remove_dir_all(root);
+    }
 }

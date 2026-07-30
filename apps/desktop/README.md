@@ -55,12 +55,16 @@ Starting / Ready / Stopping.
 **Browse…** opens a native file dialog filtered to `.gguf` (`pick_model_path`);
 no downloads. Persist with Save settings.
 
-### Quit (E1e)
+### System tray
 
-Window close / app exit requests `ServerManager::stop()` before leaving.
-Job Object (`KILL_ON_JOB_CLOSE`) remains the orphan backstop if the process is
-force-killed. The tray acquires the resident lockfile + IPC pipe so
-`winserve status|stop|restart` can attach while it runs.
+Notification-area icon with menu: **Open**, **Start**, **Stop**, **Restart**,
+**Settings**, **Quit**. Start/stop/restart call `ServerManager` only. Tooltip
+shows status + OpenAI `/v1` endpoint.
+
+- **Window close** hides to tray (does not stop the backend).
+- **Quit** (tray menu or OS exit) calls `ServerManager::stop()` before leaving.
+  Job Object (`KILL_ON_JOB_CLOSE`) remains the orphan backstop if force-killed.
+- Lockfile + IPC pipe stay held so `winserve status|stop|restart` can attach.
 
 ## See also
 

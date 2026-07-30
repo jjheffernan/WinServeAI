@@ -74,7 +74,7 @@
 - It owns the same lockfile and IPC endpoint as `winserve serve`, allowing CLI attachment.
 - Window close and application exit call `ServerManager::stop()` before exit.
 - The local model picker restricts selection to an existing `.gguf`.
-- The current surface is still a window-oriented shell: `docs/readiness/ui.md` records that a system-tray icon/menu is not implemented.
+- System tray icon/menu is implemented (Open/Start/Stop/Restart/Settings/Quit); window close hides to tray; Quit stops via `ServerManager`.
 
 ### Operational scripts
 
@@ -232,7 +232,7 @@ Proposed paths are recommendations, not existing files.
 - Largest remaining risk is missing end-to-end Windows proof, not missing implementation.
 - Job Object / named-pipe unit tests do not prove manager-death reaping or real-process CLI/tray ownership.
 - Installer authored but uncompiled/uninstalled by automation.
-- Tray binary exists; true system-tray icon/menu still absent (`docs/readiness/ui.md`).
+- Tray icon/menu present; Windows quit-with-no-orphan operator proof still open (`docs/readiness/ui.md`).
 
 ---
 

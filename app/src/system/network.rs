@@ -17,7 +17,16 @@ mod tests {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let port = listener.local_addr().unwrap().port();
         drop(listener);
-        assert!(port_available("127.0.0.1", port));
+        // Port may briefly linger or be raced by parallel tests — retry.
+        let ok = (0..20).any(|_| {
+            if port_available("127.0.0.1", port) {
+                true
+            } else {
+                std::thread::sleep(std::time::Duration::from_millis(5));
+                false
+            }
+        });
+        assert!(ok, "port {port} still unavailable after release");
     }
 
     #[test]

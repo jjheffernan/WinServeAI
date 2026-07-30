@@ -18,7 +18,7 @@ Last reviewed: 2026-07-30
 | scripts-ops | 3.4/5 | mvp-partial | No automated PS1 tests; start.ps1 missing-build UX | [scripts-ops.md](./scripts-ops.md) |
 | scripts-pr-loop | 3.0/5 | mvp-partial | Dry-run only; no formal tests | [scripts-pr-loop.md](./scripts-pr-loop.md) |
 | docs | 4.0/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
-| ui | 3.2/5 | mvp-partial | No system-tray icon yet; Windows quit proof open | [ui.md](./ui.md) |
+| ui | 3.6/5 | mvp-partial | Windows quit proof open (tray icon/menu present) | [ui.md](./ui.md) |
 
 ## Summary
 

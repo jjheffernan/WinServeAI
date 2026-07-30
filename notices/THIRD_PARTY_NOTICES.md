@@ -1,23 +1,28 @@
-# Third-party notices (stub)
+# Third-party notices
 
-This directory ships with WinServeAI install/release trees. Refresh contents
-whenever the pinned `bin/llama-server` build changes (see `bin/README.md`).
+This directory ships inside WinServeAI install/release trees (`{app}\notices\`).
+Refresh whenever the pinned `bin/llama-server` build changes (see `bin/README.md`
+and `scripts/refresh-notices.sh`).
 
-Pin documented here: **llama.cpp `b9866`**.
+| Component | Upstream | License | Pin / version |
+| --- | --- | --- | --- |
+| WinServeAI | https://github.com/jjheffernan/WinServeAI | MIT | 0.1.0 (repo `LICENSE`) |
+| llama.cpp (`llama-server`) | https://github.com/ggml-org/llama.cpp | MIT | **b9866** |
+| NVIDIA CUDA redistributables | https://docs.nvidia.com/cuda/eula/ | CUDA EULA Attachment A | CUDA builds only |
 
 ---
 
 ## WinServeAI
 
-MIT — see repository root `LICENSE`.
+MIT — full text in the repository / install root `LICENSE`.
 
 ---
 
 ## llama.cpp (ggml-org/llama.cpp)
 
-Upstream: https://github.com/ggml-org/llama.cpp  
-Pinned release: https://github.com/ggml-org/llama.cpp/releases/tag/b9866  
-License file at pin: https://github.com/ggml-org/llama.cpp/blob/b9866/LICENSE
+- Release: https://github.com/ggml-org/llama.cpp/releases/tag/b9866
+- Full license text: [`llama.cpp-LICENSE.txt`](llama.cpp-LICENSE.txt)
+- Authors / attribution list at pin: [`llama.cpp-AUTHORS.txt`](llama.cpp-AUTHORS.txt)
 
 ```text
 MIT License
@@ -43,22 +48,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-Optional attribution list: upstream `AUTHORS` at the same pin tag.
-
 ---
 
 ## NVIDIA CUDA redistributables (CUDA builds only)
 
-When packaging a CUDA build of `llama-server.exe`, redistribute only Attachment A
-runtime libraries from the matching CUDA Toolkit, beside the exe. See the
-[CUDA Toolkit EULA](https://docs.nvidia.com/cuda/eula/). End users still need a
-compatible NVIDIA GPU driver (drivers are not redistributed here).
-
-Full NVIDIA notice text for installer payloads is tracked as installer work (F4).
+When the staged `bin/` payload includes NVIDIA CUDA runtime libraries
+(`cudart64_*.dll`, `cublas*`, etc.) beside `llama-server.exe`, see
+[`NVIDIA-CUDA-NOTICE.txt`](NVIDIA-CUDA-NOTICE.txt). CPU/Vulkan-only packages
+do not redistribute those DLLs.
 
 ---
 
 ## Model weights
 
-Not bundled. Model files under `models/` (or configured `model.path`) remain the
+Not bundled. Files under `models/` or configured `model.path` remain the
 operator’s responsibility and carry their own licenses.

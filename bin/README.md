@@ -42,7 +42,14 @@ bin/llama-server       # non-Windows (optional for local experiments)
 
 Do **not** commit the binary or DLLs (gitignored). Document pin bumps in [release-process.md](../docs/release-process.md).
 
-Ship MIT notices for llama.cpp with the installer — stub: [`notices/THIRD_PARTY_NOTICES.md`](../notices/THIRD_PARTY_NOTICES.md).
+After bumping the pin, refresh notices:
+
+```bash
+PIN=b9866 ./scripts/refresh-notices.sh
+# then update the pin table in notices/THIRD_PARTY_NOTICES.md
+```
+
+Ship MIT notices for llama.cpp with the installer — payload: [`notices/`](../notices/).
 
 ## See also
 

@@ -1,0 +1,26 @@
+NVIDIA CUDA redistributables notice (WinServeAI)
+
+This WinServeAI package may include NVIDIA CUDA runtime libraries that are
+redistributed solely to run the bundled llama-server binary. Those libraries
+are NVIDIA proprietary software.
+
+Redistribution here is limited to files listed in Attachment A of the NVIDIA
+CUDA Toolkit End User License Agreement (EULA) for the CUDA toolkit version
+used to build the pinned llama-server. See:
+
+  https://docs.nvidia.com/cuda/eula/
+
+Conditions (summary — not legal advice; read the EULA):
+
+  * Redistribute only Attachment A runtime components required by this app.
+  * Do not ship the full CUDA Toolkit, SDK, or developer tools to end users.
+  * The application provides material additional functionality beyond the
+    redistributed CUDA bits.
+  * End users must install a compatible NVIDIA GPU driver themselves; GPU
+    drivers are not redistributed by WinServeAI.
+
+DLL placement: CUDA redistributables live beside llama-server.exe under
+{app}\bin\ (Windows loads DLLs from the executable directory first).
+
+If this package is a CPU- or Vulkan-only build with no NVIDIA DLLs under bin\,
+this notice still documents the policy for CUDA SKUs built from the same tree.

@@ -26,6 +26,9 @@ runtime:
 
 logging:
   dir: logs
+  max_bytes: 10485760
+  max_age_secs: 604800
+  keep: 3
 ```
 
 Copy `config/default.yaml`, set `model.path` to a real GGUF, then start.
@@ -59,7 +62,7 @@ cargo run -p winserve -- print-cmd      # binary + argv after hardware detect
 
 ## Schema
 
-All top-level sections except `logging` are required in practice (they match the shipped default). `logging` may be omitted; it defaults to `dir: logs`.
+All top-level sections except `logging` are required in practice (they match the shipped default). `logging` may be omitted; it defaults to `dir: logs` with size/age rotation knobs.
 
 ### `server`
 
@@ -99,6 +102,9 @@ See [GPU rules](#gpu-rules) below. Do not put `--n-gpu-layers`, `--fit`, or othe
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `dir` | path | `logs` | Directory for `server.log`, `llama.log`, `error.log` |
+| `max_bytes` | u64 | `10485760` | Rotate when active file reaches this size (`0` disables) |
+| `max_age_secs` | u64 | `604800` | Rotate when active file mtime is this old (`0` disables) |
+| `keep` | u32 | `3` | Rotated siblings to retain (`*.1` … `*.N`) |
 
 See [logging.md](logging.md). Created when the manager loads config.
 
@@ -169,6 +175,9 @@ runtime:
   flash_attention: true
 logging:
   dir: logs
+  max_bytes: 10485760
+  max_age_secs: 604800
+  keep: 3
 ```
 
 ### LAN bind, CPU-only

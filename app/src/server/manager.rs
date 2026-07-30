@@ -70,7 +70,7 @@ impl ServerManager {
         let config = Config::load(config_path)?;
         let hardware = system::detect();
         let binary = default_binary(&root);
-        let logs = LogSinks::open(&config.logging.dir)?;
+        let logs = LogSinks::open(&config.logging)?;
         logs.server(&format!("config loaded; binary={}", binary.display()));
         for w in config.warnings() {
             logs.server(&format!("warning: {w}"));
@@ -149,7 +149,7 @@ impl ServerManager {
         self.logs.server(&format!("starting {} {}", program.display(), args.join(" ")));
 
         let (tx, mut rx) = mpsc::unbounded_channel::<String>();
-        let logs = LogSinks::open(&self.config.logging.dir)?;
+        let logs = LogSinks::open(&self.config.logging)?;
         tokio::spawn(async move {
             while let Some(line) = rx.recv().await {
                 logs.llama(&line);

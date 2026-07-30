@@ -1,6 +1,6 @@
 # Logging
 
-> **Readiness:** 2.8/5 (`mvp-partial`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
+> **Readiness:** 3.6/5 (`mvp-ready`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
 
 WinServeAI writes three append-only streams under one directory. `ServerManager` owns all writes; there is no separate logging package.
 
@@ -9,6 +9,9 @@ Default directory is `logs/` (config: `logging.dir`). The manager creates the di
 ```yaml
 logging:
   dir: logs
+  max_bytes: 10485760   # 10 MiB; 0 disables size rotation
+  max_age_secs: 604800  # 7 days; 0 disables age rotation
+  keep: 3               # retain server.log.1 … .N
 ```
 
 ## Files
@@ -19,7 +22,7 @@ logging:
 | `llama.log` | `llama-server` stdout and stderr (line-tagged) |
 | `error.log` | Start failures, readiness failure, unexpected child exit |
 
-Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is prefixed with `ts=<unix-epoch-seconds>` and flushed immediately. No log levels or rotation.
+Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is prefixed with `ts=<unix-epoch-seconds>` and flushed immediately. No log levels.
 
 ## What is captured
 
@@ -56,8 +59,12 @@ Exit codes are written on **intentional stop** (`stopped exit=…` in `server.lo
 
 ## Rotation
 
-Not implemented. Files grow for as long as the process appends to them. Size limits, rotation, and retention are future work (see open items in [research.md](research.md)).
+Before each write (and once on open), `LogSinks` rotates an active file when:
 
+- `max_bytes > 0` and the file size is at least that many bytes, or
+- `max_age_secs > 0` and the file’s mtime is at least that old.
+
+Rotation renames `name` → `name.1` → `name.2` … up to `keep`, deleting the oldest. The active file is closed before rename (Windows-safe) and reopened empty.
 ## Debugging tips
 
 1. **Server never becomes ready** — read `error.log` first (missing binary/model, readiness failure). Then `server.log` for the exact `starting …` argv and any port warning.

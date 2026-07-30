@@ -62,8 +62,14 @@ Status legend:
 | [research/03-hardware-detection.md](research/03-hardware-detection.md) | DXGI / NVML / CUDA inventory | canonical |
 | [research/04-installer-licensing.md](research/04-installer-licensing.md) | Inno Setup, firewall, CUDA DLLs, MIT notices | canonical |
 | [research/05-server-manager.md](research/05-server-manager.md) | State machine and public manager API | canonical |
+| [research/06-competitor-architecture.md](research/06-competitor-architecture.md) | Ownership families + diagrams (pinned briefs) | building |
+| [research/competitors/PLAN.md](research/competitors/PLAN.md) | Competitor research contract + confidence vocabulary | building |
+| [research/competitors/STATUS.md](research/competitors/STATUS.md) | Brief roll-up PASS/GAP + residual uncertainties | building |
+| [comparison.md](comparison.md) | WinServeAI vs competitor families; adopt/reject/defer | building |
+| [audit/completion-audit.md](audit/completion-audit.md) | MVP implemented vs Windows-proven; test gaps | building |
+| [audit/competitor-accuracy.md](audit/competitor-accuracy.md) | Independent accuracy gate for competitor reports | building |
 
-Phase-0 deep dives carry a path-note banner mapping historical `packages/*` paths to `app/src/…` (see [STATUS.md](research/doc-build/STATUS.md)).
+Phase-0 deep dives carry a path-note banner mapping historical `packages/*` paths to `app/src/…` (see [STATUS.md](research/doc-build/STATUS.md)). Competitor briefs: `research/competitors/*.research.md`.
 
 ## Doc-build pipeline
 

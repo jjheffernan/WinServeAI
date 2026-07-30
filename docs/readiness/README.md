@@ -23,4 +23,4 @@ Last reviewed: 2026-07-30
 ## Summary
 
 - **Overall project maturity:** **3.4/5** (`mvp-partial`) — average of 14 modules, excluding `ui`.
-- **Phase alignment:** G/H resident IPC, E tray, F installer/first-run, and I1–I4 polish are merged on `dev`. Remaining gates: A2 Windows+GGUF smoke, optional ISCC CI, orphan-free quit proof. Scorecards refreshed 2026-07-30 (I2).
+- **Phase alignment:** G/H resident IPC, E tray, F installer/first-run, and I1–I4 polish are merged on `dev`. Remaining gates: A2 Windows+GGUF smoke, optional ISCC CI, orphan-free quit proof. Scorecards refreshed 2026-07-30 (I2). See [audit/completion-audit.md](../audit/completion-audit.md).

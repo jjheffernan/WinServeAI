@@ -4,6 +4,8 @@ Research snapshot for WinServeAI scaffolding (process ownership, hardware, insta
 
 Related internal docs: [architecture.md](./architecture.md), [vision.md](./vision.md), [research.md](./research.md) (checklist), [installer.md](./installer.md), [backend.md](./backend.md).
 
+**Code-verifiable competitor architecture (2026-07-30):** pinned briefs under [research/competitors/](./research/competitors/), synthesis [research/06-competitor-architecture.md](./research/06-competitor-architecture.md), WinServeAI comparison [comparison.md](./comparison.md), accuracy gate [audit/competitor-accuracy.md](./audit/competitor-accuracy.md). This prior-art note keeps opinionated Steal/Avoid positioning; prefer the briefs for path@rev evidence.
+
 > **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
 > `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 

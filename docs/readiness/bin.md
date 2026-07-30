@@ -26,5 +26,4 @@
 ## Next actions (ordered)
 
 1. Optional CI: fetch pin on `windows-latest` and `print-cmd` / unit smoke (no inference).
-2. Record shipped `b####` in release docs (I4).
-3. Close A2 after Windows + GGUF proof.
+2. Close A2 after Windows + GGUF proof.

@@ -7,7 +7,7 @@ External **llama-server** binary (not built by this repo).
 | Field | Value |
 | --- | --- |
 | **Upstream** | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) |
-| **Pinned release** | [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866) |
+| **Pinned release** | [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866) — also [`VERSION`](VERSION) |
 | **Windows asset** | Prefer the CUDA build matching your driver (e.g. `llama-b9866-bin-win-cuda-12.4-x64.zip`), or CPU/Vulkan if no NVIDIA GPU |
 
 ```text
@@ -40,13 +40,13 @@ bin/llama-server       # non-Windows (optional for local experiments)
 3. Keep DLLs **beside** `llama-server.exe` (PATH is unreliable on Windows).
 4. `cargo run -p winserve -- print-cmd` then `start`.
 
-Do **not** commit the binary or DLLs (gitignored). Document pin bumps in [release-process.md](../docs/release-process.md).
+Do **not** commit the binary or DLLs (gitignored). **Do** keep [`VERSION`](VERSION) committed and in sync with the fetch-script default. Document pin bumps in [release-process.md](../docs/release-process.md) (Current ship pin).
 
 After bumping the pin, refresh notices:
 
 ```bash
 PIN=b9866 ./scripts/refresh-notices.sh
-# then update the pin table in notices/THIRD_PARTY_NOTICES.md
+# then update bin/VERSION, fetch defaults, and notices/THIRD_PARTY_NOTICES.md
 ```
 
 Ship MIT notices for llama.cpp with the installer — payload: [`notices/`](../notices/).

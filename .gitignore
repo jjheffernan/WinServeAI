@@ -45,6 +45,7 @@ models/*
 !models/.gitkeep
 bin/*
 !bin/README.md
+!bin/VERSION
 !bin/.gitkeep
 *.log.*
 

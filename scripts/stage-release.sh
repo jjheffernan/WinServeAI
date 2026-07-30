@@ -103,6 +103,11 @@ else
     exit 1
   fi
   echo "WARN: $msg"
+  if [[ -f "$BIN_SRC/VERSION" ]]; then
+    mkdir -p "$OUT/bin"
+    cp -f "$BIN_SRC/VERSION" "$OUT/bin/VERSION"
+    echo "OK: bin/VERSION (pin record without binary)"
+  fi
 fi
 
 echo

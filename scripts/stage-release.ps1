@@ -116,6 +116,7 @@ else {
 
 $llamaExe = Join-Path $BinSrc "llama-server.exe"
 $llamaUnix = Join-Path $BinSrc "llama-server"
+$VersionSrc = Join-Path $BinSrc "VERSION"
 if (Test-Path $llamaExe) {
     Copy-Item -Force (Join-Path $BinSrc "*") -Destination (Join-Path $OutDir "bin")
     Write-Host "OK: bin\ (from repo bin/, including llama-server.exe + DLLs)"
@@ -128,6 +129,10 @@ else {
     $msg = "bin\llama-server(.exe) not found — run scripts\fetch-llama-pin.ps1 first"
     if ($RequireLlama) { throw $msg }
     Write-Host "WARN: $msg"
+    if (Test-Path $VersionSrc) {
+        Copy-Item -Force $VersionSrc -Destination (Join-Path $OutDir "bin\VERSION")
+        Write-Host "OK: bin\VERSION (pin record without binary)"
+    }
 }
 
 Write-Host ""

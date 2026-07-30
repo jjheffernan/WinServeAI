@@ -102,8 +102,9 @@ If the user changes bind after install, Server Manager should add or remove the 
 
 Ship `llama-server.exe` and any required CUDA runtime DLLs in the **same** `bin\` directory. Do not rely on a system CUDA Toolkit install or `PATH`. Pin the llama.cpp release used to build; redistribute only NVIDIA Attachment A libraries. End users still need a compatible NVIDIA driver.
 
-Models are not shipped; GGUF files have separate licenses. Record the shipped
-`b####` pin in release docs (I4).
+Models are not shipped; GGUF files have separate licenses. The shipped llama.cpp
+pin is **`b9866`** — see [release-process.md](./release-process.md) (Current ship
+pin) and [`bin/VERSION`](../bin/VERSION).
 
 ## THIRD_PARTY_NOTICES
 

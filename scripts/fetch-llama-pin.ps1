@@ -63,6 +63,8 @@ try {
     }
 
     Write-Host "OK: $destExe"
+    Set-Content -Path (Join-Path $BinDir "VERSION") -Value $Pin -NoNewline
+    Write-Host "OK: bin\VERSION = $Pin"
     Write-Host "Keep CUDA/runtime DLLs beside llama-server.exe (already copied when present)."
     Write-Host "Notices stub: notices\THIRD_PARTY_NOTICES.md (refresh on pin bumps)."
 }

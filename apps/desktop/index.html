@@ -7,64 +7,192 @@
     <style>
       :root {
         color-scheme: dark;
-        font-family: system-ui, sans-serif;
+        font-family: system-ui, -apple-system, sans-serif;
+        --bg: #0f1419;
+        --panel: #171d25;
+        --text: #e7ecf1;
+        --muted: #8b98a8;
+        --border: #2a3441;
+      }
+      * {
+        box-sizing: border-box;
       }
       body {
-        margin: 1.5rem;
-        background: #0f1419;
-        color: #e7ecf1;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      main {
+        max-width: 28rem;
+        margin: 0 auto;
+        padding: 1.25rem 1.25rem 1.75rem;
       }
       h1 {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 600;
+        margin: 0 0 0.35rem;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin: 0 0 1.25rem;
+        line-height: 1.4;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .badge-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+      }
+      .badge::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .badge[data-status="Stopped"] {
+        color: #94a3b8;
+        background: #1e293b;
+        border-color: #334155;
+      }
+      .badge[data-status="Starting"],
+      .badge[data-status="Stopping"] {
+        color: #fbbf24;
+        background: #422006;
+        border-color: #854d0e;
+      }
+      .badge[data-status="Ready"] {
+        color: #4ade80;
+        background: #052e16;
+        border-color: #166534;
+      }
+      .badge[data-status="Failed"],
+      .badge[data-status="Crashed"] {
+        color: #f87171;
+        background: #450a0a;
+        border-color: #7f1d1d;
+      }
+      .badge[data-status="Unknown"] {
+        color: var(--muted);
+        background: #111827;
+        border-color: var(--border);
+      }
+      .meta {
+        margin-top: 0.85rem;
+        font-size: 0.85rem;
+      }
+      .meta dt {
+        color: var(--muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 0 0 0.2rem;
+      }
+      .meta dd {
+        margin: 0 0 0.75rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
       }
       .row {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        margin: 1rem 0;
       }
       button {
         background: #1a56db;
         color: white;
         border: 0;
         border-radius: 6px;
-        padding: 0.45rem 0.85rem;
+        padding: 0.5rem 0.9rem;
         cursor: pointer;
+        font: inherit;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
       button.secondary {
         background: #2a3441;
       }
-      #status,
-      #endpoint,
-      #error {
-        font-family: ui-monospace, monospace;
-        font-size: 0.85rem;
-        white-space: pre-wrap;
-      }
       #error {
         color: #f87171;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem;
+        min-height: 1.2em;
+        margin: 0.75rem 0 0;
+        white-space: pre-wrap;
       }
-      .hint {
-        opacity: 0.7;
-        font-size: 0.85rem;
+      .canon {
+        margin-top: 1rem;
+        color: var(--muted);
+        font-size: 0.75rem;
+        line-height: 1.45;
+      }
+      .canon strong {
+        color: #cbd5e1;
+        font-weight: 600;
       }
     </style>
   </head>
   <body>
-    <h1>WinServeAI</h1>
-    <p class="hint">
-      Scaffold (E1a): commands talk to <code>ServerManager</code> only. Full UI lands in E1b+.
-    </p>
-    <div class="row">
-      <button id="btn-start">Start</button>
-      <button id="btn-stop" class="secondary">Stop</button>
-      <button id="btn-restart" class="secondary">Restart</button>
-      <button id="btn-refresh" class="secondary">Refresh</button>
-    </div>
-    <p><strong>Status:</strong> <span id="status">…</span></p>
-    <p><strong>Endpoint:</strong> <span id="endpoint">…</span></p>
-    <p id="error"></p>
+    <main>
+      <h1>WinServeAI</h1>
+      <p class="hint">
+        Start / stop / status via <code>ServerManager</code> only. Ready means the
+        OpenAI endpoint answered — not merely that a process is alive.
+      </p>
+
+      <section class="panel" aria-label="Status">
+        <div class="badge-row">
+          <span
+            id="badge"
+            class="badge"
+            data-status="Unknown"
+            role="status"
+            aria-live="polite"
+            >…</span
+          >
+        </div>
+        <dl class="meta">
+          <dt>OpenAI base</dt>
+          <dd id="endpoint">…</dd>
+        </dl>
+        <div class="row">
+          <button id="btn-start" type="button">Start</button>
+          <button id="btn-stop" class="secondary" type="button">Stop</button>
+          <button id="btn-restart" class="secondary" type="button">Restart</button>
+          <button id="btn-refresh" class="secondary" type="button">Refresh</button>
+          <button id="btn-copy" class="secondary" type="button">Copy URL</button>
+        </div>
+        <p id="error" aria-live="polite"></p>
+      </section>
+
+      <p class="canon">
+        Canonical states:
+        <strong>Stopped</strong>, <strong>Starting</strong>, <strong>Ready</strong>,
+        <strong>Failed</strong>, <strong>Stopping</strong>, <strong>Crashed</strong>.
+        There is no “Running” label — use Ready after readiness.
+      </p>
+    </main>
     <script src="/main.js"></script>
   </body>
 </html>

@@ -20,7 +20,7 @@ npm run dev
 Requires a Tauri 2 host toolchain (Rust + platform webview). Binary name:
 `winserve-tray`.
 
-## Commands (E1a)
+## Commands (E1a / E1b)
 
 | Command | Manager |
 | --- | --- |
@@ -31,7 +31,14 @@ Requires a Tauri 2 host toolchain (Rust + platform webview). Binary name:
 | `manager_endpoint` | `openai_base` |
 | `manager_config_summary` | read-only config fields |
 
-UI polish (canonical badges, logs, settings, path picker, quit path) is E1b–E1e / E2.
+### Status UI (E1b)
+
+Badge labels are exactly: **Stopped**, **Starting**, **Ready**, **Failed**,
+**Stopping**, **Crashed**. There is no “Running” alias for Ready. Buttons disable
+during transitional states; Start optimistically shows Starting while
+`manager_start` awaits readiness.
+
+Logs, settings, path picker, and quit→stop are E1c–E1e / E2.
 
 ## See also
 

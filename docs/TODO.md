@@ -40,7 +40,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **F1** Inno Setup script
 - [x] **F2** Desktop + Start Menu → tray/manager
 - [x] **F3** Firewall only for non-loopback; remove on uninstall
-- [ ] **F4** Notices payload (llama.cpp MIT; CUDA notice if needed)
+- [x] **F4** Notices payload (llama.cpp MIT; CUDA notice if needed)
 - [ ] **F5** First-run model path guidance
 
 ### Ship — Exit polish (I)

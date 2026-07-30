@@ -54,4 +54,5 @@ ISCC.exe installer\inno\WinServeAI.iss
 ```
 
 * [`installer/inno/WinServeAI.iss`](inno/WinServeAI.iss) — Inno Setup 6 script (Files, Icons, optional desktop + LAN firewall tasks)
-* First-run model path guidance (F5); notices payload polish (F4)
+* Notices payload under [`notices/`](../notices/) (F4) — refresh with `./scripts/refresh-notices.sh`
+* First-run model path guidance (F5)

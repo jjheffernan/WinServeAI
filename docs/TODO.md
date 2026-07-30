@@ -1,6 +1,6 @@
 # Project TODO — MVP build
 
-**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.2/5**  
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.3/5**  
 **Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.
@@ -36,7 +36,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 
 ### Then — Installer (F)
 
-- [ ] **F0** Release layout script (exe + tray + bin + config + notices)
+- [x] **F0** Release layout script (exe + tray + bin + config + notices)
 - [ ] **F1** Inno Setup script
 - [ ] **F2** Desktop + Start Menu → tray/manager
 - [ ] **F3** Firewall only for non-loopback; remove on uninstall

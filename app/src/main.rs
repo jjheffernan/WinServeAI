@@ -74,7 +74,13 @@ async fn main() -> ExitCode {
         "serve" => match run_serve(&root, &cfg_path).await {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
-                eprintln!("error: serve failed: {e}");
+                let msg = e.to_string();
+                if msg.starts_with("already running") {
+                    eprintln!("error: {msg}");
+                    eprintln!("hint: use `winserve status|stop|restart` against the resident owner");
+                } else {
+                    eprintln!("error: serve failed: {msg}");
+                }
                 ExitCode::FAILURE
             }
         },

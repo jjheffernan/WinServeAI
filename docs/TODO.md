@@ -15,7 +15,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **G2** Lockfile under `%LOCALAPPDATA%\WinServeAI\manager.lock` (PID + pipe); stale if PID dead
 - [x] **G3** Named-pipe IPC: `status` / `start` / `stop` / `restart` (+ health/endpoint)
 - [x] **G4** CLI `stop` / `restart` / `status` attach to resident owner
-- [ ] **G5** Single-instance: second serve/tray fails “already running”
+- [x] **G5** Single-instance: second serve/tray fails “already running”
 
 ### Next — Engine product gaps (H)
 

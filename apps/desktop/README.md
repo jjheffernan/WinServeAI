@@ -53,7 +53,14 @@ Form edits `server.host` / `server.port` / `model.path` / `gpu.*` /
 Starting / Ready / Stopping.
 
 **Browse…** opens a native file dialog filtered to `.gguf` (`pick_model_path`);
-no downloads. Persist with Save settings. Quit→stop is E1e.
+no downloads. Persist with Save settings.
+
+### Quit (E1e)
+
+Window close / app exit requests `ServerManager::stop()` before leaving.
+Job Object (`KILL_ON_JOB_CLOSE`) remains the orphan backstop if the process is
+force-killed. The tray acquires the resident lockfile + IPC pipe so
+`winserve status|stop|restart` can attach while it runs.
 
 ## See also
 

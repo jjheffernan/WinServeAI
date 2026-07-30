@@ -1,6 +1,6 @@
 # Project TODO — MVP build
 
-**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.3/5**  
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.4/5**  
 **Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.
@@ -46,7 +46,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 ### Ship — Exit polish (I)
 
 - [x] **I1** Docs: tray + IPC in development / architecture / installer
-- [ ] **I2** Readiness re-score + `check_doc_drift.py`
+- [x] **I2** Readiness re-score + `check_doc_drift.py`
 - [x] **I3** Safe default.yaml + empty model.path guidance
 - [ ] **I4** Record shipped `b####` pin in release docs
 

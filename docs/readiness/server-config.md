@@ -5,7 +5,7 @@
 | Path | `app/src/server/config.rs` + `config/default.yaml` |
 | Overall | **3.6 / 5** |
 | Label | `mvp-ready` |
-| Reviewed | 2026-07-04 |
+| Reviewed | 2026-07-30 |
 
 ## Dimensions
 

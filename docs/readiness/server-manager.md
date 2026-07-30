@@ -5,7 +5,7 @@
 | Path | `app/src/server/manager.rs` |
 | Overall | **3.4 / 5** |
 | Label | `mvp-partial` |
-| Reviewed | 2026-07-04 |
+| Reviewed | 2026-07-30 |
 
 ## Dimensions
 

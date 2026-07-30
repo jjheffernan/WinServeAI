@@ -3,8 +3,8 @@
 | Field | Value |
 | --- | --- |
 | Path | `scripts/{start,stop,reset}.ps1`, `scripts/smoke-openai.ps1`, `scripts/smoke-check.sh` |
-| Overall | **3.6 / 5** |
-| Label | `mvp-ready` |
+| Overall | **3.4 / 5** |
+| Label | `mvp-partial` |
 | Reviewed | 2026-07-30 |
 
 ## Dimensions

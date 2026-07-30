@@ -3,7 +3,7 @@
 | Field | Value |
 | --- | --- |
 | Path | `installer/` + `scripts/stage-release.*` + `notices/` |
-| Overall | **3.4 / 5** |
+| Overall | **3.0 / 5** |
 | Label | `mvp-partial` |
 | Reviewed | 2026-07-30 |
 

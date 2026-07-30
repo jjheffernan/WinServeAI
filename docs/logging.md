@@ -1,6 +1,6 @@
 # Logging
 
-> **Readiness:** 3.6/5 (`mvp-ready`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
+> **Readiness:** 3.8/5 (`mvp-ready`) — details in [readiness/server-logs.md](./readiness/server-logs.md)
 
 WinServeAI writes three append-only streams under one directory. `ServerManager` owns all writes; there is no separate logging package.
 

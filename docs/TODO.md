@@ -28,7 +28,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 ### Then — Desktop (E)
 
 - [x] **E1a** Tauri 2 `winserve-tray`; commands → `ServerManager` only
-- [ ] **E1b** Start / stop / status UI (canonical states only)
+- [x] **E1b** Start / stop / status UI (canonical states only)
 - [ ] **E1c** Log viewer
 - [ ] **E1d** Settings → YAML validate/write
 - [ ] **E2** Model path picker (local `.gguf` only)

@@ -1,0 +1,25 @@
+[package]
+name = "winserve-tray"
+description = "WinServeAI tray shell — ServerManager owner (Tauri 2)"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[lib]
+name = "winserve_tray_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "winserve-tray"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tokio = { version = "1", features = ["sync"] }
+winserve = { path = "../../../app" }

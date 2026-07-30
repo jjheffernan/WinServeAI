@@ -1,0 +1,18 @@
+{
+  "name": "winserve-tray",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WinServeAI tray shell (Tauri 2) — ServerManager only",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
+  }
+}

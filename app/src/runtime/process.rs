@@ -46,12 +46,14 @@ impl ChildProcess {
             cmd.current_dir(dir);
         }
 
-        // Windows: new process group so we can send CTRL_BREAK to the group id (pid).
+        // Windows: new process group (CTRL_BREAK) + CREATE_SUSPENDED so we can
+        // AssignProcessToJobObject before the child runs (closes the assign race).
         #[cfg(windows)]
         {
             use std::os::windows::process::CommandExt;
             const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
-            cmd.creation_flags(CREATE_NEW_PROCESS_GROUP);
+            const CREATE_SUSPENDED: u32 = 0x00000004;
+            cmd.creation_flags(CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED);
         }
 
         let mut child = cmd
@@ -61,7 +63,22 @@ impl ChildProcess {
         let pid = child.id().unwrap_or(0);
 
         #[cfg(windows)]
-        let job = win::assign_to_kill_on_close_job(pid).ok();
+        let job = match win::assign_to_kill_on_close_job(pid) {
+            Ok(job) => {
+                if let Err(e) = win::resume_primary_thread(pid) {
+                    win::close_handle(job);
+                    let _ = child.start_kill();
+                    return Err(ProcessError::Spawn(format!(
+                        "resume after job assign failed: {e}"
+                    )));
+                }
+                Some(job)
+            }
+            Err(e) => {
+                let _ = child.start_kill();
+                return Err(ProcessError::Spawn(format!("job assign failed: {e}")));
+            }
+        };
 
         if let Some(stdout) = child.stdout.take() {
             let tx = log_tx.clone();
@@ -152,12 +169,17 @@ mod win {
         AttachConsole, FreeConsole, GenerateConsoleCtrlEvent, SetConsoleCtrlHandler,
         CTRL_BREAK_EVENT,
     };
+    use windows::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Thread32First, Thread32Next, TH32CS_SNAPTHREAD, THREADENTRY32,
+    };
     use windows::Win32::System::JobObjects::{
         AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
         SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
         JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
     };
-    use windows::Win32::System::Threading::{OpenProcess, PROCESS_ALL_ACCESS};
+    use windows::Win32::System::Threading::{
+        OpenProcess, OpenThread, ResumeThread, PROCESS_ALL_ACCESS, THREAD_SUSPEND_RESUME,
+    };
 
     pub fn assign_to_kill_on_close_job(pid: u32) -> windows::core::Result<HANDLE> {
         unsafe {
@@ -176,6 +198,38 @@ mod win {
             let _ = CloseHandle(process);
             assign?;
             Ok(job)
+        }
+    }
+
+    /// Resume the first thread belonging to `pid` (primary thread after CREATE_SUSPENDED).
+    pub fn resume_primary_thread(pid: u32) -> windows::core::Result<()> {
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0)?;
+            let mut entry = THREADENTRY32 {
+                dwSize: std::mem::size_of::<THREADENTRY32>() as u32,
+                ..Default::default()
+            };
+            let mut found = false;
+            if Thread32First(snap, &mut entry).is_ok() {
+                loop {
+                    if entry.th32OwnerProcessID == pid {
+                        let thread = OpenThread(THREAD_SUSPEND_RESUME, false, entry.th32ThreadID)?;
+                        ResumeThread(thread);
+                        let _ = CloseHandle(thread);
+                        found = true;
+                        break;
+                    }
+                    if Thread32Next(snap, &mut entry).is_err() {
+                        break;
+                    }
+                }
+            }
+            let _ = CloseHandle(snap);
+            if found {
+                Ok(())
+            } else {
+                Err(windows::core::Error::from_win32())
+            }
         }
     }
 

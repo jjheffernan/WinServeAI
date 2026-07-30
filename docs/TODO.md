@@ -19,7 +19,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 
 ### Next — Engine product gaps (H)
 
-- [ ] **H1** CREATE_SUSPENDED → assign Job Object → resume
+- [x] **H1** CREATE_SUSPENDED → assign Job Object → resume
 - [ ] **H2** Log rotation under `logs/`
 - [ ] **H3** Optional `/health` readiness fallback (keep `/v1/models` primary)
 - [ ] **H4** Pin fetch helper + `notices/THIRD_PARTY_NOTICES` stub

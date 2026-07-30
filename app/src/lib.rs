@@ -21,6 +21,7 @@
 //! One backend only. No plugin system. No backend trait.
 
 pub mod api;
+pub mod ipc;
 pub mod runtime;
 pub mod server;
 pub mod system;

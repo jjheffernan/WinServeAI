@@ -34,6 +34,8 @@ const setGpuLayers = document.getElementById("set-gpu-layers");
 const setContext = document.getElementById("set-context");
 const setFa = document.getElementById("set-fa");
 const btnBrowseModel = document.getElementById("btn-browse-model");
+const firstRunEl = document.getElementById("first-run");
+const btnFirstBrowse = document.getElementById("btn-first-browse");
 
 let busy = false;
 let currentStatus = "Unknown";
@@ -85,11 +87,20 @@ function syncSettingsEnabled() {
   ].forEach((el) => {
     el.disabled = !enabled;
   });
+  if (btnFirstBrowse) {
+    btnFirstBrowse.disabled = !enabled;
+  }
   if (!settingsEditable) {
     settingsNote.className = "warn";
     settingsNote.textContent =
       "Stop the server before editing settings (Starting / Ready / Stopping).";
   }
+}
+
+function syncFirstRunBanner(modelPath) {
+  const needs = !(modelPath || "").trim();
+  firstRunEl.classList.toggle("visible", needs);
+  btnFirstBrowse.disabled = busy || !settingsEditable;
 }
 
 function fillSettings(dto) {
@@ -107,6 +118,7 @@ function fillSettings(dto) {
     settingsNote.textContent = "";
   }
   syncSettingsEnabled();
+  syncFirstRunBanner(dto.modelPath);
 }
 
 function readSettingsPatch() {
@@ -214,7 +226,8 @@ btnCopy.onclick = async () => {
 };
 
 btnReloadSettings.onclick = () => reloadSettings();
-btnBrowseModel.onclick = async () => {
+
+async function browseModelPath() {
   if (!settingsEditable || busy) return;
   settingsNote.className = "";
   settingsNote.textContent = "";
@@ -222,14 +235,22 @@ btnBrowseModel.onclick = async () => {
     const path = await invoke("pick_model_path");
     if (!path) return;
     setModel.value = path;
+    syncFirstRunBanner(path);
     settingsNote.className = "ok";
     settingsNote.textContent =
       "Selected .gguf path — click Save settings to write YAML.";
+    document.getElementById("settings-form")?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   } catch (e) {
     settingsNote.className = "err";
     settingsNote.textContent = String(e);
   }
-};
+}
+
+btnBrowseModel.onclick = () => browseModelPath();
+btnFirstBrowse.onclick = () => browseModelPath();
 settingsForm.onsubmit = async (ev) => {
   ev.preventDefault();
   if (!settingsEditable || busy) return;

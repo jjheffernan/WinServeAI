@@ -77,6 +77,13 @@ copy_bin winserve-tray || echo "WARN: winserve-tray missing under $TARGET"
 cp -f "$ROOT/config/default.yaml" "$OUT/config/default.yaml"
 echo "OK: config/default.yaml"
 
+if [[ -f "$ROOT/config/FIRST_RUN.txt" ]]; then
+  cp -f "$ROOT/config/FIRST_RUN.txt" "$OUT/FIRST_RUN.txt"
+  echo "OK: FIRST_RUN.txt"
+else
+  echo "WARN: config/FIRST_RUN.txt missing"
+fi
+
 if [[ -d "$ROOT/notices" ]]; then
   cp -R "$ROOT/notices/." "$OUT/notices/"
   echo "OK: notices/"

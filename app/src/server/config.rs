@@ -118,7 +118,7 @@ impl Default for Config {
                 port: default_port(),
             },
             model: ModelSection {
-                path: PathBuf::from(r"D:\models\model.gguf"),
+                path: PathBuf::new(),
             },
             gpu: GpuSection {
                 auto: true,
@@ -157,9 +157,7 @@ impl Config {
         if self.server.port == 0 {
             return Err(ConfigError::Validate("server.port must be non-zero".into()));
         }
-        if self.model.path.as_os_str().is_empty() {
-            return Err(ConfigError::Validate("model.path is required".into()));
-        }
+        // Empty model.path is allowed at load for first-run; `start` still requires a real file.
         if self.server.host.trim().is_empty() {
             return Err(ConfigError::Validate("server.host is required".into()));
         }
@@ -179,7 +177,12 @@ impl Config {
     /// Soft checks for operator warnings (do not fail load).
     pub fn warnings(&self) -> Vec<String> {
         let mut w = Vec::new();
-        if !self.model.path.exists() {
+        if self.model.path.as_os_str().is_empty() {
+            w.push(
+                "model.path is empty — set a local .gguf before start (docs/first-run.md / Settings Browse)"
+                    .into(),
+            );
+        } else if !self.model.path.exists() {
             w.push(format!(
                 "model.path does not exist yet: {}",
                 self.model.path.display()
@@ -210,6 +213,15 @@ mod tests {
     #[test]
     fn default_config_validates() {
         Config::default().validate().unwrap();
+    }
+
+    #[test]
+    fn accepts_empty_model_path_for_first_run() {
+        let mut c = Config::default();
+        c.model.path = PathBuf::new();
+        c.validate().unwrap();
+        let w = c.warnings();
+        assert!(w.iter().any(|s| s.contains("model.path is empty")));
     }
 
     #[test]

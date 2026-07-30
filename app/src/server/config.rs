@@ -60,6 +60,15 @@ pub struct RuntimeSection {
 pub struct LoggingSection {
     #[serde(default = "default_log_dir")]
     pub dir: PathBuf,
+    /// Rotate when the active file reaches this size (0 = disable size rotation).
+    #[serde(default = "default_max_bytes")]
+    pub max_bytes: u64,
+    /// Rotate when the active file is older than this many seconds (0 = disable age rotation).
+    #[serde(default = "default_max_age_secs")]
+    pub max_age_secs: u64,
+    /// How many rotated siblings to keep (`server.log.1` … `.N`).
+    #[serde(default = "default_keep")]
+    pub keep: u32,
 }
 
 fn default_host() -> String {
@@ -80,11 +89,23 @@ fn default_context() -> u32 {
 fn default_log_dir() -> PathBuf {
     PathBuf::from("logs")
 }
+fn default_max_bytes() -> u64 {
+    10 * 1024 * 1024
+}
+fn default_max_age_secs() -> u64 {
+    7 * 24 * 60 * 60
+}
+fn default_keep() -> u32 {
+    3
+}
 
 impl Default for LoggingSection {
     fn default() -> Self {
         Self {
             dir: default_log_dir(),
+            max_bytes: default_max_bytes(),
+            max_age_secs: default_max_age_secs(),
+            keep: default_keep(),
         }
     }
 }

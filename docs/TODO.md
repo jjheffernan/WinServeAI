@@ -1,6 +1,6 @@
 # Project TODO — MVP build
 
-**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.1/5**  
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.2/5**  
 **Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.
@@ -20,7 +20,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 ### Next — Engine product gaps (H)
 
 - [x] **H1** CREATE_SUSPENDED → assign Job Object → resume
-- [ ] **H2** Log rotation under `logs/`
+- [x] **H2** Log rotation under `logs/`
 - [ ] **H3** Optional `/health` readiness fallback (keep `/v1/models` primary)
 - [ ] **H4** Pin fetch helper + `notices/THIRD_PARTY_NOTICES` stub
 - [ ] **H5** `scripts/stop.ps1` prefers IPC graceful stop when lockfile exists

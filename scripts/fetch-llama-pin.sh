@@ -87,4 +87,6 @@ if [[ ! -f "$DEST" ]]; then
 fi
 chmod +x "$DEST" 2>/dev/null || true
 echo "OK: $DEST"
+printf '%s\n' "$PIN" > "$BIN/VERSION"
+echo "OK: bin/VERSION = $PIN"
 echo "Notices stub: notices/THIRD_PARTY_NOTICES.md (refresh on pin bumps)."

@@ -48,7 +48,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **I1** Docs: tray + IPC in development / architecture / installer
 - [x] **I2** Readiness re-score + `check_doc_drift.py`
 - [x] **I3** Safe default.yaml + empty model.path guidance
-- [ ] **I4** Record shipped `b####` pin in release docs
+- [x] **I4** Record shipped `b####` pin in release docs
 
 ## Non-blocking / later
 

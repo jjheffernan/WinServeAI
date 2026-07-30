@@ -42,6 +42,21 @@ Stable never ships an unrecorded llama-server build. Preview builds may track `d
 
 ---
 
+## Current ship pin (MVP)
+
+| Field | Value |
+| --- | --- |
+| **llama.cpp tag** | [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866) |
+| **Recorded in** | [`bin/VERSION`](../bin/VERSION) (one line: `b9866`) |
+| **Fetch defaults** | `scripts/fetch-llama-pin.ps1` / `.sh` default `PIN=b9866` |
+| **Notices** | [`notices/THIRD_PARTY_NOTICES.md`](../notices/THIRD_PARTY_NOTICES.md) lists **b9866** |
+| **Installer** | Stage via `scripts/stage-release.*` after fetch; ship that same pin |
+
+Preview/`dev` may keep this pin until a deliberate bump. Stable tags must list the
+same `b####` in release notes and match `bin/VERSION`.
+
+---
+
 ## Pin llama.cpp (`b####` in `bin/`)
 
 Upstream releases use tags like [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866). Each WinServeAI release documents **exactly one** pin.
@@ -49,15 +64,15 @@ Upstream releases use tags like [`b9866`](https://github.com/ggml-org/llama.cpp/
 ```text
 bin/
   llama-server.exe    # from ggml-org/llama.cpp release b####
-  VERSION             # recommended: one line, e.g. b9866 (+ commit SHA)
+  VERSION             # committed one-line pin, e.g. b9866
   # CUDA builds: matching cudart / cublas DLLs beside the exe
 ```
 
 Rules:
 
 1. Place the binary at **`bin/llama-server.exe`** (external system — not compiled into `winserve`).
-2. Record the pin in `bin/VERSION` (or equivalent) **and** in the GitHub release notes.
-3. On pin bump: replace `bin/` contents, refresh notices, re-run the stable checklist (argv / readiness can drift — see research/02).
+2. Keep the committed pin in **`bin/VERSION`** in sync with fetch-script defaults, `bin/README.md`, and `notices/THIRD_PARTY_NOTICES.md`. List the same tag in GitHub release notes.
+3. On pin bump: replace `bin/` binary contents, update `bin/VERSION`, refresh notices (`PIN=b#### ./scripts/refresh-notices.sh`), re-run the stable checklist (argv / readiness can drift — see research/02).
 4. Do not embed llama.cpp source in the crate.
 
 CUDA builds ship redistributable DLLs **next to** `llama-server.exe`. End users still need a compatible NVIDIA driver. Details: [research/04](research/04-installer-licensing.md).

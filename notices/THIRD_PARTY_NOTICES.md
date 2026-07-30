@@ -1,8 +1,8 @@
 # Third-party notices
 
 This directory ships inside WinServeAI install/release trees (`{app}\notices\`).
-Refresh whenever the pinned `bin/llama-server` build changes (see `bin/README.md`
-and `scripts/refresh-notices.sh`).
+Refresh whenever the pinned `bin/llama-server` build changes (see `bin/VERSION`,
+`bin/README.md`, and `scripts/refresh-notices.sh`).
 
 | Component | Upstream | License | Pin / version |
 | --- | --- | --- | --- |

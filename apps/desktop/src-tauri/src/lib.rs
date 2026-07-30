@@ -160,6 +160,36 @@ async fn manager_apply_settings(
     Ok(settings_dto(&mgr))
 }
 
+/// Native file dialog for a local `.gguf` only (no download). Returns the path string;
+/// does not write YAML — caller saves via settings when editable.
+#[tauri::command]
+fn pick_model_path(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+
+    let picked = app
+        .dialog()
+        .file()
+        .add_filter("GGUF models", &["gguf"])
+        .blocking_pick_file();
+
+    let Some(file) = picked else {
+        return Ok(None);
+    };
+    let path = file.into_path().map_err(|e| e.to_string())?;
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .eq_ignore_ascii_case("gguf");
+    if !ext {
+        return Err("model path must be a .gguf file".into());
+    }
+    if !path.is_file() {
+        return Err(format!("model path is not a file: {}", path.display()));
+    }
+    Ok(Some(path.display().to_string()))
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct LogTailDto {
@@ -214,6 +244,7 @@ pub fn run() {
     });
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             manager_status,
@@ -223,6 +254,7 @@ pub fn run() {
             manager_endpoint,
             manager_config_summary,
             manager_apply_settings,
+            pick_model_path,
             manager_logs,
         ])
         .run(tauri::generate_context!())

@@ -4,8 +4,8 @@ use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::sync::mpsc;
-use winserve::ipc::lockfile::{self, LockGuard};
-use winserve::ipc::pipe;
+use winserve::ipc::lockfile::{self, LockGuard, LockInfo};
+use winserve::ipc::pipe::{self, Response};
 use winserve::server::config::Config;
 use winserve::server::resident::{self, Command, CommandKind};
 use winserve::ServerManager;
@@ -18,6 +18,35 @@ fn config_path(root: &std::path::Path) -> PathBuf {
     env::var_os("WINSERVE_CONFIG")
         .map(PathBuf::from)
         .unwrap_or_else(|| root.join("config").join("default.yaml"))
+}
+
+/// Live resident owner from the lockfile, or `None` if missing/stale.
+fn live_owner() -> Result<Option<LockInfo>, Box<dyn std::error::Error>> {
+    let path = lockfile::default_path();
+    let _ = lockfile::remove_if_stale(&path)?;
+    match lockfile::read(&path)? {
+        Some(info) if lockfile::pid_alive(info.pid) => Ok(Some(info)),
+        Some(_) => {
+            let _ = std::fs::remove_file(&path);
+            Ok(None)
+        }
+        None => Ok(None),
+    }
+}
+
+async fn attach(cmd: &str) -> Result<Response, Box<dyn std::error::Error>> {
+    let Some(info) = live_owner()? else {
+        return Err("no resident manager running (start with `winserve serve`)".into());
+    };
+    let resp = pipe::request(&info.pipe, cmd).await?;
+    Ok(resp)
+}
+
+fn print_attach(resp: &Response) {
+    if let Some(err) = &resp.error {
+        eprintln!("error: {err}");
+    }
+    println!("{}  {}", resp.status, resp.endpoint);
 }
 
 #[tokio::main]
@@ -58,14 +87,29 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        "status" => match ServerManager::load_config(&root, &cfg_path) {
-            Ok(mut mgr) => {
-                println!("{:?}  {}", mgr.get_status(), mgr.openai_base());
-                ExitCode::SUCCESS
+        "status" => match attach("status").await {
+            Ok(resp) => {
+                print_attach(&resp);
+                if resp.ok {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::FAILURE
+                }
             }
             Err(e) => {
-                eprintln!("{e}");
-                ExitCode::FAILURE
+                // No resident: report config endpoint + Stopped (not an attach failure).
+                match ServerManager::load_config(&root, &cfg_path) {
+                    Ok(mgr) => {
+                        eprintln!("note: {e}");
+                        println!("Stopped  {}", mgr.openai_base());
+                        ExitCode::SUCCESS
+                    }
+                    Err(cfg_err) => {
+                        eprintln!("error: {e}");
+                        eprintln!("{cfg_err}");
+                        ExitCode::FAILURE
+                    }
+                }
             }
         },
         "print-config" => match Config::load(&cfg_path) {
@@ -89,17 +133,23 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        "stop" | "restart" => {
-            eprintln!(
-                "{cmd}: requires a resident manager process. Run `winserve serve`; \
-                 CLI attach lands with the manager IPC. \
-                 For now, stop the resident process (Ctrl+C)."
-            );
-            ExitCode::FAILURE
-        }
+        "stop" | "restart" => match attach(cmd.as_str()).await {
+            Ok(resp) => {
+                print_attach(&resp);
+                if resp.ok {
+                    ExitCode::SUCCESS
+                } else {
+                    ExitCode::FAILURE
+                }
+            }
+            Err(e) => {
+                eprintln!("error: {e}");
+                ExitCode::FAILURE
+            }
+        },
         other => {
             eprintln!("unknown command: {other}");
-            eprintln!("usage: winserve <serve|start|status|print-config|print-cmd>");
+            eprintln!("usage: winserve <serve|start|stop|restart|status|print-config|print-cmd>");
             ExitCode::FAILURE
         }
     }

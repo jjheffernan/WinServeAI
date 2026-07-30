@@ -15,7 +15,7 @@ Last reviewed: 2026-07-04
 | cli | 2.6/5 | mvp-partial | `stop`/`restart` not implemented | [cli.md](./cli.md) |
 | bin | 2.2/5 | scaffold | No `llama-server.exe` committed; operator supplies **b9866** | [bin.md](./bin.md) |
 | installer | 1.6/5 | scaffold | Spec only; no Inno scripts | [installer.md](./installer.md) |
-| scripts-ops | 3.2/5 | mvp-partial | Force-kill stop.ps1; A2 needs operator Windows proof | [scripts-ops.md](./scripts-ops.md) |
+| scripts-ops | 3.6/5 | mvp-ready | start.ps1 unclear if binary missing; A2 needs operator Windows proof | [scripts-ops.md](./scripts-ops.md) |
 | scripts-pr-loop | 3.0/5 | mvp-partial | Dry-run only; no formal tests | [scripts-pr-loop.md](./scripts-pr-loop.md) |
 | docs | 4.0/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
 | ui | 0.4/5 | stub | Path missing; Phase 2 placeholder | [ui.md](./ui.md) |

@@ -1,6 +1,6 @@
 # Development
 
-> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 3.2/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
+> **Readiness:** cli 2.6/5 (`mvp-partial`), scripts-ops 3.6/5 (`mvp-ready`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
 WinServeAI is a **single Rust crate** (`winserve` in `app/`) that owns process lifecycle for an external `bin/llama-server.exe`. There is no `packages/` monorepo and no backend-trait workspace.
 
@@ -189,7 +189,7 @@ Run from anywhere; scripts locate the repo root from `scripts/`.
 
 ```powershell
 .\scripts\start.ps1          # WINSERVE_CONFIG=config\default.yaml; release winserve, else debug
-.\scripts\stop.ps1           # force-stop processes named winserve and llama-server (last resort)
+.\scripts\stop.ps1           # IPC graceful stop when lockfile exists; -Force for name kill
 .\scripts\reset.ps1          # stop.ps1 + clear files under logs/ (keeps config and models)
 .\scripts\smoke-openai.ps1   # A2: poll GET /v1/models (+ optional chat); needs binary + GGUF
 .\scripts\smoke-openai.ps1 -Start   # optional: start winserve in background, then poll

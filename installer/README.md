@@ -48,5 +48,10 @@ Requires `cargo build -p winserve` / `winserve-tray` artifacts under `target/rel
 
 ## Next (F1+)
 
-* `installer/inno/WinServeAI.iss` — Inno Setup script consuming `installer/inno/files`
-* Shortcuts, firewall (non-loopback only), first-run model path guidance
+```powershell
+.\scripts\stage-release.ps1 -OutDir installer\inno\files -RequireLlama
+ISCC.exe installer\inno\WinServeAI.iss
+```
+
+* [`installer/inno/WinServeAI.iss`](inno/WinServeAI.iss) — Inno Setup 6 script (Files, Icons, optional desktop + LAN firewall tasks)
+* First-run model path guidance (F5); notices payload polish (F4)

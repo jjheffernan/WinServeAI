@@ -65,6 +65,8 @@ Before each write (and once on open), `LogSinks` rotates an active file when:
 - `max_age_secs > 0` and the file’s mtime is at least that old.
 
 Rotation renames `name` → `name.1` → `name.2` … up to `keep`, deleting the oldest. The active file is closed before rename (Windows-safe) and reopened empty.
+
+**UI / tray:** `logs::tail_file` / `logs::tail_dir` return the last N lines for the desktop log viewer (`manager_logs`). Viewer only — no writes from the webview.
 ## Debugging tips
 
 1. **Server never becomes ready** — read `error.log` first (missing binary/model, readiness failure). Then `server.log` for the exact `starting …` argv and any port warning.

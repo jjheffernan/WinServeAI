@@ -119,6 +119,36 @@ impl LogSinks {
     }
 }
 
+/// Last `max_lines` of a log file. Missing file → empty list (viewer-friendly).
+pub fn tail_file(path: &Path, max_lines: usize) -> Result<Vec<String>, LogError> {
+    if max_lines == 0 || !path.exists() {
+        return Ok(Vec::new());
+    }
+    let text = fs::read_to_string(path)?;
+    let lines: Vec<String> = text.lines().map(str::to_string).collect();
+    if lines.len() <= max_lines {
+        Ok(lines)
+    } else {
+        Ok(lines[lines.len() - max_lines..].to_vec())
+    }
+}
+
+/// Tail the three unified streams under `dir`.
+pub fn tail_dir(dir: &Path, max_lines: usize) -> Result<LogTail, LogError> {
+    Ok(LogTail {
+        server: tail_file(&dir.join("server.log"), max_lines)?,
+        llama: tail_file(&dir.join("llama.log"), max_lines)?,
+        error: tail_file(&dir.join("error.log"), max_lines)?,
+    })
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LogTail {
+    pub server: Vec<String>,
+    pub llama: Vec<String>,
+    pub error: Vec<String>,
+}
+
 fn open_append(path: &Path) -> Result<File, LogError> {
     Ok(OpenOptions::new().create(true).append(true).open(path)?)
 }
@@ -239,6 +269,25 @@ mod tests {
         );
         let text = fs::read_to_string(dir.join("server.log")).unwrap();
         assert!(text.contains("fresh"), "got: {text}");
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn tail_file_returns_last_n_lines() {
+        let dir = std::env::temp_dir().join(format!(
+            "winserve-tail-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("server.log");
+        fs::write(&path, "a\nb\nc\nd\ne\n").unwrap();
+        let lines = tail_file(&path, 3).unwrap();
+        assert_eq!(lines, vec!["c".to_string(), "d".into(), "e".into()]);
+        assert!(tail_file(&dir.join("missing.log"), 10).unwrap().is_empty());
         let _ = fs::remove_dir_all(dir);
     }
 }

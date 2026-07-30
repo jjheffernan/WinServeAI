@@ -151,6 +151,45 @@
         color: #cbd5e1;
         font-weight: 600;
       }
+      .tabs {
+        display: flex;
+        gap: 0.35rem;
+        margin-bottom: 0.6rem;
+        flex-wrap: wrap;
+      }
+      .tabs button {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        padding: 0.3rem 0.65rem;
+        font-size: 0.8rem;
+      }
+      .tabs button.active {
+        color: var(--text);
+        background: #243044;
+        border-color: #3b4a5f;
+      }
+      #log-view {
+        margin: 0;
+        height: 14rem;
+        overflow: auto;
+        background: #0b0f14;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.65rem 0.75rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .log-dir {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
+      }
     </style>
   </head>
   <body>
@@ -186,11 +225,24 @@
         <p id="error" aria-live="polite"></p>
       </section>
 
+      <section class="panel" aria-label="Logs">
+        <div class="tabs" role="tablist">
+          <button type="button" class="active" data-stream="server" role="tab">
+            server.log
+          </button>
+          <button type="button" data-stream="llama" role="tab">llama.log</button>
+          <button type="button" data-stream="error" role="tab">error.log</button>
+        </div>
+        <pre id="log-view" role="log" aria-live="polite">(no lines yet)</pre>
+        <p class="log-dir" id="log-dir"></p>
+      </section>
+
       <p class="canon">
         Canonical states:
         <strong>Stopped</strong>, <strong>Starting</strong>, <strong>Ready</strong>,
         <strong>Failed</strong>, <strong>Stopping</strong>, <strong>Crashed</strong>.
-        There is no “Running” label — use Ready after readiness.
+        There is no “Running” label — use Ready after readiness. Log viewer is
+        read-only (tails <code>logs/</code>).
       </p>
     </main>
     <script src="/main.js"></script>

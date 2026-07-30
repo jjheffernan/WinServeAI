@@ -1,6 +1,6 @@
 # Installer
 
-> **Readiness:** installer 1.6/5 (`scaffold`), bin 2.2/5 (`scaffold`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
+> **Readiness:** installer 2.2/5 (`scaffold`), bin 2.2/5 (`scaffold`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
 
 Native Windows packaging for the WinServeAI appliance. Phase 3 deliverable: install → launch **winserve** → OpenAI-compatible API on the configured host/port.
 

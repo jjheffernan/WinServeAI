@@ -299,7 +299,18 @@
           </label>
           <label>
             <span>model.path</span>
-            <input id="set-model" name="modelPath" type="text" autocomplete="off" />
+            <div class="row">
+              <input
+                id="set-model"
+                name="modelPath"
+                type="text"
+                autocomplete="off"
+                style="flex: 1; min-width: 0"
+              />
+              <button id="btn-browse-model" class="secondary" type="button">
+                Browse…
+              </button>
+            </div>
           </label>
           <label class="check">
             <input id="set-gpu-auto" name="gpuAuto" type="checkbox" />

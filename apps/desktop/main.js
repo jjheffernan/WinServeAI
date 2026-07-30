@@ -33,6 +33,7 @@ const setGpuAuto = document.getElementById("set-gpu-auto");
 const setGpuLayers = document.getElementById("set-gpu-layers");
 const setContext = document.getElementById("set-context");
 const setFa = document.getElementById("set-fa");
+const btnBrowseModel = document.getElementById("btn-browse-model");
 
 let busy = false;
 let currentStatus = "Unknown";
@@ -80,6 +81,7 @@ function syncSettingsEnabled() {
     setContext,
     setFa,
     btnSaveSettings,
+    btnBrowseModel,
   ].forEach((el) => {
     el.disabled = !enabled;
   });
@@ -212,6 +214,22 @@ btnCopy.onclick = async () => {
 };
 
 btnReloadSettings.onclick = () => reloadSettings();
+btnBrowseModel.onclick = async () => {
+  if (!settingsEditable || busy) return;
+  settingsNote.className = "";
+  settingsNote.textContent = "";
+  try {
+    const path = await invoke("pick_model_path");
+    if (!path) return;
+    setModel.value = path;
+    settingsNote.className = "ok";
+    settingsNote.textContent =
+      "Selected .gguf path — click Save settings to write YAML.";
+  } catch (e) {
+    settingsNote.className = "err";
+    settingsNote.textContent = String(e);
+  }
+};
 settingsForm.onsubmit = async (ev) => {
   ev.preventDefault();
   if (!settingsEditable || busy) return;

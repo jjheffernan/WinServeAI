@@ -21,9 +21,22 @@ const btnCopy = document.getElementById("btn-copy");
 const logView = document.getElementById("log-view");
 const logDirEl = document.getElementById("log-dir");
 const tabButtons = Array.from(document.querySelectorAll(".tabs [data-stream]"));
+const settingsForm = document.getElementById("settings-form");
+const btnSaveSettings = document.getElementById("btn-save-settings");
+const btnReloadSettings = document.getElementById("btn-reload-settings");
+const settingsNote = document.getElementById("settings-note");
+const settingsPath = document.getElementById("settings-path");
+const setHost = document.getElementById("set-host");
+const setPort = document.getElementById("set-port");
+const setModel = document.getElementById("set-model");
+const setGpuAuto = document.getElementById("set-gpu-auto");
+const setGpuLayers = document.getElementById("set-gpu-layers");
+const setContext = document.getElementById("set-context");
+const setFa = document.getElementById("set-fa");
 
 let busy = false;
 let currentStatus = "Unknown";
+let settingsEditable = false;
 let activeStream = "server";
 /** @type {{ server: string[], llama: string[], error: string[], dir?: string }} */
 let logCache = { server: [], llama: [], error: [] };
@@ -53,6 +66,67 @@ function syncButtons() {
   btnRestart.disabled = busy || transitional || s === "Stopped";
   btnRefresh.disabled = busy;
   btnCopy.disabled = !endpointEl.textContent || endpointEl.textContent === "…";
+  syncSettingsEnabled();
+}
+
+function syncSettingsEnabled() {
+  const enabled = settingsEditable && !busy;
+  [
+    setHost,
+    setPort,
+    setModel,
+    setGpuAuto,
+    setGpuLayers,
+    setContext,
+    setFa,
+    btnSaveSettings,
+  ].forEach((el) => {
+    el.disabled = !enabled;
+  });
+  if (!settingsEditable) {
+    settingsNote.className = "warn";
+    settingsNote.textContent =
+      "Stop the server before editing settings (Starting / Ready / Stopping).";
+  }
+}
+
+function fillSettings(dto) {
+  setHost.value = dto.host ?? "";
+  setPort.value = dto.port ?? 8080;
+  setModel.value = dto.modelPath ?? "";
+  setGpuAuto.checked = !!dto.gpuAuto;
+  setGpuLayers.value = dto.gpuLayers ?? "auto";
+  setContext.value = dto.context ?? 32768;
+  setFa.checked = !!dto.flashAttention;
+  settingsPath.textContent = dto.configPath || "";
+  settingsEditable = !!dto.editable;
+  if (settingsEditable) {
+    settingsNote.className = "";
+    settingsNote.textContent = "";
+  }
+  syncSettingsEnabled();
+}
+
+function readSettingsPatch() {
+  return {
+    host: setHost.value.trim(),
+    port: Number(setPort.value),
+    modelPath: setModel.value.trim(),
+    gpuAuto: setGpuAuto.checked,
+    gpuLayers: setGpuLayers.value.trim() || "auto",
+    context: Number(setContext.value),
+    flashAttention: setFa.checked,
+  };
+}
+
+async function reloadSettings() {
+  try {
+    const dto = await invoke("manager_config_summary");
+    fillSettings(dto);
+  } catch (e) {
+    settingsNote.className = "err";
+    settingsNote.textContent = String(e);
+  }
 }
 
 function renderLogs() {
@@ -87,6 +161,7 @@ async function refresh() {
     syncButtons();
   }
   await refreshLogs();
+  await reloadSettings();
 }
 
 async function run(cmd, optimisticStatus) {
@@ -110,6 +185,7 @@ async function run(cmd, optimisticStatus) {
     busy = false;
     syncButtons();
     await refreshLogs();
+    await reloadSettings();
   }
 }
 
@@ -132,6 +208,34 @@ btnCopy.onclick = async () => {
     await navigator.clipboard.writeText(url);
   } catch (e) {
     errorEl.textContent = `copy failed: ${e}`;
+  }
+};
+
+btnReloadSettings.onclick = () => reloadSettings();
+settingsForm.onsubmit = async (ev) => {
+  ev.preventDefault();
+  if (!settingsEditable || busy) return;
+  busy = true;
+  syncButtons();
+  settingsNote.className = "";
+  settingsNote.textContent = "Saving…";
+  try {
+    const dto = await invoke("manager_apply_settings", {
+      patch: readSettingsPatch(),
+    });
+    fillSettings(dto);
+    settingsNote.className = "ok";
+    settingsNote.textContent = "Settings saved to YAML.";
+    const snap = await invoke("manager_status");
+    applySnap(snap);
+  } catch (e) {
+    settingsNote.className = "err";
+    settingsNote.textContent = String(e);
+    await reloadSettings();
+  } finally {
+    busy = false;
+    syncButtons();
+    await refreshLogs();
   }
 };
 

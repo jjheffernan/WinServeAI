@@ -6,11 +6,10 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::State;
 use tokio::sync::Mutex;
 use winserve::server::manager::{ServerManager, Status};
-use winserve::Config;
 
 struct AppState {
     manager: Mutex<ServerManager>,
@@ -88,15 +87,77 @@ async fn manager_endpoint(state: State<'_, Arc<AppState>>) -> Result<String, Str
 }
 
 #[tauri::command]
-async fn manager_config_summary(state: State<'_, Arc<AppState>>) -> Result<ConfigSummary, String> {
+async fn manager_config_summary(state: State<'_, Arc<AppState>>) -> Result<SettingsDto, String> {
     let mgr = state.manager.lock().await;
-    let cfg: &Config = mgr.config();
-    Ok(ConfigSummary {
+    Ok(settings_dto(&mgr))
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SettingsDto {
+    host: String,
+    port: u16,
+    model_path: String,
+    gpu_auto: bool,
+    gpu_layers: String,
+    context: u32,
+    flash_attention: bool,
+    logging_dir: String,
+    config_path: String,
+    editable: bool,
+    status: String,
+}
+
+fn settings_dto(mgr: &ServerManager) -> SettingsDto {
+    let cfg = mgr.config();
+    let status = mgr.status();
+    let editable = matches!(
+        status,
+        Status::Stopped | Status::Failed | Status::Crashed
+    );
+    SettingsDto {
         host: cfg.server.host.clone(),
         port: cfg.server.port,
         model_path: cfg.model.path.display().to_string(),
+        gpu_auto: cfg.gpu.auto,
+        gpu_layers: cfg.gpu.layers.clone(),
+        context: cfg.runtime.context,
+        flash_attention: cfg.runtime.flash_attention,
         logging_dir: cfg.logging.dir.display().to_string(),
-    })
+        config_path: mgr.config_path().display().to_string(),
+        editable,
+        status: status.as_str().to_string(),
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct SettingsPatch {
+    host: String,
+    port: u16,
+    model_path: String,
+    gpu_auto: bool,
+    gpu_layers: String,
+    context: u32,
+    flash_attention: bool,
+}
+
+#[tauri::command]
+async fn manager_apply_settings(
+    state: State<'_, Arc<AppState>>,
+    patch: SettingsPatch,
+) -> Result<SettingsDto, String> {
+    let mut mgr = state.manager.lock().await;
+    let mut next = mgr.config().clone();
+    next.server.host = patch.host;
+    next.server.port = patch.port;
+    next.model.path = PathBuf::from(patch.model_path);
+    next.gpu.auto = patch.gpu_auto;
+    next.gpu.layers = patch.gpu_layers;
+    next.runtime.context = patch.context;
+    next.runtime.flash_attention = patch.flash_attention;
+    mgr.apply_config(next).map_err(|e| e.to_string())?;
+    Ok(settings_dto(&mgr))
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -131,15 +192,6 @@ async fn manager_logs(
     })
 }
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct ConfigSummary {
-    host: String,
-    port: u16,
-    model_path: String,
-    logging_dir: String,
-}
-
 #[allow(dead_code)]
 fn _status_exhaustiveness(s: Status) -> &'static str {
     // Keep tray aligned with manager status vocabulary.
@@ -170,6 +222,7 @@ pub fn run() {
             manager_restart,
             manager_endpoint,
             manager_config_summary,
+            manager_apply_settings,
             manager_logs,
         ])
         .run(tauri::generate_context!())

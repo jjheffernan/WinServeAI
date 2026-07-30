@@ -29,7 +29,8 @@ Requires a Tauri 2 host toolchain (Rust + platform webview). Binary name:
 | `manager_stop` | `stop` |
 | `manager_restart` | `restart` |
 | `manager_endpoint` | `openai_base` |
-| `manager_config_summary` | read-only config fields |
+| `manager_config_summary` | read settings DTO (+ `editable` flag) |
+| `manager_apply_settings` | validate + write YAML via `ServerManager::apply_config` |
 | `manager_logs` | viewer-only tail of `server` / `llama` / `error` logs |
 
 ### Status UI (E1b)
@@ -44,7 +45,11 @@ during transitional states; Start optimistically shows Starting while
 Tabs for `server.log` / `llama.log` / `error.log`; tails via
 `winserve::server::logs::tail_dir` (timestamps already on each line). Read-only.
 
-Settings, path picker, and quit→stop are E1d–E1e / E2.
+### Settings (E1d)
+
+Form edits `server.host` / `server.port` / `model.path` / `gpu.*` /
+`runtime.context` / `runtime.flash_attention`. Save is rejected while
+Starting / Ready / Stopping. Path picker and quit→stop are E2 / E1e.
 
 ## See also
 

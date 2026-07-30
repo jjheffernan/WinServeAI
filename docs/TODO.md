@@ -22,7 +22,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **H1** CREATE_SUSPENDED → assign Job Object → resume
 - [x] **H2** Log rotation under `logs/`
 - [x] **H3** Optional `/health` readiness fallback (keep `/v1/models` primary)
-- [ ] **H4** Pin fetch helper + `notices/THIRD_PARTY_NOTICES` stub
+- [x] **H4** Pin fetch helper + `notices/THIRD_PARTY_NOTICES` stub
 - [ ] **H5** `scripts/stop.ps1` prefers IPC graceful stop when lockfile exists
 
 ### Then — Desktop (E)

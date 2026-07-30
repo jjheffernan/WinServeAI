@@ -38,7 +38,7 @@ On Windows, install [Build Tools for Visual Studio](https://visualstudio.microso
 git checkout dev
 git pull
 
-# 1. Put llama-server in bin/ (see bin/README.md — pin b9866)
+# 1. Put llama-server in bin/ (pin b9866 — .\scripts\fetch-llama-pin.ps1 or see bin/README.md)
 # 2. Edit config/default.yaml → model.path
 cargo run -p winserve -- print-cmd
 cargo run -p winserve -- start

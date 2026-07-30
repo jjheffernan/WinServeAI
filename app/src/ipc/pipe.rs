@@ -173,17 +173,15 @@ async fn listen_windows(pipe_name: String, commands: mpsc::Sender<Command>) -> R
     use tokio::net::windows::named_pipe::ServerOptions;
 
     let endpoint = endpoint_for(&pipe_name);
-    let mut first = true;
+    // Keep a spare instance accepting so back-to-back clients do not hit PIPE_BUSY.
+    let mut server = ServerOptions::new()
+        .first_pipe_instance(true)
+        .create(&endpoint)?;
     loop {
-        let mut opts = ServerOptions::new();
-        if first {
-            // first_pipe_instance returns &mut Self — do not reassign.
-            opts.first_pipe_instance(true);
-            first = false;
-        }
-        let server = opts.create(&endpoint)?;
         server.connect().await?;
-        let (reader, writer) = tokio::io::split(server);
+        let connected = server;
+        server = ServerOptions::new().create(&endpoint)?;
+        let (reader, writer) = tokio::io::split(connected);
         if let Err(e) = handle_connection(reader, writer, &commands).await {
             if matches!(e, PipeError::ChannelClosed) {
                 return Ok(());
@@ -198,7 +196,29 @@ async fn request_windows(pipe_name: &str, cmd: &str) -> Result<Response, PipeErr
     use tokio::net::windows::named_pipe::ClientOptions;
 
     let endpoint = endpoint_for(pipe_name);
-    let client = ClientOptions::new().open(endpoint)?;
+    let mut last_err = None;
+    let client = {
+        let mut opened = None;
+        for _ in 0..50 {
+            match ClientOptions::new().open(&endpoint) {
+                Ok(c) => {
+                    opened = Some(c);
+                    break;
+                }
+                Err(e) if e.raw_os_error() == Some(231) => {
+                    // ERROR_PIPE_BUSY — wait for the next server instance.
+                    last_err = Some(e);
+                    tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+                }
+                Err(e) => return Err(e.into()),
+            }
+        }
+        opened.ok_or_else(|| {
+            last_err
+                .map(PipeError::from)
+                .unwrap_or_else(|| PipeError::Protocol("pipe busy".into()))
+        })?
+    };
     let (reader, mut writer) = tokio::io::split(client);
     let body = serde_json::to_string(&Request {
         cmd: cmd.to_string(),

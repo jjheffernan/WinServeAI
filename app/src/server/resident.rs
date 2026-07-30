@@ -18,6 +18,8 @@ pub enum CommandKind {
     Start,
     Stop,
     Restart,
+    Health,
+    Endpoint,
 }
 
 #[derive(Debug, Clone)]
@@ -40,19 +42,24 @@ impl Command {
     }
 }
 
+/// Apply one command and build a reply.
+pub async fn handle(manager: &mut ServerManager, kind: CommandKind) -> Reply {
+    let error = match kind {
+        CommandKind::Status | CommandKind::Health | CommandKind::Endpoint => None,
+        CommandKind::Start => manager.start().await.err().map(|e| e.to_string()),
+        CommandKind::Stop => manager.stop().await.err().map(|e| e.to_string()),
+        CommandKind::Restart => manager.restart().await.err().map(|e| e.to_string()),
+    };
+    Reply {
+        status: manager.get_status(),
+        endpoint: manager.openai_base(),
+        error,
+    }
+}
+
 /// Serve commands until every sender is dropped.
 pub async fn run(manager: &mut ServerManager, commands: &mut mpsc::Receiver<Command>) {
     while let Some(Command { kind, reply }) = commands.recv().await {
-        let error = match kind {
-            CommandKind::Status => None,
-            CommandKind::Start => manager.start().await.err().map(|e| e.to_string()),
-            CommandKind::Stop => manager.stop().await.err().map(|e| e.to_string()),
-            CommandKind::Restart => manager.restart().await.err().map(|e| e.to_string()),
-        };
-        let _ = reply.send(Reply {
-            status: manager.get_status(),
-            endpoint: manager.openai_base(),
-            error,
-        });
+        let _ = reply.send(handle(manager, kind).await);
     }
 }

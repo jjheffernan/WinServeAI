@@ -42,7 +42,7 @@ pub fn default_path() -> PathBuf {
         let base = std::env::var_os("XDG_RUNTIME_DIR")
             .or_else(|| std::env::var_os("TMPDIR"))
             .map(PathBuf::from)
-            .unwrap_or_else(|| PathBuf::from("/tmp"));
+            .unwrap_or_else(std::env::temp_dir);
         base.join("WinServeAI").join("manager.lock")
     }
 }

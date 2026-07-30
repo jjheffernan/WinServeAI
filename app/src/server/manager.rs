@@ -26,6 +26,19 @@ pub enum Status {
     Crashed,
 }
 
+impl Status {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Status::Stopped => "Stopped",
+            Status::Starting => "Starting",
+            Status::Ready => "Ready",
+            Status::Stopping => "Stopping",
+            Status::Failed => "Failed",
+            Status::Crashed => "Crashed",
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum ManagerError {
     #[error(transparent)]

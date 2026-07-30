@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::sync::mpsc;
 use winserve::ipc::lockfile::{self, LockGuard};
+use winserve::ipc::pipe;
 use winserve::server::config::Config;
 use winserve::server::resident::{self, Command, CommandKind};
 use winserve::ServerManager;
@@ -116,6 +117,8 @@ async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result
 
     let mut mgr = ServerManager::load_config(root, cfg_path)?;
     let (tx, mut rx) = mpsc::channel::<Command>(8);
+    let ipc = tokio::spawn(pipe::listen(info.pipe.clone(), tx.clone()));
+    println!("serve: ipc {}", pipe::endpoint_for(&info.pipe));
 
     match mgr.start().await {
         Ok(()) => println!("READY {}", mgr.openai_base()),
@@ -123,18 +126,24 @@ async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result
     }
     println!("serve: resident manager; Ctrl+C to stop");
 
-    let signal = tokio::spawn(async move {
+    let signal_tx = tx.clone();
+    let mut signal = tokio::spawn(async move {
         if tokio::signal::ctrl_c().await.is_ok() {
             let (cmd, ack) = Command::new(CommandKind::Stop);
-            if tx.send(cmd).await.is_ok() {
+            if signal_tx.send(cmd).await.is_ok() {
                 let _ = ack.await;
             }
         }
     });
+    drop(tx);
 
-    resident::run(&mut mgr, &mut rx).await;
+    tokio::select! {
+        _ = resident::run(&mut mgr, &mut rx) => {}
+        _ = &mut signal => {}
+    }
+    ipc.abort();
     signal.abort();
-    mgr.stop().await?;
+    let _ = mgr.stop().await;
     drop(lock);
     Ok(())
 }

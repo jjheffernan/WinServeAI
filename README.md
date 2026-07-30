@@ -39,12 +39,12 @@ git checkout dev
 git pull
 
 # 1. Put llama-server in bin/ (pin b9866 — .\scripts\fetch-llama-pin.ps1 or see bin/README.md)
-# 2. Edit config/default.yaml → model.path
+# 2. Set model.path to a local .gguf (default is empty — see docs/first-run.md)
 cargo run -p winserve -- print-cmd
 cargo run -p winserve -- start
 ```
 
-API: `http://127.0.0.1:8080/v1`
+API: `http://127.0.0.1:8080/v1` · First run: [docs/first-run.md](docs/first-run.md)
 
 ## Rules
 

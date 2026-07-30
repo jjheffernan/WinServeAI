@@ -14,7 +14,7 @@ server:
   host: 127.0.0.1
 
 model:
-  path: D:\models\model.gguf
+  path: ""   # first-run: set to a local .gguf (see docs/first-run.md)
 
 gpu:
   auto: true
@@ -31,7 +31,8 @@ logging:
   keep: 3
 ```
 
-Copy `config/default.yaml`, set `model.path` to a real GGUF, then start.
+Shipped `model.path` is empty on purpose. Copy `config/default.yaml`, set a real
+`.gguf` (tray Settings → Browse, or edit YAML), then start. See [first-run.md](first-run.md).
 
 ## Where config is loaded
 
@@ -77,9 +78,10 @@ OpenAI-compatible base URL: `http://{host}:{port}/v1` (see [api.md](api.md)).
 
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `path` | path | `D:\models\model.gguf` (sample) | Path to a GGUF file |
+| `path` | path | `""` (empty until first run) | Path to a GGUF file |
 
-Validation: path string must be non-empty. On `start`, the file must exist or startup fails.
+Validation allows empty `model.path` so first-run guidance works. On `start`, the
+path must be non-empty **and** the file must exist or startup fails.
 
 ### `gpu`
 
@@ -113,12 +115,15 @@ See [logging.md](logging.md). Created when the manager loads config.
 `Config::validate()` (on load and save):
 
 * `server.port` must be non-zero
-* `model.path` must be non-empty
+* `server.host` must be non-empty
+* `gpu.layers` must be `"auto"` or a non-negative integer string
+* `runtime.context` must be non-zero
+* `model.path` **may** be empty at load (first-run); soft warning via `warnings()`
 
 Additional checks at `start` (manager, not the YAML parser):
 
 * `bin/llama-server` / `llama-server.exe` exists under the repo root
-* `model.path` exists on disk
+* `model.path` is non-empty and exists on disk
 * Port bind probe may warn if the port looks taken (imperfect for `0.0.0.0` vs loopback)
 
 ## GPU rules

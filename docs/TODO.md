@@ -41,13 +41,13 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **F2** Desktop + Start Menu → tray/manager
 - [x] **F3** Firewall only for non-loopback; remove on uninstall
 - [x] **F4** Notices payload (llama.cpp MIT; CUDA notice if needed)
-- [ ] **F5** First-run model path guidance
+- [x] **F5** First-run model path guidance
 
 ### Ship — Exit polish (I)
 
 - [ ] **I1** Docs: tray + IPC in development / architecture / installer
 - [ ] **I2** Readiness re-score + `check_doc_drift.py`
-- [ ] **I3** Safe default.yaml + empty model.path guidance
+- [x] **I3** Safe default.yaml + empty model.path guidance
 - [ ] **I4** Record shipped `b####` pin in release docs
 
 ## Non-blocking / later

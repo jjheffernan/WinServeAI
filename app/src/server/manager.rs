@@ -162,6 +162,13 @@ impl ServerManager {
             return Err(ManagerError::Other(msg));
         }
 
+        if self.config.model.path.as_os_str().is_empty() {
+            self.status = Status::Failed;
+            let msg = "model.path is empty — set a local .gguf (docs/first-run.md / Settings Browse)"
+                .to_string();
+            self.logs.error(&msg);
+            return Err(ManagerError::Other(msg));
+        }
         if !self.config.model.path.exists() {
             self.status = Status::Failed;
             let msg = format!("model not found: {}", self.config.model.path.display());

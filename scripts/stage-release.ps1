@@ -97,6 +97,15 @@ if (-not (Test-Path $ConfigSrc)) {
 Copy-Item -Force $ConfigSrc -Destination (Join-Path $OutDir "config\default.yaml")
 Write-Host "OK: config\default.yaml"
 
+$FirstRunSrc = Join-Path $Root "config\FIRST_RUN.txt"
+if (Test-Path $FirstRunSrc) {
+    Copy-Item -Force $FirstRunSrc -Destination (Join-Path $OutDir "FIRST_RUN.txt")
+    Write-Host "OK: FIRST_RUN.txt"
+}
+else {
+    Write-Host "WARN: config\FIRST_RUN.txt missing"
+}
+
 if (Test-Path $NoticesSrc) {
     Copy-Item -Force -Recurse (Join-Path $NoticesSrc "*") -Destination (Join-Path $OutDir "notices")
     Write-Host "OK: notices\"

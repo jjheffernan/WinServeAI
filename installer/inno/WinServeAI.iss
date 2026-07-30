@@ -43,7 +43,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
 DisableProgramGroupPage=no
-InfoAfterFile=
+InfoAfterFile=FIRST_RUN.txt
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -60,6 +60,8 @@ Source: "winserve-tray.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsource
 Source: "bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Default config — do not clobber operator edits on upgrade
 Source: "config\default.yaml"; DestDir: "{app}\config"; Flags: onlyifdoesntexist uninsneveruninstall
+; First-run guidance (also shown after install via InfoAfterFile)
+Source: "FIRST_RUN.txt"; DestDir: "{app}"; Flags: ignoreversion
 ; Notices (MIT / third-party)
 Source: "notices\*"; DestDir: "{app}\notices"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Empty logs dir

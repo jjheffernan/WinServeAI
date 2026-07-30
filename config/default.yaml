@@ -3,7 +3,9 @@ server:
   host: 127.0.0.1
 
 model:
-  path: D:\models\model.gguf
+  # First-run: set to a local .gguf (tray Settings → Browse, or edit this file).
+  # See docs/first-run.md / config/FIRST_RUN.txt — no models are bundled.
+  path: ""
 
 gpu:
   auto: true

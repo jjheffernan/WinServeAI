@@ -32,7 +32,7 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 - [x] **E1c** Log viewer
 - [x] **E1d** Settings → YAML validate/write
 - [x] **E2** Model path picker (local `.gguf` only)
-- [ ] **E1e** Quit → `stop()`; Job Object backstop
+- [x] **E1e** Quit → `stop()`; Job Object backstop
 
 ### Then — Installer (F)
 

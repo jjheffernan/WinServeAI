@@ -2,17 +2,36 @@
 //!
 //! All lifecycle goes through [`winserve::ServerManager`]. The webview must not
 //! spawn `llama-server` or invent a second orchestrator.
+//!
+//! The tray process is the resident G owner: lockfile + named-pipe IPC so CLI
+//! `status` / `stop` / `restart` can attach. Quit calls `stop()` first; Job
+//! Object remains the orphan backstop.
 
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
-use tokio::sync::Mutex;
+use tauri::{Manager, RunEvent, State, WindowEvent};
+use tokio::sync::{mpsc, Mutex};
+use winserve::ipc::lockfile::{self, LockGuard};
+use winserve::ipc::pipe;
 use winserve::server::manager::{ServerManager, Status};
+use winserve::server::resident::{self, Command};
 
 struct AppState {
     manager: Mutex<ServerManager>,
+    /// Held for process lifetime; Drop removes the lockfile.
+    _lock: LockGuard,
+    stopping: AtomicBool,
+}
+
+async fn graceful_stop(state: &AppState) {
+    if state.stopping.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    let mut mgr = state.manager.lock().await;
+    let _ = mgr.stop().await;
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -228,10 +247,37 @@ fn _status_exhaustiveness(s: Status) -> &'static str {
     s.as_str()
 }
 
+fn spawn_ipc(state: Arc<AppState>, pipe_name: String) {
+    tauri::async_runtime::spawn(async move {
+        let (tx, mut rx) = mpsc::channel::<Command>(8);
+        let listen_name = pipe_name.clone();
+        tokio::spawn(async move {
+            if let Err(e) = pipe::listen(listen_name, tx).await {
+                eprintln!("winserve-tray ipc listen ended: {e}");
+            }
+        });
+        while let Some(Command { kind, reply }) = rx.recv().await {
+            let mut mgr = state.manager.lock().await;
+            let _ = reply.send(resident::handle(&mut mgr, kind).await);
+        }
+    });
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let root = find_root();
     let cfg = config_path(&root);
+    let (lock, info) = LockGuard::acquire_default(lockfile::DEFAULT_PIPE_NAME).unwrap_or_else(|e| {
+        panic!("winserve-tray: cannot acquire manager lock (is another owner running?): {e}")
+    });
+    eprintln!(
+        "winserve-tray: lock {} (pid={}, pipe={})",
+        lock.path().display(),
+        info.pid,
+        info.pipe
+    );
+    eprintln!("winserve-tray: ipc {}", pipe::endpoint_for(&info.pipe));
+
     let manager = ServerManager::load_config(&root, &cfg).unwrap_or_else(|e| {
         panic!(
             "winserve-tray: failed to load config {} under {}: {e}",
@@ -241,7 +287,10 @@ pub fn run() {
     });
     let state = Arc::new(AppState {
         manager: Mutex::new(manager),
+        _lock: lock,
+        stopping: AtomicBool::new(false),
     });
+    spawn_ipc(state.clone(), info.pipe);
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -257,6 +306,36 @@ pub fn run() {
             pick_model_path,
             manager_logs,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running winserve-tray");
+        .build(tauri::generate_context!())
+        .expect("error while building winserve-tray")
+        .run(|app, event| match event {
+            RunEvent::ExitRequested { api, .. } => {
+                let state = app.state::<Arc<AppState>>();
+                if !state.stopping.load(Ordering::SeqCst) {
+                    api.prevent_exit();
+                    let app = app.clone();
+                    let state = Arc::clone(&state);
+                    tauri::async_runtime::spawn(async move {
+                        graceful_stop(&state).await;
+                        app.exit(0);
+                    });
+                }
+            }
+            RunEvent::WindowEvent {
+                event: WindowEvent::CloseRequested { api, .. },
+                ..
+            } => {
+                let state = app.state::<Arc<AppState>>();
+                if !state.stopping.load(Ordering::SeqCst) {
+                    api.prevent_close();
+                    let app = app.clone();
+                    let state = Arc::clone(&state);
+                    tauri::async_runtime::spawn(async move {
+                        graceful_stop(&state).await;
+                        app.exit(0);
+                    });
+                }
+            }
+            _ => {}
+        });
 }

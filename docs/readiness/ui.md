@@ -3,25 +3,26 @@
 | Field | Value |
 | --- | --- |
 | Path | `apps/desktop/` (`winserve-tray`) |
-| Overall | **3.2 / 5** |
-| Label | `mvp-partial` |
+| Overall | **3.6 / 5** |
+| Label | `mvp-ready` |
 | Reviewed | 2026-07-30 |
 
 ## Dimensions
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 4/5 | Tauri commands wrap `ServerManager` only; settings gated; `.gguf` path picker only (no download). |
-| Implementation | 4/5 | Status/start/stop + logs + settings + `pick_model_path` (tauri-plugin-dialog, `.gguf` filter). No quit→stop / lockfile owner yet (E1e). |
-| Tests | 2/5 | Manager `apply_config` tests; log tail test. No UI/dialog tests. |
-| Docs | 3/5 | `apps/desktop/README.md` + TODO through E2. |
-| Windows readiness | 1/5 | Compiles with Tauri host toolchain; dialog not yet proven on Win10/11 install. |
+| Design | 4/5 | Tauri commands wrap `ServerManager` only; tray is G owner (lockfile + IPC); quit → `stop()` with Job Object backstop. |
+| Implementation | 4/5 | Status/start/stop/logs/settings/`.gguf` picker; `ExitRequested` / `CloseRequested` call `stop()`; lockfile + pipe listen for CLI attach. |
+| Tests | 2/5 | Manager/log unit tests; no automated tray quit/IPC integration test. |
+| Docs | 3/5 | `apps/desktop/README.md` + TODO E1a–E1e / E2. |
+| Windows readiness | 2/5 | Compiles with Tauri host toolchain; Win10/11 tray + dialog + quit path still need operator proof. |
 
 ## Gaps
 
-- Quit path → `stop()` + Job Object backstop (E1e).
-- Tray should become resident G owner (lockfile + IPC) like `winserve serve`.
+- System tray icon / menu (window-only shell today).
+- Operator Windows proof for quit with no orphan `llama-server`.
 
 ## Next actions (ordered)
 
-1. E1e — quit → `stop()`; embed lockfile/IPC owner.
+1. Optional tray icon menu (start/stop/status) for true minimize-to-tray UX.
+2. Operator smoke: quit while Ready → no orphan llama-server; CLI `winserve stop` against tray owner.

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WinServeAI</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 1.5rem;
+        background: #0f1419;
+        color: #e7ecf1;
+      }
+      h1 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+      .row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+      }
+      button {
+        background: #1a56db;
+        color: white;
+        border: 0;
+        border-radius: 6px;
+        padding: 0.45rem 0.85rem;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #2a3441;
+      }
+      #status,
+      #endpoint,
+      #error {
+        font-family: ui-monospace, monospace;
+        font-size: 0.85rem;
+        white-space: pre-wrap;
+      }
+      #error {
+        color: #f87171;
+      }
+      .hint {
+        opacity: 0.7;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WinServeAI</h1>
+    <p class="hint">
+      Scaffold (E1a): commands talk to <code>ServerManager</code> only. Full UI lands in E1b+.
+    </p>
+    <div class="row">
+      <button id="btn-start">Start</button>
+      <button id="btn-stop" class="secondary">Stop</button>
+      <button id="btn-restart" class="secondary">Restart</button>
+      <button id="btn-refresh" class="secondary">Refresh</button>
+    </div>
+    <p><strong>Status:</strong> <span id="status">…</span></p>
+    <p><strong>Endpoint:</strong> <span id="endpoint">…</span></p>
+    <p id="error"></p>
+    <script src="/main.js"></script>
+  </body>
+</html>

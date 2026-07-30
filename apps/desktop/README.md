@@ -30,6 +30,7 @@ Requires a Tauri 2 host toolchain (Rust + platform webview). Binary name:
 | `manager_restart` | `restart` |
 | `manager_endpoint` | `openai_base` |
 | `manager_config_summary` | read-only config fields |
+| `manager_logs` | viewer-only tail of `server` / `llama` / `error` logs |
 
 ### Status UI (E1b)
 
@@ -38,7 +39,12 @@ Badge labels are exactly: **Stopped**, **Starting**, **Ready**, **Failed**,
 during transitional states; Start optimistically shows Starting while
 `manager_start` awaits readiness.
 
-Logs, settings, path picker, and quit→stop are E1c–E1e / E2.
+### Log viewer (E1c)
+
+Tabs for `server.log` / `llama.log` / `error.log`; tails via
+`winserve::server::logs::tail_dir` (timestamps already on each line). Read-only.
+
+Settings, path picker, and quit→stop are E1d–E1e / E2.
 
 ## See also
 

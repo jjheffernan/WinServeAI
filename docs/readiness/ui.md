@@ -3,28 +3,28 @@
 | Field | Value |
 | --- | --- |
 | Path | `apps/desktop/` (`winserve-tray`) |
-| Overall | **2.2 / 5** |
-| Label | `scaffold` |
+| Overall | **2.6 / 5** |
+| Label | `mvp-partial` |
 | Reviewed | 2026-07-30 |
 
 ## Dimensions
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 3/5 | Tauri 2 shell; commands wrap `ServerManager` only — matches `docs/specs/E-desktop.md` E1a/E1b. Canonical badge states only (no “Running”). |
-| Implementation | 3/5 | `winserve-tray` invoke handlers for status/start/stop/restart/endpoint/config summary. Status badge + start/stop/restart/copy URL with transitional disables and optimistic Starting/Stopping. No tray menu / quit→stop yet (E1e). |
-| Tests | 0/5 | None. |
-| Docs | 2/5 | `apps/desktop/README.md` + TODO E1a/E1b. |
-| Windows readiness | 1/5 | Scaffold compiles with Tauri host toolchain; not yet proven as installable tray on Win10/11. |
+| Design | 3/5 | Tauri 2 shell; commands wrap `ServerManager` only — matches `docs/specs/E-desktop.md` E1a–E1c. Canonical badge states; read-only log tail. |
+| Implementation | 3/5 | Status/start/stop/restart UI + `manager_logs` tailing `server`/`llama`/`error` via `logs::tail_dir`. No settings / path picker / quit→stop yet. |
+| Tests | 1/5 | `tail_file_returns_last_n_lines` in `server/logs.rs`; no UI tests. |
+| Docs | 3/5 | `apps/desktop/README.md` + logging.md tail note + TODO E1a–E1c. |
+| Windows readiness | 1/5 | Compiles with Tauri host toolchain; not yet proven as installable tray on Win10/11. |
 
 ## Gaps
 
-- Log viewer / settings / path picker (E1c, E1d, E2).
+- Settings / path picker (E1d, E2).
 - Quit path → `stop()` + Job Object backstop (E1e).
 - Tray should become resident G owner (lockfile + IPC) like `winserve serve`.
 
 ## Next actions (ordered)
 
-1. E1c — log viewer from `logs/`.
+1. E1d — settings YAML validate/write.
 2. E1e — quit → `stop()`; consider embedding lockfile/IPC owner.
-3. E1d / E2 — settings + model path picker.
+3. E2 — model path picker.

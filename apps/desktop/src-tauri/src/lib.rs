@@ -101,6 +101,38 @@ async fn manager_config_summary(state: State<'_, Arc<AppState>>) -> Result<Confi
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct LogTailDto {
+    server: Vec<String>,
+    llama: Vec<String>,
+    error: Vec<String>,
+    dir: String,
+}
+
+/// Viewer-only: tail `server.log` / `llama.log` / `error.log` under the config logging dir.
+#[tauri::command]
+async fn manager_logs(
+    state: State<'_, Arc<AppState>>,
+    max_lines: Option<usize>,
+) -> Result<LogTailDto, String> {
+    let mgr = state.manager.lock().await;
+    let rel = &mgr.config().logging.dir;
+    let dir = if rel.is_absolute() {
+        rel.clone()
+    } else {
+        mgr.root().join(rel)
+    };
+    let n = max_lines.unwrap_or(200).clamp(1, 2000);
+    let tail = winserve::server::logs::tail_dir(&dir, n).map_err(|e| e.to_string())?;
+    Ok(LogTailDto {
+        server: tail.server,
+        llama: tail.llama,
+        error: tail.error,
+        dir: dir.display().to_string(),
+    })
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct ConfigSummary {
     host: String,
     port: u16,
@@ -138,6 +170,7 @@ pub fn run() {
             manager_restart,
             manager_endpoint,
             manager_config_summary,
+            manager_logs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running winserve-tray");

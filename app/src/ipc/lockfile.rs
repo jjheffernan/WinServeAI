@@ -20,7 +20,7 @@ pub struct LockInfo {
 
 #[derive(Debug, Error)]
 pub enum LockError {
-    #[error("manager already running (pid={pid}, pipe={pipe})")]
+    #[error("already running (pid={pid}, pipe={pipe})")]
     AlreadyRunning { pid: u32, pipe: String },
     #[error("io: {0}")]
     Io(#[from] io::Error),
@@ -195,6 +195,10 @@ mod tests {
         let _first = acquire(&path, "a").unwrap();
         let err = acquire(&path, "b").unwrap_err();
         assert!(matches!(err, LockError::AlreadyRunning { .. }));
+        assert!(
+            err.to_string().starts_with("already running"),
+            "got: {err}"
+        );
         release(&path).unwrap();
     }
 

@@ -12,7 +12,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use tauri::{Manager, RunEvent, State, WindowEvent};
+use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
+use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
+use tauri::{AppHandle, Manager, RunEvent, State, WindowEvent};
 use tokio::sync::{mpsc, Mutex};
 use winserve::ipc::lockfile::{self, LockGuard};
 use winserve::ipc::pipe;
@@ -32,6 +34,51 @@ async fn graceful_stop(state: &AppState) {
     }
     let mut mgr = state.manager.lock().await;
     let _ = mgr.stop().await;
+}
+
+fn show_main(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
+
+/// Tray menu ids → actions (host-safe unit surface).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TrayAction {
+    Open,
+    Start,
+    Stop,
+    Restart,
+    Settings,
+    Quit,
+}
+
+fn tray_action(id: &str) -> Option<TrayAction> {
+    match id {
+        "open" => Some(TrayAction::Open),
+        "start" => Some(TrayAction::Start),
+        "stop" => Some(TrayAction::Stop),
+        "restart" => Some(TrayAction::Restart),
+        "settings" => Some(TrayAction::Settings),
+        "quit" => Some(TrayAction::Quit),
+        _ => None,
+    }
+}
+
+async fn tray_tooltip(state: &AppState) -> String {
+    let mut mgr = state.manager.lock().await;
+    let status = mgr.get_status().as_str();
+    let endpoint = mgr.openai_base();
+    format!("WinServeAI — {status}\n{endpoint}")
+}
+
+async fn refresh_tray_tooltip(app: &AppHandle, state: &AppState) {
+    let tip = tray_tooltip(state).await;
+    if let Some(tray) = app.tray_by_id("winserve") {
+        let _ = tray.set_tooltip(Some(&tip));
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -306,6 +353,104 @@ pub fn run() {
             pick_model_path,
             manager_logs,
         ])
+        .setup(|app| {
+            let open_i = MenuItem::with_id(app, "open", "Open", true, None::<&str>)?;
+            let start_i = MenuItem::with_id(app, "start", "Start", true, None::<&str>)?;
+            let stop_i = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;
+            let restart_i = MenuItem::with_id(app, "restart", "Restart", true, None::<&str>)?;
+            let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let sep1 = PredefinedMenuItem::separator(app)?;
+            let sep2 = PredefinedMenuItem::separator(app)?;
+            let menu = Menu::with_items(
+                app,
+                &[
+                    &open_i,
+                    &sep1,
+                    &start_i,
+                    &stop_i,
+                    &restart_i,
+                    &sep2,
+                    &settings_i,
+                    &quit_i,
+                ],
+            )?;
+
+            let icon = app
+                .default_window_icon()
+                .cloned()
+                .expect("winserve-tray: default window icon required for tray");
+
+            let _tray = TrayIconBuilder::with_id("winserve")
+                .icon(icon)
+                .tooltip("WinServeAI")
+                .menu(&menu)
+                .show_menu_on_left_click(true)
+                .on_menu_event(|app, event| {
+                    let Some(action) = tray_action(event.id.as_ref()) else {
+                        return;
+                    };
+                    let state = app.state::<Arc<AppState>>().inner().clone();
+                    match action {
+                        TrayAction::Open | TrayAction::Settings => show_main(app),
+                        TrayAction::Quit => {
+                            let app = app.clone();
+                            tauri::async_runtime::spawn(async move {
+                                graceful_stop(&state).await;
+                                app.exit(0);
+                            });
+                        }
+                        TrayAction::Start => {
+                            let app = app.clone();
+                            tauri::async_runtime::spawn(async move {
+                                {
+                                    let mut mgr = state.manager.lock().await;
+                                    let _ = mgr.start().await;
+                                }
+                                refresh_tray_tooltip(&app, &state).await;
+                            });
+                        }
+                        TrayAction::Stop => {
+                            let app = app.clone();
+                            tauri::async_runtime::spawn(async move {
+                                {
+                                    let mut mgr = state.manager.lock().await;
+                                    let _ = mgr.stop().await;
+                                }
+                                refresh_tray_tooltip(&app, &state).await;
+                            });
+                        }
+                        TrayAction::Restart => {
+                            let app = app.clone();
+                            tauri::async_runtime::spawn(async move {
+                                {
+                                    let mut mgr = state.manager.lock().await;
+                                    let _ = mgr.restart().await;
+                                }
+                                refresh_tray_tooltip(&app, &state).await;
+                            });
+                        }
+                    }
+                })
+                .on_tray_icon_event(|tray, event| {
+                    // Left click opens the menu; double-click focuses the window.
+                    if let TrayIconEvent::DoubleClick {
+                        button: MouseButton::Left,
+                        ..
+                    } = event
+                    {
+                        show_main(tray.app_handle());
+                    }
+                })
+                .build(app)?;
+
+            let state = app.state::<Arc<AppState>>().inner().clone();
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                refresh_tray_tooltip(&app_handle, &state).await;
+            });
+            Ok(())
+        })
         .build(tauri::generate_context!())
         .expect("error while building winserve-tray")
         .run(|app, event| match event {
@@ -325,17 +470,28 @@ pub fn run() {
                 event: WindowEvent::CloseRequested { api, .. },
                 ..
             } => {
-                let state = app.state::<Arc<AppState>>();
-                if !state.stopping.load(Ordering::SeqCst) {
-                    api.prevent_close();
-                    let app = app.clone();
-                    let state = Arc::clone(&state);
-                    tauri::async_runtime::spawn(async move {
-                        graceful_stop(&state).await;
-                        app.exit(0);
-                    });
+                // Close → hide to tray. Quit from the tray menu stops the manager.
+                api.prevent_close();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.hide();
                 }
             }
             _ => {}
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tray_menu_ids_map_to_actions() {
+        assert_eq!(tray_action("open"), Some(TrayAction::Open));
+        assert_eq!(tray_action("start"), Some(TrayAction::Start));
+        assert_eq!(tray_action("stop"), Some(TrayAction::Stop));
+        assert_eq!(tray_action("restart"), Some(TrayAction::Restart));
+        assert_eq!(tray_action("settings"), Some(TrayAction::Settings));
+        assert_eq!(tray_action("quit"), Some(TrayAction::Quit));
+        assert_eq!(tray_action("unknown"), None);
+    }
 }

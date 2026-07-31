@@ -1,6 +1,6 @@
 # Project TODO — MVP build
 
-**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.4/5**  
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.6/5**  
 **Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.
@@ -54,8 +54,10 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 
 | Item | Note |
 | --- | --- |
-| **A2** Windows smoke | Operator proof; do not gate G–F |
-| Unit / CI expansion | Phase 4 or opportunistic |
+| **A2** Windows smoke | Operator + GGUF; `tests/windows/a2-smoke.ps1` |
+| Orphan / tray quit proof | `orphan-quit.ps1`, `tray-quit.ps1` on Windows |
+| Install → Ready | Clean-machine operator checklist |
+| DXGI known-host assert | Optional NVIDIA matrix; env gate only |
 | NVML FFI | Keep nvidia-smi until needed |
 | Phase 4 stability | Crash recovery polish, config migration |
 | Phase 5 | Auto-update, service mode, metrics |

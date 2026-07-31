@@ -104,7 +104,7 @@ Abstractions for “many backends” come later *only if needed*.
 - [research/01-windows-process.md](./research/01-windows-process.md) — Job Objects
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — `GET /v1/models`
 - [specs/E-desktop.md](./specs/E-desktop.md) — tray shell
-- [prior-art.md](./prior-art.md) — external analogues
+- [prior-art.md](./prior-art.md) — external analogues (Steal/Avoid)
 - [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
 - [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — argv only here
 - [`app/src/ipc/`](../app/src/ipc/) — lockfile + pipe

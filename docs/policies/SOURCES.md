@@ -77,6 +77,18 @@ Internal policy: [doc-drift.md](./doc-drift.md).
 | --- | --- | --- |
 | llm-d readiness probes (liveness ≠ readiness) | https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md | prior-art, research/02, research/05 |
 
+## Competitor / analogue upstreams
+
+Cited from [prior-art.md](../prior-art.md) and Phase-0 research. Prefer path@rev when asserting code facts.
+
+| Topic | URL | Cited in |
+| --- | --- | --- |
+| llama.cpp (server pin `b9866`) | https://github.com/ggml-org/llama.cpp | research/02, prior-art, bin/README |
+| Ollama | https://github.com/ollama/ollama | prior-art |
+| Jan | https://github.com/janhq/jan | prior-art |
+| LocalAI | https://github.com/mudler/LocalAI | prior-art |
+| GPT4All | https://github.com/nomic-ai/gpt4all | prior-art |
+
 ## Related internal docs
 
 | Doc | Role |

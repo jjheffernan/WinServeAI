@@ -1,6 +1,6 @@
 # API
 
-> **Readiness:** api 2.6/5 (`mvp-partial`), server-health 3.8/5 (`mvp-ready`) — details in [readiness/api.md](./readiness/api.md), [readiness/server-health.md](./readiness/server-health.md)
+> **Readiness:** api 3.2/5 (`mvp-partial`), server-health 3.8/5 (`mvp-ready`) — details in [readiness/api.md](./readiness/api.md), [readiness/server-health.md](./readiness/server-health.md)
 
 WinServeAI is an **appliance wrapper** around `llama-server.exe`. It does not implement an OpenAI HTTP stack of its own. Clients talk to **llama-server’s OpenAI-compatible routes** at `/v1` once `ServerManager` reports READY.
 

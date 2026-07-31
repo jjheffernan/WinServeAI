@@ -1,6 +1,6 @@
 # Installer
 
-> **Readiness:** installer 3.0/5 (`mvp-partial`), bin 3.2/5 (`mvp-partial`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
+> **Readiness:** installer 3.4/5 (`mvp-partial`), bin 3.2/5 (`mvp-partial`) — details in [readiness/installer.md](./readiness/installer.md), [readiness/bin.md](./readiness/bin.md)
 
 Native Windows packaging for the WinServeAI appliance. Install → launch
 **`winserve-tray`** (fallback `winserve`) → set a local `.gguf` → OpenAI-compatible

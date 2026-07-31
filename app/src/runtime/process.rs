@@ -281,4 +281,55 @@ mod tests {
         let _ = code;
         assert!(!child.is_running());
     }
+
+    /// Dropping ChildProcess closes the Job Object; KILL_ON_JOB_CLOSE reaps the child.
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn drop_job_reaps_child_on_windows() {
+        use std::os::windows::process::CommandExt;
+        use std::process::Command as StdCommand;
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        let marker = std::env::temp_dir().join(format!(
+            "winserve-job-reap-{}-{}.flag",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let _ = std::fs::remove_file(&marker);
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        // Child loops until marker appears — drop must kill it before we write the marker.
+        let loop_cmd = format!(
+            "for /L %i in (1,1,200) do @if exist \"{}\" (exit 0) else ping -n 1 127.0.0.1 >nul",
+            marker.display()
+        );
+        let child = ChildProcess::spawn(
+            PathBuf::from("cmd"),
+            vec!["/C".into(), loop_cmd],
+            None,
+            tx,
+        )
+        .await
+        .expect("spawn");
+        let pid = child.pid;
+        assert!(pid != 0);
+        drop(child);
+
+        tokio::time::sleep(Duration::from_millis(400)).await;
+        // If still alive, OpenProcess succeeds; tasklist exit 0 with matching PID.
+        let still = StdCommand::new("tasklist")
+            .args(["/FI", &format!("PID eq {pid}"), "/NH"])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .output()
+            .expect("tasklist");
+        let out = String::from_utf8_lossy(&still.stdout);
+        assert!(
+            !out.contains(&pid.to_string()),
+            "orphan pid={pid} still listed: {out}"
+        );
+        let _ = std::fs::remove_file(&marker);
+    }
 }

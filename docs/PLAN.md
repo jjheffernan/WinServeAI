@@ -38,7 +38,19 @@ Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive h
 | **D** unit tests + validation + readiness docs | Done |
 | **A2** operator smoke on Windows | Open — **non-blocking** |
 | **E** desktop + resident manager | Done on `dev` (E1a–E1e, E2); tray wraps ServerManager + lockfile/IPC |
-| **F** Inno installer | Done on `dev` (F0–F5); ISCC compile + install→Ready proof still open ([specs/F-installer.md](specs/F-installer.md)) |
+| **F** Inno installer | Done on `dev` (F0–F5); ISCC compiles in CI; install→Ready operator proof still open ([specs/F-installer.md](specs/F-installer.md)) |
+| Host-safe coverage | Done on `dev` path: `--no-ui`, fake-backend lifecycle, CLI exit codes, resident attach, Windows ownership unit tests, stage-release + ops script asserts, tray menu unit test |
+
+### Remaining operator gates (Windows + GGUF)
+
+These are **environment proof**, not missing product code:
+
+| Gate | How |
+| --- | --- |
+| **A2** OpenAI smoke | `tests/windows/a2-smoke.ps1` / `scripts/smoke-openai.ps1` |
+| Orphan-free quit | `tests/windows/orphan-quit.ps1`, `tests/windows/tray-quit.ps1` |
+| Install → Ready | `tests/windows/install-ready.ps1` on a clean machine |
+| DXGI non-empty adapters | Known NVIDIA Windows host (no simulated GPU certainty in CI) |
 
 ---
 
@@ -130,8 +142,8 @@ Spec: [specs/F-installer.md](specs/F-installer.md). Vision requires this for MVP
 
 - [x] Resident manager + CLI attach (G) — implemented on `dev`
 - [x] Tray: start/stop/status/logs/settings + path picker (E) — implemented on `dev`
-- [x] Installer packages tray + pinned binary + notices (F) — sources + staging on `dev`; ISCC/install proof open
-- [ ] Quit/stop leaves no orphan `llama-server` — code present; Windows operator proof open (A2)
+- [x] Installer packages tray + pinned binary + notices (F) — sources + staging + ISCC in CI; clean-machine install→Ready open
+- [ ] Quit/stop leaves no orphan `llama-server` — code present; Windows operator proof open
 - [ ] OpenAI client works against `/v1` with a local GGUF — A2 open
 - [x] No chat UI / download / multi-backend surface in the product
 
@@ -145,6 +157,7 @@ Spec: [specs/F-installer.md](specs/F-installer.md). Vision requires this for MVP
 * Auto-updater, Windows service mode (Phase 5+)
 * Config schema migration framework (Phase 4)
 * Blocking on A2 smoke, full Windows CI, or broad unit-test coverage
+* Runtime download of `llama-server`, in-process engine embed, reverse-proxy facade, embedding upstream Web UI
 
 ---
 

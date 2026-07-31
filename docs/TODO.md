@@ -54,8 +54,10 @@ Ordered for after-hours / feature-spec drains. One PR per letter-number when pos
 
 | Item | Note |
 | --- | --- |
-| **A2** Windows smoke | Operator proof; do not gate G–F |
-| Unit / CI expansion | Phase 4 or opportunistic |
+| **A2** Windows smoke | Operator + GGUF; `tests/windows/a2-smoke.ps1` |
+| Orphan / tray quit proof | `orphan-quit.ps1`, `tray-quit.ps1` on Windows |
+| Install → Ready | Clean-machine operator checklist |
+| DXGI known-host assert | Optional NVIDIA matrix; env gate only |
 | NVML FFI | Keep nvidia-smi until needed |
 | Phase 4 stability | Crash recovery polish, config migration |
 | Phase 5 | Auto-update, service mode, metrics |

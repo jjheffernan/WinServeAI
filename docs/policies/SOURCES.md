@@ -77,26 +77,17 @@ Internal policy: [doc-drift.md](./doc-drift.md).
 | --- | --- | --- |
 | llm-d readiness probes (liveness ≠ readiness) | https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md | prior-art, research/02, research/05 |
 
-## Competitor source trees (architecture research)
+## Competitor / analogue upstreams
 
-Pinned revisions live in each brief header under [research/competitors/](../research/competitors/). Prefer citing the brief + path@rev over inventing new URLs.
+Cited from [prior-art.md](../prior-art.md) and Phase-0 research. Prefer path@rev when asserting code facts.
 
 | Topic | URL | Cited in |
 | --- | --- | --- |
-| llama.cpp (server pin `b9866`) | https://github.com/ggml-org/llama.cpp | competitors/llama-cpp-server, research/02 |
-| Ollama (`v0.32.5`) | https://github.com/ollama/ollama | competitors/ollama, prior-art |
-| Jan (`v0.8.4`) | https://github.com/janhq/jan | competitors/jan, prior-art |
-| Jan fork of llama.cpp (releases) | https://github.com/janhq/llama.cpp | competitors/jan |
-| LocalAI (`v4.7.1`) | https://github.com/mudler/LocalAI | competitors/localai, prior-art |
-| GPT4All (`v3.10.0`) | https://github.com/nomic-ai/gpt4all | competitors/gpt4all, prior-art |
-| Jan llama.cpp CDN mirror | https://catalog.jan.ai/llama.cpp/releases/releases.json | competitors/jan |
-| Hugging Face models / GGUF discovery | https://huggingface.co | competitors/jan, competitors/gpt4all |
-| GPT4All model gallery | https://gpt4all.io/models/ | competitors/gpt4all |
-| GPT4All GGUF gallery | https://gpt4all.io/models/gguf/ | competitors/gpt4all |
-| GPT4All llama.cpp submodule fork | https://github.com/nomic-ai/llama.cpp | competitors/gpt4all |
-
-| Competitor research plan | (internal) [research/competitors/PLAN.md](../research/competitors/PLAN.md) | competitors/* |
-| Competitor architecture synthesis | (internal) [research/06-competitor-architecture.md](../research/06-competitor-architecture.md) | comparison |
+| llama.cpp (server pin `b9866`) | https://github.com/ggml-org/llama.cpp | research/02, prior-art, bin/README |
+| Ollama | https://github.com/ollama/ollama | prior-art |
+| Jan | https://github.com/janhq/jan | prior-art |
+| LocalAI | https://github.com/mudler/LocalAI | prior-art |
+| GPT4All | https://github.com/nomic-ai/gpt4all | prior-art |
 
 ## Related internal docs
 
@@ -108,5 +99,3 @@ Pinned revisions live in each brief header under [research/competitors/](../rese
 | [research/03-hardware-detection.md](../research/03-hardware-detection.md) | DXGI / NVML inventory |
 | [research/04-installer-licensing.md](../research/04-installer-licensing.md) | Inno, CUDA DLLs, MIT notices |
 | [research/05-server-manager.md](../research/05-server-manager.md) | State machine and manager API |
-| [research/competitors/PLAN.md](../research/competitors/PLAN.md) | Competitor research contract + confidence vocabulary |
-| [audit/completion-audit.md](../audit/completion-audit.md) | MVP completion vs Windows proof gaps |

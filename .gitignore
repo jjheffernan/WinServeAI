@@ -27,6 +27,7 @@ Thumbs.db
 # Build / release artifacts
 /dist/
 /out/
+/installer/inno/files/
 *.exe
 *.msi
 *.msix

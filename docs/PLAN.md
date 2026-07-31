@@ -1,7 +1,7 @@
 # Implementation plan — full MVP build-out
 
 **Branch:** `dev` (work) · **`main`** = releases only  
-**Maturity:** [readiness/README.md](readiness/README.md) — **3.4/5** (`mvp-partial`)  
+**Maturity:** [readiness/README.md](readiness/README.md) — **3.5/5** (`mvp-partial`)  
 **Source backlog:** [TODO.md](TODO.md) · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)  
 **Vision MVP:** [vision.md](vision.md) · **Build success:** [build-spec.md](build-spec.md)
 

@@ -21,11 +21,53 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Check
+      - name: Check winserve
         run: cargo check -p winserve
 
-      - name: Test
+      - name: Check winserve-tray
+        run: cargo check -p winserve-tray
+
+      - name: Test winserve
         run: cargo test -p winserve
+
+      - name: Test winserve-tray
+        run: cargo test -p winserve-tray
 
       - name: Doc drift
         run: python scripts/check_doc_drift.py
+
+      - name: Stage-release layout asserts
+        shell: bash
+        run: bash tests/scripts/stage-release-assert.sh
+
+      - name: Build release binaries for packaging
+        run: |
+          cargo build -p winserve --release
+          cargo build -p winserve-tray --release
+
+      - name: Stage Inno payload
+        shell: pwsh
+        run: |
+          .\scripts\stage-release.ps1 -Configuration release -SkipBuild -OutDir installer\inno\files
+          if (-not (Test-Path installer\inno\files\winserve.exe)) {
+            throw "staged winserve.exe missing"
+          }
+          if (-not (Test-Path installer\inno\files\bin\VERSION)) {
+            Write-Warning "bin/VERSION missing in stage (pin record preferred)"
+          }
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile Inno installer (ISCC)
+        shell: pwsh
+        run: |
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe not found after choco install" }
+          & $iscc installer\inno\WinServeAI.iss
+          $setup = Get-ChildItem dist\WinServeAI-*-setup.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $setup) { throw "ISCC did not produce dist/WinServeAI-*-setup.exe" }
+          Write-Host "OK: $($setup.FullName) ($([math]::Round($setup.Length/1MB, 2)) MB)"

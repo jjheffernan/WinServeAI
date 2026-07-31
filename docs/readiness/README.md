@@ -14,7 +14,7 @@ Last reviewed: 2026-07-30
 | api | 2.6/5 | mvp-partial | URL helpers only; no tests | [api.md](./api.md) |
 | cli | 3.2/5 | mvp-partial | No automated attach smoke; one-shot `start` has no IPC | [cli.md](./cli.md) |
 | bin | 3.2/5 | mvp-partial | Fetch manual; no checksum / CI pin download | [bin.md](./bin.md) |
-| installer | 3.0/5 | mvp-partial | No ISCC CI; Windows install→Ready proof open | [installer.md](./installer.md) |
+| installer | 3.4/5 | mvp-partial | Install→Ready operator proof open (ISCC compiles in CI) | [installer.md](./installer.md) |
 | scripts-ops | 3.4/5 | mvp-partial | No automated PS1 tests; start.ps1 missing-build UX | [scripts-ops.md](./scripts-ops.md) |
 | scripts-pr-loop | 3.0/5 | mvp-partial | Dry-run only; no formal tests | [scripts-pr-loop.md](./scripts-pr-loop.md) |
 | docs | 4.0/5 | mvp-ready | No automated link checks beyond drift | [docs.md](./docs.md) |
@@ -22,5 +22,5 @@ Last reviewed: 2026-07-30
 
 ## Summary
 
-- **Overall project maturity:** **3.4/5** (`mvp-partial`) — average of 14 modules, excluding `ui`.
-- **Phase alignment:** G/H resident IPC, E tray, F installer/first-run, and I1–I4 polish are merged on `dev`. Remaining gates: A2 Windows+GGUF smoke, optional ISCC CI, orphan-free quit proof. Scorecards refreshed 2026-07-30 (I2). See [audit/completion-audit.md](../audit/completion-audit.md).
+- **Overall project maturity:** **3.5/5** (`mvp-partial`) — average of 14 modules, excluding `ui`.
+- **Phase alignment:** G/H resident IPC, E tray, F installer/first-run, and I1–I4 polish are merged on `dev`. Remaining gates: A2 Windows+GGUF smoke, install→Ready operator proof. Scorecards refreshed 2026-07-31 (packaging CI). See [audit/completion-audit.md](../audit/completion-audit.md).

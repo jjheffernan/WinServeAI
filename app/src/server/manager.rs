@@ -63,6 +63,8 @@ pub struct ServerManager {
     child: Option<ChildProcess>,
     status: Status,
     last_exit: Option<i32>,
+    /// How long `start` waits for HTTP readiness (default 120s).
+    ready_timeout: Duration,
 }
 
 impl ServerManager {
@@ -87,7 +89,13 @@ impl ServerManager {
             child: None,
             status: Status::Stopped,
             last_exit: None,
+            ready_timeout: Duration::from_secs(120),
         })
+    }
+
+    /// Override readiness wait (tests / controllable fake backends).
+    pub fn set_ready_timeout(&mut self, timeout: Duration) {
+        self.ready_timeout = timeout;
     }
 
     pub fn config(&self) -> &Config {
@@ -202,7 +210,7 @@ impl ServerManager {
         self.logs.server(&format!("spawned pid={}", child.pid));
         self.child = Some(child);
 
-        match health::wait_until_ready(&self.config.base_url(), Duration::from_secs(120)).await {
+        match health::wait_until_ready(&self.config.base_url(), self.ready_timeout).await {
             Ok(()) => {
                 self.status = Status::Ready;
                 self.logs.server(&format!("READY {}", self.config.openai_v1_url()));

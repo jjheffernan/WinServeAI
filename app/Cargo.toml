@@ -10,6 +10,11 @@ publish = false
 name = "winserve"
 path = "src/main.rs"
 
+# Controllable stand-in for bin/llama-server in lifecycle tests (not a product binary).
+[[bin]]
+name = "fake-llama-server"
+path = "src/bin/fake_llama_server.rs"
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

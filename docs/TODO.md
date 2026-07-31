@@ -1,6 +1,6 @@
 # Project TODO — MVP build
 
-**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.5/5**  
+**Source:** [PLAN.md](PLAN.md) · **Maturity:** [readiness/README.md](readiness/README.md) **3.6/5**  
 **Branch:** `dev` · **Anti-drift:** [policies/doc-drift.md](policies/doc-drift.md)
 
 Testing / A2 smoke is **non-blocking**. Prefer draft PRs against `dev` that `cargo check`.

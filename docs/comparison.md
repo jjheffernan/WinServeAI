@@ -213,7 +213,7 @@ Tied to [readiness/README.md](./readiness/README.md) modules. Order follows comp
 
 Architecture posture while closing gaps: keep the appliance boundary; do not widen toward control-plane product features rejected above. Optional tiny steals (env for secrets, HTTP drain before kill, localhost defaults) stay inside existing modules.
 
-Project maturity is **3.5/5** (`mvp-partial`) after packaging CI; P0 Windows proof (A2 / install→Ready) still blocks release.
+Project maturity is **3.6/5** (`mvp-partial`) after coverage-depth slice; P0 Windows proof (A2 / install→Ready) still blocks release.
 
 ---
 

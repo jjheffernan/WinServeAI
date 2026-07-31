@@ -1,6 +1,6 @@
 # Development
 
-> **Readiness:** cli 3.2/5 (`mvp-partial`), scripts-ops 3.4/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
+> **Readiness:** cli 3.6/5 (`mvp-partial`), scripts-ops 3.8/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
 WinServeAI owns process lifecycle for an external `bin/llama-server.exe` via
 **`ServerManager`**. The manager crate is `winserve` (`app/`); the optional

@@ -7,6 +7,8 @@ Cross-cutting suites:
 | Path | Role |
 | --- | --- |
 | `tests/scripts/stage-release-assert.sh` | Host-safe staged `{app}` layout asserts |
+| `tests/scripts/host-safe-ops-check.sh` | Host-safe PS1 presence + contract greps (optional pwsh parse) |
+| `app/tests/cli_exit_codes.rs` | CLI exit codes without resident/GGUF |
 | `tests/windows/a2-smoke.ps1` | A2 wrapper → `scripts/smoke-openai.ps1` (**operator + GGUF**) |
 | `tests/windows/orphan-quit.ps1` | Manager-kill leaves no `llama-server` |
 | `tests/windows/install-ready.ps1` | Install → Ready operator checklist |

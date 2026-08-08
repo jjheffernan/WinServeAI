@@ -455,11 +455,10 @@ pub fn run() {
         .expect("error while building winserve-tray")
         .run(|app, event| match event {
             RunEvent::ExitRequested { api, .. } => {
-                let state = app.state::<Arc<AppState>>();
+                let state = app.state::<Arc<AppState>>().inner().clone();
                 if !state.stopping.load(Ordering::SeqCst) {
                     api.prevent_exit();
                     let app = app.clone();
-                    let state = Arc::clone(&state);
                     tauri::async_runtime::spawn(async move {
                         graceful_stop(&state).await;
                         app.exit(0);

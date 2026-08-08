@@ -22,11 +22,20 @@ pub enum ProcessError {
     Io(#[from] std::io::Error),
 }
 
+/// Process-scoped Job Object handle. `HANDLE` is a raw pointer and is not
+/// `Send` by default; Win32 allows use/close from any thread in the owner process.
+#[cfg(windows)]
+struct JobHandle(windows::Win32::Foundation::HANDLE);
+
+// SAFETY: Exclusive ownership stays in `ChildProcess`; job APIs are process-wide.
+#[cfg(windows)]
+unsafe impl Send for JobHandle {}
+
 pub struct ChildProcess {
     child: Child,
     pub pid: u32,
     #[cfg(windows)]
-    job: Option<windows::Win32::Foundation::HANDLE>,
+    job: Option<JobHandle>,
 }
 
 impl ChildProcess {
@@ -66,7 +75,7 @@ impl ChildProcess {
         let job = match win::assign_to_kill_on_close_job(pid) {
             Ok(job) => {
                 if let Err(e) = win::resume_primary_thread(pid) {
-                    win::close_handle(job);
+                    win::close_handle(job.0);
                     let _ = child.start_kill();
                     return Err(ProcessError::Spawn(format!(
                         "resume after job assign failed: {e}"
@@ -148,7 +157,7 @@ impl ChildProcess {
     #[cfg(windows)]
     fn close_job(&mut self) {
         if let Some(job) = self.job.take() {
-            win::close_handle(job);
+            win::close_handle(job.0);
         }
     }
 }
@@ -181,7 +190,7 @@ mod win {
         OpenProcess, OpenThread, ResumeThread, PROCESS_ALL_ACCESS, THREAD_SUSPEND_RESUME,
     };
 
-    pub fn assign_to_kill_on_close_job(pid: u32) -> windows::core::Result<HANDLE> {
+    pub fn assign_to_kill_on_close_job(pid: u32) -> windows::core::Result<super::JobHandle> {
         unsafe {
             let job = CreateJobObjectW(None, PCWSTR::null())?;
             let mut info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
@@ -197,7 +206,7 @@ mod win {
             let assign = AssignProcessToJobObject(job, process);
             let _ = CloseHandle(process);
             assign?;
-            Ok(job)
+            Ok(super::JobHandle(job))
         }
     }
 

@@ -29,10 +29,12 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=..\..\LICENSE
+; Paths relative to this .iss (SourcePath). Do not use SourceDir-relative paths here —
+; SourceDir=files would resolve LicenseFile/OutputDir under installer\inno\files\.
+LicenseFile={#SourcePath}\..\..\LICENSE
 ; Staged payload from scripts\stage-release.ps1
 SourceDir=files
-OutputDir=..\..\dist
+OutputDir={#SourcePath}\..\..\dist
 OutputBaseFilename=WinServeAI-{#MyAppVersion}-setup
 SetupIconFile=
 Compression=lzma2

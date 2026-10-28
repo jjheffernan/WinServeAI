@@ -50,7 +50,7 @@ fn fixture_root(tag: &str) -> (PathBuf, PathBuf) {
     std::fs::write(root.join("bin").join("FAKE_BEHAVIOR"), "ready").unwrap();
 
     let gguf = root.join("model.gguf");
-    std::fs::write(&gguf, b"fake-gguf").unwrap();
+    std::fs::write(&gguf, winserve::runtime::gguf::stub_header()).unwrap();
     let cfg_path = root.join("config").join("default.yaml");
     let mut cfg = Config::default();
     cfg.logging.dir = root.join("logs");

@@ -2,5 +2,6 @@
 //!
 //! Raw llama.cpp flags exist ONLY in `llama.rs`.
 
+pub mod gguf;
 pub mod llama;
 pub mod process;

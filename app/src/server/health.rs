@@ -23,8 +23,11 @@ pub enum HealthError {
 pub async fn wait_until_ready(base_url: &str, timeout: Duration) -> Result<(), HealthError> {
     let models_url = format!("{base_url}/v1/models");
     let health_url = format!("{base_url}/health");
+    // Readiness only talks to the server we just spawned. A system proxy
+    // (HTTP_PROXY, Windows proxy, PAC) must not intercept 127.0.0.1.
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(2))
+        .no_proxy()
         .build()
         .map_err(|e| HealthError::Http(e.to_string()))?;
 

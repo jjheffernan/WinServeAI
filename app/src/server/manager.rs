@@ -5,6 +5,7 @@
 //! stop: signal → wait → force kill → flush logs
 //! ```
 
+use crate::runtime::gguf;
 use crate::runtime::llama::{build_command, default_binary};
 use crate::runtime::process::{ChildProcess, ProcessError};
 use crate::server::config::{Config, ConfigError};
@@ -156,6 +157,14 @@ impl ServerManager {
     }
 
     pub async fn start(&mut self) -> Result<(), ManagerError> {
+        // Same settings already serving: report success. A different model
+        // requires stop first (settings are locked while Ready).
+        let _ = self.get_status();
+        if self.status == Status::Ready && self.child.is_some() {
+            self.logs
+                .server(&format!("already serving {}", self.config.openai_v1_url()));
+            return Ok(());
+        }
         if self.child.is_some() {
             return Err(ProcessError::AlreadyRunning.into());
         }
@@ -181,6 +190,12 @@ impl ServerManager {
         if !self.config.model.path.exists() {
             self.status = Status::Failed;
             let msg = format!("model not found: {}", self.config.model.path.display());
+            self.logs.error(&msg);
+            return Err(ManagerError::Other(msg));
+        }
+        if let Err(e) = gguf::require_gguf(&self.config.model.path) {
+            self.status = Status::Failed;
+            let msg = format!("model.path: {e}");
             self.logs.error(&msg);
             return Err(ManagerError::Other(msg));
         }
@@ -393,7 +408,7 @@ mod tests {
         });
         std::fs::write(&bin, b"stub").unwrap();
         let gguf = root.join("model.gguf");
-        std::fs::write(&gguf, b"fake").unwrap();
+        std::fs::write(&gguf, gguf::stub_header()).unwrap();
         cfg.model.path = gguf;
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let port = listener.local_addr().unwrap().port();
@@ -420,7 +435,7 @@ mod tests {
         std::fs::write(&bin, b"#!/bin/sh\nexit 7\n").unwrap();
         std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
         let gguf = root.join("model.gguf");
-        std::fs::write(&gguf, b"fake").unwrap();
+        std::fs::write(&gguf, gguf::stub_header()).unwrap();
         cfg.model.path = gguf;
         cfg.server.host = "127.0.0.1".into();
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

@@ -6,80 +6,217 @@
     <title>WinServeAI chat</title>
     <style>
       :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-      body { margin: 0; background: #0f1419; color: #e7ecf1; }
-      main { max-width: 40rem; margin: 0 auto; padding: 1rem; }
-      h1 { font-size: 1.1rem; }
-      p { color: #8b98a8; font-size: 0.85rem; }
-      label { display: grid; gap: 0.25rem; font-size: 0.75rem; color: #8b98a8; margin-bottom: 0.6rem; }
-      input, textarea, button { font: inherit; }
-      input, textarea {
-        background: #0b0f14; color: #e7ecf1; border: 1px solid #2a3441; border-radius: 6px; padding: 0.45rem 0.55rem;
-      }
-      #log { min-height: 14rem; white-space: pre-wrap; background: #171d25; border: 1px solid #2a3441; border-radius: 8px; padding: 0.75rem; }
-      .row { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
-      button { background: #1a56db; color: white; border: 0; border-radius: 6px; padding: 0.5rem 0.9rem; cursor: pointer; }
-      #err { color: #f87171; min-height: 1.2em; font-size: 0.8rem; }
+      html, body { height: 100%; margin: 0; background: #0f1419; color: #e7ecf1; }
+      body { display: flex; flex-direction: column; max-width: 44rem; margin: 0 auto; }
+      header, form, #err, details { padding: 0.6rem 1rem; }
+      header { display: flex; align-items: center; justify-content: space-between; }
+      h1 { font-size: 1rem; margin: 0; }
+      button, textarea, input { font: inherit; }
+      button { background: #1a56db; color: white; border: 0; border-radius: 6px; padding: 0.45rem 0.8rem; cursor: pointer; }
+      button.secondary { background: #243041; }
+      #thread { flex: 1; overflow: auto; padding: 0.5rem 1rem 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+      .bubble { max-width: 85%; padding: 0.55rem 0.75rem; border-radius: 12px; white-space: pre-wrap; line-height: 1.4; }
+      .user { align-self: flex-end; background: #1a56db; }
+      .assistant { align-self: flex-start; background: #1c2633; border: 1px solid #2a3441; }
+      .empty { color: #8b98a8; font-size: 0.9rem; margin: 0; }
+      .prompts { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; margin-top: 0.6rem; }
+      form { display: flex; gap: 0.5rem; align-items: end; border-top: 1px solid #2a3441; }
+      textarea { flex: 1; resize: none; background: #0b0f14; color: #e7ecf1; border: 1px solid #2a3441; border-radius: 8px; padding: 0.5rem 0.6rem; }
+      #err { color: #f87171; min-height: 1.2em; font-size: 0.8rem; margin: 0; }
+      details { color: #8b98a8; font-size: 0.8rem; }
+      label { display: grid; gap: 0.2rem; margin-top: 0.4rem; }
+      input { background: #0b0f14; color: #e7ecf1; border: 1px solid #2a3441; border-radius: 6px; padding: 0.4rem 0.5rem; }
     </style>
   </head>
   <body>
-    <main>
+    <header>
       <h1>Chat</h1>
-      <p>Standalone client. It only knows the OpenAI URL and, when you set one, the API key. Swap this page for any other frontend that can do the same.</p>
+      <button id="new" class="secondary" type="button">New chat</button>
+    </header>
+    <div id="thread"></div>
+    <p id="err"></p>
+    <form id="composer">
+      <textarea id="msg" rows="2" placeholder="Message"></textarea>
+      <button id="send" type="submit">Send</button>
+    </form>
+    <details>
+      <summary>Connection</summary>
       <label>Base URL<input id="base" type="text" value="http://127.0.0.1:8080/v1" /></label>
       <label>API key<input id="key" type="password" placeholder="empty on this PC" autocomplete="off" /></label>
-      <div id="log"></div>
-      <label>Message<textarea id="msg" rows="3"></textarea></label>
-      <div class="row"><button id="send" type="button">Send</button></div>
-      <p id="err"></p>
-    </main>
+    </details>
     <script>
-      const baseEl = document.getElementById("base");
-      const keyEl = document.getElementById("key");
-      const logEl = document.getElementById("log");
+      const thread = document.getElementById("thread");
       const msgEl = document.getElementById("msg");
       const errEl = document.getElementById("err");
+      const baseEl = document.getElementById("base");
+      const keyEl = document.getElementById("key");
+      const sendBtn = document.getElementById("send");
       const saved = JSON.parse(localStorage.getItem("winserve-chat") || "{}");
       if (saved.base) baseEl.value = saved.base;
       if (saved.key) keyEl.value = saved.key;
-      const messages = [];
+      let messages = Array.isArray(saved.messages) ? saved.messages : [];
+      let abort = null;
 
       function save() {
-        localStorage.setItem("winserve-chat", JSON.stringify({ base: baseEl.value.trim(), key: keyEl.value.trim() }));
+        localStorage.setItem("winserve-chat", JSON.stringify({
+          base: baseEl.value.trim(),
+          key: keyEl.value.trim(),
+          messages,
+        }));
       }
 
       function paint() {
-        logEl.textContent = messages.map((m) => m.role + ": " + m.content).join("\n\n") || "(no messages)";
+        thread.replaceChildren();
+        if (!messages.length) {
+          const empty = document.createElement("p");
+          empty.className = "empty";
+          empty.textContent = "The model can walk you through connecting an app. WinServeAI is already installed.";
+          const prompts = document.createElement("div");
+          prompts.className = "prompts";
+          for (const prompt of [
+            "How do I connect another app?",
+            "What base URL, key, and model do I enter?",
+            "How does another PC connect?",
+          ]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "secondary";
+            button.textContent = prompt;
+            button.onclick = () => send(prompt);
+            prompts.append(button);
+          }
+          thread.append(empty, prompts);
+          return;
+        }
+        for (const message of messages) {
+          const bubble = document.createElement("div");
+          bubble.className = "bubble " + (message.role === "user" ? "user" : "assistant");
+          bubble.textContent = message.content;
+          thread.append(bubble);
+        }
+        thread.scrollTop = thread.scrollHeight;
       }
 
-      document.getElementById("send").onclick = async () => {
-        errEl.textContent = "";
-        const text = msgEl.value.trim();
-        if (!text) return;
-        save();
-        messages.push({ role: "user", content: text });
-        msgEl.value = "";
-        paint();
+      function headers() {
         const headers = { "Content-Type": "application/json" };
         const key = keyEl.value.trim();
         if (key) headers.Authorization = "Bearer " + key;
+        return headers;
+      }
+
+      async function readStream(resp) {
+        const assistant = { role: "assistant", content: "" };
+        messages.push(assistant);
+        paint();
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            const payload = line.startsWith("data:") ? line.slice(5).trim() : "";
+            if (!payload || payload === "[DONE]") continue;
+            const data = JSON.parse(payload);
+            assistant.content += data.choices?.[0]?.delta?.content || "";
+            paint();
+          }
+        }
+        if (!assistant.content) assistant.content = "(empty reply)";
+        paint();
+      }
+
+      document.getElementById("new").onclick = () => {
+        if (abort) abort.abort();
+        messages = [];
+        errEl.textContent = "";
+        save();
+        paint();
+      };
+
+      async function modelName(base) {
+        try {
+          const resp = await fetch(base + "/models", { headers: headers(), signal: abort.signal });
+          if (!resp.ok) return "local";
+          const data = await resp.json();
+          return data.data?.[0]?.id || "local";
+        } catch (e) {
+          if (e.name === "AbortError") throw e;
+          return "local";
+        }
+      }
+
+      function setupPrompt(base, model) {
+        const key = keyEl.value.trim()
+          ? "An API key is set. Other apps send Authorization: Bearer and that key."
+          : "No API key is set. Apps that demand a key can send any placeholder; this server is not checking one.";
+        return {
+          role: "system",
+          content: "You help someone who already installed WinServeAI and pressed Start. Another app connects with three values only: base URL " + base + ", the API key above, and model " + model + ". Give those three values in short steps. Do not tell them to install Ollama or download a model.",
+        };
+      }
+
+      async function send(text) {
+        if (!text || abort) return;
+        errEl.textContent = "";
+        msgEl.value = "";
+        messages.push({ role: "user", content: text });
+        save();
+        paint();
+        abort = new AbortController();
+        sendBtn.textContent = "Stop";
         const base = baseEl.value.trim().replace(/\/$/, "");
+        const model = await modelName(base);
         try {
           const resp = await fetch(base + "/chat/completions", {
             method: "POST",
-            headers,
-            body: JSON.stringify({ model: "local", messages, stream: false }),
+            headers: headers(),
+            signal: abort.signal,
+            body: JSON.stringify({ model, messages: [setupPrompt(base, model), ...messages], stream: true }),
           });
-          const data = await resp.json().catch(() => ({}));
-          if (!resp.ok) throw new Error(data.error?.message || resp.status + " " + resp.statusText);
-          const answer = data.choices?.[0]?.message?.content || "";
-          messages.push({ role: "assistant", content: answer });
-          paint();
+          if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            throw new Error(data.error?.message || resp.status + " " + resp.statusText);
+          }
+          await readStream(resp);
+          save();
         } catch (e) {
-          messages.pop();
+          if (e.name !== "AbortError") {
+            const last = messages.at(-1);
+            if (last?.role === "assistant" && !last.content) messages.pop();
+            errEl.textContent = String(e.message || e);
+          }
+          save();
           paint();
-          errEl.textContent = String(e.message || e);
+        } finally {
+          abort = null;
+          sendBtn.textContent = "Send";
         }
       };
+
+      document.getElementById("composer").onsubmit = (event) => {
+        event.preventDefault();
+        send(msgEl.value.trim());
+      };
+
+      msgEl.onkeydown = (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          document.getElementById("composer").requestSubmit();
+        }
+      };
+
+      sendBtn.onclick = (event) => {
+        if (!abort) return;
+        event.preventDefault();
+        abort.abort();
+      };
+
+      baseEl.onchange = save;
+      keyEl.onchange = save;
       paint();
     </script>
   </body>

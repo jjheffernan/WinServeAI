@@ -2,7 +2,7 @@
 
 > Windows-native **llama.cpp appliance wrapper** — one click to an OpenAI-compatible endpoint.
 
-Not a multi-backend platform. Not a chat app. Not a model marketplace.
+Not a multi-backend platform. Not a model marketplace. Chat is a separate page.
 
 ```text
 Windows App → ServerManager → llama-server.exe → http://localhost:8080/v1
@@ -11,7 +11,9 @@ Windows App → ServerManager → llama-server.exe → http://localhost:8080/v1
 ## Layout
 
 ```text
-app/           ServerManager + runtime + system probes
+app/           the server program (nobody opens this folder)
+apps/tray/     the window
+apps/chat/     optional chat page (base URL + API key)
 bin/           llama-server.exe (external)
 config/        default.yaml
 logs/          server.log, llama.log, error.log
@@ -52,7 +54,7 @@ API: `http://127.0.0.1:8080/v1` · First run: [docs/first-run.md](docs/first-run
 2. One orchestrator: `ServerManager`
 3. Raw llama flags only in `app/src/runtime/llama.rs`
 4. YAML config is source of truth
-5. No plugins, downloads, chat UI, or Docker
+5. No plugin loader, model downloads, or Docker. Chat is `apps/chat`, a client of `/v1`
 
 See [docs/architecture.md](docs/architecture.md) and [docs/build-spec.md](docs/build-spec.md).
 

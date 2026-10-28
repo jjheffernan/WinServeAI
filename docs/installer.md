@@ -153,7 +153,7 @@ Copy notices into every installer and portable/zip release. Refresh with
 - [backend.md](./backend.md) — `bin/` layout and DLL co-location
 - [installer/README.md](../installer/README.md) — stub goals
 - [bin/README.md](../bin/README.md) — external binary pin
-- [apps/desktop/README.md](../apps/desktop/README.md) — tray shell
+- [apps/tray/README.md](../apps/tray/README.md) — tray shell
 
 ### Upstream
 

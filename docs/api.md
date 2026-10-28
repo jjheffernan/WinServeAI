@@ -9,7 +9,7 @@ Client  →  http://{host}:{port}/v1/...   (llama-server)
 App/CLI →  ServerManager                 (start / stop / wait ready)
 ```
 
-The server does not render a page. Frontends are separate clients. See [addons/README.md](../addons/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
+The server does not render a page. Frontends are separate clients. See [apps/README.md](../apps/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
 
 See [architecture.md](./architecture.md) for the full process boundary.
 
@@ -142,7 +142,7 @@ console.log(resp.choices[0].message.content);
 
 WinServeAI does not ship:
 
-- A chat UI or web frontend for inference
+- A chat page inside the server. The optional page is `apps/chat`
 - Model download / registry APIs
 - Auth, multi-tenant gateways, or metrics dashboards
 - Multi-backend or plugin endpoints

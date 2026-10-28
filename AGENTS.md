@@ -34,6 +34,9 @@ Open PRs against **`dev`**. Release promotions are PRs from `dev` → `main`.
 | `app/src/runtime/` | Process + llama argv |
 | `app/src/system/` | GPU / memory / network probes |
 | `app/src/api/` | OpenAI URL helpers (passthrough) |
+| `app/` | Server program. People do not open this folder. |
+| `apps/tray/` | The window |
+| `apps/chat/` | Optional chat page. Any other frontend uses the base URL and API key. |
 | `bin/` | External llama-server binary |
 | `config/` | default.yaml |
 | `logs/` | server.log, llama.log, error.log |

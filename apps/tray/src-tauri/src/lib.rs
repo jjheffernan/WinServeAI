@@ -99,6 +99,47 @@ fn snapshot(manager: &mut ServerManager, error: Option<String>) -> ManagerSnapsh
     }
 }
 
+fn chat_page(root: &Path) -> Option<PathBuf> {
+    [
+        root.join("chat").join("index.html"),
+        root.join("apps").join("chat").join("index.html"),
+    ]
+    .into_iter()
+    .find(|path| path.is_file())
+}
+
+fn open_html(path: &Path) -> std::io::Result<()> {
+    #[cfg(windows)]
+    {
+        std::process::Command::new("cmd")
+            .args(["/C", "start", "", &path.display().to_string()])
+            .spawn()?;
+        return Ok(());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open").arg(path).spawn()?;
+        return Ok(());
+    }
+    #[cfg(all(unix, not(target_os = "macos")))]
+    {
+        std::process::Command::new("xdg-open").arg(path).spawn()?;
+        return Ok(());
+    }
+    #[allow(unreachable_code)]
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "no opener",
+    ))
+}
+
+#[tauri::command]
+fn open_chat() -> Result<(), String> {
+    let path = chat_page(&find_root())
+        .ok_or_else(|| "Chat page not found next to the program.".to_string())?;
+    open_html(&path).map_err(|e| format!("could not open chat: {e}"))
+}
+
 fn find_root() -> PathBuf {
     // Prefer cwd (repo / install root), then walk up from the executable.
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
@@ -180,10 +221,7 @@ struct SettingsDto {
 fn settings_dto(mgr: &ServerManager) -> SettingsDto {
     let cfg = mgr.config();
     let status = mgr.status();
-    let editable = matches!(
-        status,
-        Status::Stopped | Status::Failed | Status::Crashed
-    );
+    let editable = matches!(status, Status::Stopped | Status::Failed | Status::Crashed);
     SettingsDto {
         host: cfg.server.host.clone(),
         port: cfg.server.port,
@@ -381,6 +419,7 @@ pub fn run() {
             manager_apply_settings,
             pick_model_path,
             manager_logs,
+            open_chat,
         ])
         .setup(|app| {
             {

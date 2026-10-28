@@ -23,7 +23,7 @@ WinServeAI’s niche is **Windows-native, headless, OpenAI-compatible inference 
 | Licensing | Ship MIT notice for llama.cpp **with binaries** | Bundling models; omitting third-party notices (Ollama got called out for this) |
 | Runtime | Single-crate appliance: spawn `bin/llama-server.exe` only; no backend trait | LocalAI-scale polyglot backends; reintroducing `packages/*` |
 
-**Closest analogues:** [llama-server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) (engine), [Ollama](https://github.com/ollama/ollama) (daemon/API ergonomics), [KoboldCpp](https://github.com/LostRuins/koboldcpp) (portable Windows binary + OpenAI `/v1`), small managers like [llama-cpp-windows-manager](https://github.com/alekk89/llama-cpp-windows-manager) / [llama-server-manager](https://github.com/zero4281/llama-server-manager) (lifecycle wrappers). WinServeAI should be **narrower** than all of them: no model pull, no chat UI, no multi-engine zoo.
+**Closest analogues:** [llama-server](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) (engine), [Ollama](https://github.com/ollama/ollama) (daemon/API ergonomics), [KoboldCpp](https://github.com/LostRuins/koboldcpp) (portable Windows binary + OpenAI `/v1`), small managers like [llama-cpp-windows-manager](https://github.com/alekk89/llama-cpp-windows-manager) / [llama-server-manager](https://github.com/zero4281/llama-server-manager) (lifecycle wrappers). WinServeAI should be **narrower** than all of them: no model pull, no chat inside the server, no multi-engine zoo. The optional chat page is a separate `/v1` client.
 
 ---
 

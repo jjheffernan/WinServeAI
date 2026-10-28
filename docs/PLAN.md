@@ -19,12 +19,12 @@ A Windows user can:
 
 Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive hardware matrix) is **post-MVP**.
 
-**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). One llama.cpp backend. Chat is `addons/chat`, a client of that API. Any other frontend needs the base URL and `server.api_key` (`Authorization: Bearer`). The tinker layer is host, port, GPU layers, context, flash attention, and the key, stored in YAML. Flags stay in `runtime/llama.rs`.
+**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). One llama.cpp backend. Chat is `apps/chat`, a client of that API. Any other frontend needs the base URL and `server.api_key` (`Authorization: Bearer`). The tinker layer is host, port, GPU layers, context, flash attention, and the key, stored in YAML. Flags stay in `runtime/llama.rs`.
 
 ### Policy for this build-out
 
 * **Testing is non-blocking.** Ship slices without waiting on A2 Windows smoke, new unit suites, or CI green as a gate. Prefer draft PRs that compile (`cargo check -p winserve`) and document manual verify steps.
-* **Architecture hard rules stay.** One backend (llama.cpp), one orchestrator (`ServerManager`), raw flags only in `runtime/llama.rs`, YAML source of truth. No chat UI, downloads, Docker, multi-backend.
+* **Architecture hard rules stay.** One backend (llama.cpp), one orchestrator (`ServerManager`), raw flags only in `runtime/llama.rs`, YAML source of truth. No chat inside the server, no downloads, no Docker, no multi-backend.
 * **PR size.** One milestone letter slice per PR when possible (e.g. `E3a` lockfile+IPC, then `E1` shell). Prefer draft PRs against `dev`.
 
 ---
@@ -147,14 +147,14 @@ Spec: [specs/F-installer.md](specs/F-installer.md). Vision requires this for MVP
 - [x] Installer packages tray + pinned binary + notices (F) — sources + staging + ISCC in CI; clean-machine install→Ready open
 - [ ] Quit/stop leaves no orphan `llama-server` — code present; Windows operator proof open
 - [ ] OpenAI client works against `/v1` with a local GGUF — A2 open
-- [x] No chat UI / download / multi-backend surface in the product
+- [x] No download or multi-backend surface. Chat is a separate `/v1` client (`apps/chat`)
 
 ---
 
 ## Explicitly out of scope (do not schedule for MVP)
 
 * Backend traits / plugins / multi-provider
-* Chat UI, model marketplace, HuggingFace downloads
+* Chat inside the server, model marketplace, HuggingFace downloads
 * Docker, auth, remote management, metrics dashboard
 * Auto-updater, Windows service mode (Phase 5+)
 * Config schema migration framework (Phase 4)

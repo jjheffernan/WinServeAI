@@ -67,6 +67,7 @@ Source: "bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs creat
 Source: "config\default.yaml"; DestDir: "{app}\config"; Flags: onlyifdoesntexist uninsneveruninstall
 ; First-run guidance (also shown after install via InfoAfterFile)
 Source: "FIRST_RUN.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "chat\index.html"; DestDir: "{app}\chat"; Flags: ignoreversion skipifsourcedoesntexist
 ; Notices (MIT / third-party)
 Source: "notices\*"; DestDir: "{app}\notices"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Empty logs dir

@@ -168,7 +168,7 @@ llama.cpp is MIT. Binary distributions must include copyright + permission notic
 6. `{app}\notices\THIRD_PARTY_NOTICES.md` and full llama.cpp license text are present after install.
 7. Uninstall removes app files, shortcuts, and firewall rule (if any); does not delete user GGUF files outside `{app}`.
 8. Upgrade path does not clobber a user-edited `config\default.yaml` without confirmation/policy.
-9. No models, chat UI, or downloaders in the installer payload.
+9. No models or downloaders in the installer payload. The chat page is a static file under `chat\` and is not the server.
 
 ## Implementation order (when coding)
 

@@ -11,7 +11,7 @@ Thanks for helping build WinServeAI. This is infrastructure software — prefer 
    - Raw llama flags only in `app/src/runtime/llama.rs`.
    - YAML config is the source of truth (`config/default.yaml`).
    - Unified logs under `logs/`.
-   - No model downloads, chat UI, Docker, or multi-provider support.
+   - No model downloads, no chat inside the server, no Docker, no multi-provider support. Optional chat page: `apps/chat`.
 3. Confirm the change fits MVP scope (see vision), or is explicitly deferred work.
 4. Prefer extending `ServerManager` (`app/src/server/`) and runtime (`app/src/runtime/`) over special-casing the UI or CLI.
 

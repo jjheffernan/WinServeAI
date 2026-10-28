@@ -3,8 +3,8 @@
 > **Readiness:** cli 3.6/5 (`mvp-partial`), scripts-ops 3.8/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
 WinServeAI owns process lifecycle for an external `bin/llama-server.exe` via
-**`ServerManager`**. The manager crate is `winserve` (`app/`); the optional
-desktop shell is `winserve-tray` (`apps/desktop/`). There is no backend-trait
+**`ServerManager`**. The manager crate is `winserve` (`app/`). The window is
+`winserve-tray` (`apps/tray/`). There is no backend-trait
 workspace and no `packages/` monorepo.
 
 See [architecture.md](architecture.md) for the runtime boundary, lockfile, and
@@ -96,7 +96,8 @@ app/                       # package winserve — ServerManager + CLI
   src/runtime/             # llama argv + process spawn (external boundary)
   src/system/              # GPU / memory / network probes
   src/api/                 # OpenAI URL helpers (passthrough)
-apps/desktop/              # Tauri 2 shell → winserve-tray (wraps ServerManager)
+apps/tray/              # the window (Tauri 2 → winserve-tray)
+apps/chat/              # optional chat page; only talks to /v1
 bin/                       # llama-server.exe (not built by this repo)
 config/                    # default.yaml (empty model.path until first run)
 logs/                      # server.log, llama.log, error.log (created at runtime)
@@ -110,7 +111,7 @@ Root workspace:
 
 ```toml
 [workspace]
-members = ["app", "apps/desktop/src-tauri"]
+members = ["app", "apps/tray/src-tauri"]
 ```
 
 Do **not** reintroduce `packages/config`, `packages/launcher`, or other
@@ -201,12 +202,12 @@ target/release/winserve-tray.exe   # or CARGO_TARGET_DIR equivalent
 
 ## Desktop tray (`winserve-tray`)
 
-Tauri 2 shell under `apps/desktop/`. Webview commands call **`ServerManager`
+Tauri 2 shell under `apps/tray/`. Webview commands call **`ServerManager`
 only** — never spawn `llama-server` from JS. While running, the tray holds the
 same lockfile + IPC pipe so CLI `status|stop|restart` attach.
 
 ```bash
-cd apps/desktop && npm install && npm run dev
+cd apps/tray && npm install && npm run dev
 # or from repo root:
 cargo run -p winserve-tray
 ```
@@ -215,7 +216,7 @@ Canonical status labels: Stopped / Starting / Ready / Failed / Stopping /
 Crashed. Settings + `.gguf` Browse require Stopped / Failed / Crashed. Quit
 calls `stop()`; Job Object remains the orphan backstop.
 
-Details: [apps/desktop/README.md](../apps/desktop/README.md),
+Details: [apps/tray/README.md](../apps/tray/README.md),
 [specs/E-desktop.md](specs/E-desktop.md).
 
 ## External binary
@@ -284,7 +285,7 @@ Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtim
 - [configuration.md](./configuration.md) — YAML schema and `WINSERVE_CONFIG`
 - [api.md](./api.md) — readiness (`GET /v1/models`) and client examples
 - [logging.md](./logging.md) — `logs/` streams
-- [apps/desktop/README.md](../apps/desktop/README.md) — tray commands
+- [apps/tray/README.md](../apps/tray/README.md) — tray commands
 - [contributing.md](./contributing.md) — PR and branch rules
 - [release-process.md](./release-process.md) — `dev` vs `main`, pin policy
 - [PLAN.md](./PLAN.md) — ordered implementation milestones

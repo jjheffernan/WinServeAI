@@ -1,15 +1,11 @@
-WinServeAI — first run
-======================
+WinServeAI
+==========
 
-No model weights are bundled. Before Start / Ready:
+1. Open WinServeAI from the Start menu.
+2. Click Browse and choose your .gguf file.
+3. Click Save, then Start.
+4. When it says Ready, click Copy URL or Open chat.
 
-1. Place a local .gguf on disk (you supply the file).
-2. Set model.path:
-   - Desktop: open WinServeAI → Settings → Browse… → Save settings
-   - Or edit config\default.yaml (this install) and set model.path
-3. Ensure bin\llama-server.exe is present (installer ships it; dev: scripts\fetch-llama-pin.ps1).
-4. Click Start (tray) or: winserve start / winserve serve
-
-Default bind is 127.0.0.1:8080 (loopback only). OpenAI base: http://127.0.0.1:8080/v1
-
-More detail: docs\first-run.md (repo) or the project README.
+The address is http://127.0.0.1:8080/v1
+Leave the API key empty when you only use this PC.
+You do not need to edit any files.

@@ -18,6 +18,7 @@ const btnStop = document.getElementById("btn-stop");
 const btnRestart = document.getElementById("btn-restart");
 const btnRefresh = document.getElementById("btn-refresh");
 const btnCopy = document.getElementById("btn-copy");
+const btnChat = document.getElementById("btn-chat");
 const logView = document.getElementById("log-view");
 const logDirEl = document.getElementById("log-dir");
 const tabButtons = Array.from(document.querySelectorAll(".tabs [data-stream]"));
@@ -226,6 +227,14 @@ btnCopy.onclick = async () => {
     await navigator.clipboard.writeText(url);
   } catch (e) {
     errorEl.textContent = `copy failed: ${e}`;
+  }
+};
+
+btnChat.onclick = async () => {
+  try {
+    await invoke("open_chat");
+  } catch (e) {
+    errorEl.textContent = String(e);
   }
 };
 

@@ -17,7 +17,7 @@ App → ServerManager → runtime/llama + process → bin/llama-server.exe → /
 - One orchestrator: `ServerManager`
 - Raw llama flags only in `app/src/runtime/llama.rs`
 - No backend traits, plugins, or provider abstractions
-- No model downloads, chat UI, Docker
+- No model downloads, no chat inside the server, no Docker. Optional chat page is `apps/chat`
 - YAML config is source of truth (`config/default.yaml`)
 
 ## Logs

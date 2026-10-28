@@ -135,7 +135,7 @@ Auto-restart after crash is **off** for MVP.
 
 ## Out of scope
 
-Multi-backend support, backend traits, plugins, chat UI, model downloads, and remote management. Abstractions for “many backends” only if a real second backend appears.
+Multi-backend support, backend traits, plugins, chat inside the server, model downloads, and remote management. Abstractions for “many backends” only if a real second backend appears.
 
 ## Sources / See also
 

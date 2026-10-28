@@ -111,7 +111,7 @@ Canonical states from [research/05](../research/05-server-manager.md): Stopped, 
 5. Model path picker sets `model.path` only (no download UI).
 6. Quit or Stop leaves no orphan `llama-server` (Job Object + graceful stop).
 7. With tray running, `winserve stop` / `winserve status` work via IPC (Option C).
-8. No chat UI, no model download entry points in the shipped UI.
+8. No model download. Chat is a separate page (`Open chat`), not rendered by the server.
 9. UI code paths do not reference llama argv flags or spawn `llama-server` directly.
 
 ## File touch list (expected implementation)

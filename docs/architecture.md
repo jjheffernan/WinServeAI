@@ -68,7 +68,8 @@ app/                 # crate winserve
   src/runtime/       # llama + process (external boundary)
   src/api/           # OpenAI URL helpers (passthrough)
   src/system/        # gpu, memory, network
-apps/desktop/        # Tauri 2 → winserve-tray
+apps/tray/           # the window people open (Tauri 2 → winserve-tray)
+apps/chat/           # optional chat page; only talks to /v1
 bin/                 # llama-server.exe
 config/              # default.yaml (+ FIRST_RUN.txt for install tree)
 logs/                # server.log, llama.log, error.log
@@ -85,7 +86,7 @@ docs/
 3. **Raw flags only in `runtime/llama.rs`.**
 4. **Config is YAML source of truth.**
 5. **Unified logs** under `logs/`.
-6. **No model downloads, chat UI, Docker, or multi-provider support.**
+6. **No model downloads, no chat inside the server, no Docker, no multi-provider support.** The optional chat page is `apps/chat`.
 7. **One resident owner** — lockfile + pipe; never two managers fighting over the Job Object.
 
 Abstractions for “many backends” come later *only if needed*.

@@ -57,7 +57,7 @@ pub fn build_command(config: &Config, hardware: &HardwareInfo, binary: &Path) ->
         args.push(key.to_string());
     }
 
-    // The server does not ship a page. Frontends live in addons/ and call /v1.
+    // The server does not ship a page. Frontends live in apps/chat and call /v1.
     args.push("--no-ui".into());
 
     (binary.to_path_buf(), args)

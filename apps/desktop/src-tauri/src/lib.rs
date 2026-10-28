@@ -16,7 +16,7 @@ use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Manager, RunEvent, State, WindowEvent};
 use tokio::sync::{mpsc, Mutex};
-use winserve::ipc::lockfile::{self, LockGuard};
+use winserve::ipc::lockfile::{self, LockError, LockGuard};
 use winserve::ipc::pipe;
 use winserve::server::manager::{ServerManager, Status};
 use winserve::server::resident::{self, Command};
@@ -26,6 +26,8 @@ struct AppState {
     /// Held for process lifetime; Drop removes the lockfile.
     _lock: LockGuard,
     stopping: AtomicBool,
+    /// Set once the Tauri app exists, so a second launch can ask us to show.
+    window: std::sync::Mutex<Option<AppHandle>>,
 }
 
 async fn graceful_stop(state: &AppState) {
@@ -304,6 +306,11 @@ fn spawn_ipc(state: Arc<AppState>, pipe_name: String) {
             }
         });
         while let Some(Command { kind, reply }) = rx.recv().await {
+            if kind == resident::CommandKind::Show {
+                if let Some(app) = state.window.lock().ok().and_then(|guard| guard.clone()) {
+                    show_main(&app);
+                }
+            }
             let mut mgr = state.manager.lock().await;
             let _ = reply.send(resident::handle(&mut mgr, kind).await);
         }
@@ -314,9 +321,26 @@ fn spawn_ipc(state: Arc<AppState>, pipe_name: String) {
 pub fn run() {
     let root = find_root();
     let cfg = config_path(&root);
-    let (lock, info) = LockGuard::acquire_default(lockfile::DEFAULT_PIPE_NAME).unwrap_or_else(|e| {
-        panic!("winserve-tray: cannot acquire manager lock (is another owner running?): {e}")
-    });
+    let (lock, info) = match LockGuard::acquire_default(lockfile::DEFAULT_PIPE_NAME) {
+        Ok(pair) => pair,
+        Err(LockError::AlreadyRunning { pipe, .. }) => {
+            // Owner is the first tray. Ask it to show, then leave.
+            let shown = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .ok()
+                .and_then(|rt| rt.block_on(pipe::request(&pipe, "show")).ok());
+            if shown.is_some() {
+                eprintln!("winserve-tray: already running; opened the existing window");
+            } else {
+                eprintln!("winserve-tray: already running (pid owns {pipe})");
+            }
+            return;
+        }
+        Err(e) => {
+            panic!("winserve-tray: cannot acquire manager lock: {e}")
+        }
+    };
     eprintln!(
         "winserve-tray: lock {} (pid={}, pipe={})",
         lock.path().display(),
@@ -336,6 +360,7 @@ pub fn run() {
         manager: Mutex::new(manager),
         _lock: lock,
         stopping: AtomicBool::new(false),
+        window: std::sync::Mutex::new(None),
     });
     spawn_ipc(state.clone(), info.pipe);
 
@@ -354,6 +379,10 @@ pub fn run() {
             manager_logs,
         ])
         .setup(|app| {
+            {
+                let state = app.state::<Arc<AppState>>();
+                *state.window.lock().expect("window handle lock") = Some(app.handle().clone());
+            }
             let open_i = MenuItem::with_id(app, "open", "Open", true, None::<&str>)?;
             let start_i = MenuItem::with_id(app, "start", "Start", true, None::<&str>)?;
             let stop_i = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;

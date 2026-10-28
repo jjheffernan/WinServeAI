@@ -20,6 +20,8 @@ pub enum CommandKind {
     Restart,
     Health,
     Endpoint,
+    /// Ask the tray to show its window. The manager state does not change.
+    Show,
 }
 
 #[derive(Debug, Clone)]
@@ -45,7 +47,9 @@ impl Command {
 /// Apply one command and build a reply.
 pub async fn handle(manager: &mut ServerManager, kind: CommandKind) -> Reply {
     let error = match kind {
-        CommandKind::Status | CommandKind::Health | CommandKind::Endpoint => None,
+        CommandKind::Status | CommandKind::Health | CommandKind::Endpoint | CommandKind::Show => {
+            None
+        }
         CommandKind::Start => manager.start().await.err().map(|e| e.to_string()),
         CommandKind::Stop => manager.stop().await.err().map(|e| e.to_string()),
         CommandKind::Restart => manager.restart().await.err().map(|e| e.to_string()),

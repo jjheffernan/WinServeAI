@@ -12,6 +12,7 @@ use crate::server::health::{self, HealthError};
 use crate::server::logs::{LogError, LogSinks};
 use crate::system::{self, network, HardwareInfo};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::Duration;
 use thiserror::Error;
 use tokio::sync::mpsc;
@@ -59,7 +60,7 @@ pub struct ServerManager {
     config: Config,
     hardware: HardwareInfo,
     binary: PathBuf,
-    logs: LogSinks,
+    logs: Arc<LogSinks>,
     child: Option<ChildProcess>,
     status: Status,
     last_exit: Option<i32>,
@@ -74,7 +75,7 @@ impl ServerManager {
         let config = Config::load(&config_path)?;
         let hardware = system::detect();
         let binary = default_binary(&root);
-        let logs = LogSinks::open(&config.logging)?;
+        let logs = Arc::new(LogSinks::open(&config.logging)?);
         logs.server(&format!("config loaded; binary={}", binary.display()));
         for w in config.warnings() {
             logs.server(&format!("warning: {w}"));
@@ -198,7 +199,9 @@ impl ServerManager {
         self.logs.server(&format!("starting {} {}", program.display(), args.join(" ")));
 
         let (tx, mut rx) = mpsc::unbounded_channel::<String>();
-        let logs = LogSinks::open(&self.config.logging)?;
+        // One sink for the process lifetime. A second open keeps the files
+        // locked, so Windows cannot rename them when rotation runs.
+        let logs = Arc::clone(&self.logs);
         tokio::spawn(async move {
             while let Some(line) = rx.recv().await {
                 logs.llama(&line);
@@ -210,7 +213,31 @@ impl ServerManager {
         self.logs.server(&format!("spawned pid={}", child.pid));
         self.child = Some(child);
 
-        match health::wait_until_ready(&self.config.base_url(), self.ready_timeout).await {
+        let base = self.config.base_url();
+        let timeout = self.ready_timeout;
+        let ready = health::wait_until_ready(&base, timeout);
+        tokio::pin!(ready);
+        let result = loop {
+            tokio::select! {
+                result = &mut ready => break result,
+                _ = tokio::time::sleep(Duration::from_millis(200)) => {
+                    let code = if let Some(child) = self.child.as_mut() {
+                        child.try_exit_code().await
+                    } else {
+                        None
+                    };
+                    if let Some(code) = code {
+                        self.last_exit = Some(code);
+                        self.child = None;
+                        self.status = Status::Failed;
+                        let msg = format!("llama-server exited during startup (exit={code})");
+                        self.logs.error(&msg);
+                        return Err(ManagerError::Other(msg));
+                    }
+                }
+            }
+        };
+        match result {
             Ok(()) => {
                 self.status = Status::Ready;
                 self.logs.server(&format!("READY {}", self.config.openai_v1_url()));
@@ -378,6 +405,41 @@ mod tests {
         assert!(err.contains("not available"), "got {err}");
         assert_eq!(mgr.status(), Status::Failed);
         drop(listener);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn start_fails_fast_when_child_exits() {
+        use std::os::unix::fs::PermissionsExt;
+        use std::time::Instant;
+
+        let (root, path, mut cfg) = temp_cfg();
+        std::fs::create_dir_all(root.join("bin")).unwrap();
+        let bin = root.join("bin").join("llama-server");
+        std::fs::write(&bin, b"#!/bin/sh\nexit 7\n").unwrap();
+        std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let gguf = root.join("model.gguf");
+        std::fs::write(&gguf, b"fake").unwrap();
+        cfg.model.path = gguf;
+        cfg.server.host = "127.0.0.1".into();
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        cfg.server.port = listener.local_addr().unwrap().port();
+        drop(listener);
+        cfg.save(&path).unwrap();
+
+        let mut mgr = ServerManager::load_config(&root, &path).unwrap();
+        mgr.set_ready_timeout(Duration::from_secs(30));
+        let started = Instant::now();
+        let err = mgr.start().await.unwrap_err().to_string();
+        assert!(
+            started.elapsed() < Duration::from_secs(5),
+            "waited {:?}",
+            started.elapsed()
+        );
+        assert!(err.contains("exited during startup"), "got {err}");
+        assert!(err.contains("exit=7"), "got {err}");
+        assert_eq!(mgr.status(), Status::Failed);
         let _ = std::fs::remove_dir_all(root);
     }
 }

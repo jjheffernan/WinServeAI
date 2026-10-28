@@ -53,6 +53,7 @@ fn parse_kind(cmd: &str) -> Result<CommandKind, PipeError> {
         "restart" => Ok(CommandKind::Restart),
         "health" => Ok(CommandKind::Health),
         "endpoint" => Ok(CommandKind::Endpoint),
+        "show" => Ok(CommandKind::Show),
         other => Err(PipeError::Protocol(format!("unknown cmd: {other}"))),
     }
 }

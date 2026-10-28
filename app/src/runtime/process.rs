@@ -62,7 +62,10 @@ impl ChildProcess {
             use std::os::windows::process::CommandExt;
             const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
             const CREATE_SUSPENDED: u32 = 0x00000004;
-            cmd.creation_flags(CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED);
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            // No console flash. CTRL_BREAK attach can fail for a windowless child;
+            // stop still falls through to the job kill.
+            cmd.creation_flags(CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED | CREATE_NO_WINDOW);
         }
 
         let mut child = cmd

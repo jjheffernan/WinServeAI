@@ -84,12 +84,32 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        "start" => match run_start(&root, &cfg_path).await {
-            Ok(()) => ExitCode::SUCCESS,
+        "start" => match live_owner() {
+            Ok(Some(_)) => match attach("start").await {
+                Ok(resp) => {
+                    print_attach(&resp);
+                    if resp.ok {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::FAILURE
+                    }
+                }
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    ExitCode::FAILURE
+                }
+            },
+            Ok(None) => match run_start(&root, &cfg_path).await {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(e) => {
+                    eprintln!("error: start failed: {e}");
+                    eprintln!("hint: place pinned llama-server in bin/ (see bin/README.md)");
+                    eprintln!("hint: set model.path in config to an existing .gguf file");
+                    ExitCode::FAILURE
+                }
+            },
             Err(e) => {
-                eprintln!("error: start failed: {e}");
-                eprintln!("hint: place pinned llama-server in bin/ (see bin/README.md)");
-                eprintln!("hint: set model.path in config to an existing .gguf file");
+                eprintln!("error: {e}");
                 ExitCode::FAILURE
             }
         },

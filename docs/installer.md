@@ -34,7 +34,8 @@ installer MVP.
 ## Layout on disk
 
 ```text
-%ProgramFiles%\WinServeAI\          # {app}
+%LOCALAPPDATA%\Programs\WinServeAI\ # {app} default (per-user, no admin)
+                                    # all-users override: %ProgramFiles%\WinServeAI
   winserve.exe                      # CLI manager (serve / attach)
   winserve-tray.exe                 # primary shortcut target
   FIRST_RUN.txt                     # post-install guidance
@@ -64,8 +65,9 @@ installer MVP.
 
 Inno icons prefer `{app}\winserve-tray.exe` with `WorkingDir: "{app}"`, falling
 back to `winserve.exe` if the tray was not staged. Optional desktop icon via
-`[Tasks]`. Admin elevation is required for Program Files and the optional
-firewall task.
+`[Tasks]`. The default install is per-user and does not ask for administrator.
+Choose “all users” in the wizard for Program Files. The optional firewall
+task needs that elevated install; loopback does not.
 
 Do not put `llama-server.exe` on the Start Menu as the primary entry.
 

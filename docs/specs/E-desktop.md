@@ -87,7 +87,7 @@ Today CLI `stop` / `restart` fail with “requires a long-running manager proces
 
 | | |
 | --- | --- |
-| **Idea** | Phase 2 tray **is** the long-running owner (embeds `ServerManager` + Job Object). Expose a **minimal local IPC** (Windows named pipe) and a **lockfile** so CLI `status` / `stop` / `restart` attach to that process. Single-instance: second tray/CLI start fails with “already running”. |
+| **Idea** | Phase 2 tray **is** the long-running owner (embeds `ServerManager` + Job Object). Expose a **minimal local IPC** (Windows named pipe) and a **lockfile** so CLI `status` / `stop` / `restart` attach to that process. Single-instance: a second `serve` fails with “already running”; a second tray sends `show` and exits. |
 | **Pros** | Satisfies E3 for both UI and CLI; one process owns children; no separate headless daemon required for MVP. |
 | **Cons** | Slightly more than pure tray-owned; must define a tiny command set (`status`, `stop`, `restart`, `start` if stopped). |
 

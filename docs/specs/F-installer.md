@@ -32,7 +32,8 @@ Shortcut → manager/tray (never llama-server alone)
 Align with [installer.md](../installer.md) (operator guide). Prefer this over older `bin/winserve.exe` sketches in research notes.
 
 ```text
-{app}\                              # e.g. C:\Program Files\WinServeAI
+{app}\                              # default %LOCALAPPDATA%\Programs\WinServeAI
+                                    # all-users: C:\Program Files\WinServeAI
   winserve.exe                      # Server Manager CLI / headless entry
   winserve-tray.exe                 # Phase 2 desktop; Start Menu / desktop target when present
   bin\
@@ -74,9 +75,9 @@ installer/
 | --- | --- |
 | `AppName` | WinServeAI |
 | `AppVersion` | release version (match cargo / tag) |
-| `DefaultDirName` | `{autopf}\WinServeAI` |
+| `DefaultDirName` | `{autopf}\WinServeAI` (per-user `{localappdata}\Programs` unless elevated) |
 | `DefaultGroupName` | WinServeAI |
-| `PrivilegesRequired` | `admin` (Program Files + optional firewall) |
+| `PrivilegesRequired` | `lowest`, with `PrivilegesRequiredOverridesAllowed=dialog` so LAN/firewall can elevate |
 | `ArchitecturesAllowed` | `x64compatible` (match shipped binaries) |
 | `OutputBaseFilename` | e.g. `WinServeAI-{version}-setup` |
 
@@ -159,7 +160,7 @@ llama.cpp is MIT. Binary distributions must include copyright + permission notic
 
 ## Acceptance criteria
 
-1. Clean install on Windows 10/11 x64 to Program Files (admin).
+1. Clean install on Windows 10/11 x64, per-user by default (`%LOCALAPPDATA%\Programs\WinServeAI`). All-users Program Files is the elevated wizard choice.
 2. Start Menu (and optional desktop) shortcut starts **manager/tray**, not `llama-server` alone.
 3. With `model.path` set to a user GGUF (wizard or Settings), user can reach **Ready** and `GET /v1/models` returns 200.
 4. Default install uses loopback bind and installs **no** firewall rule.

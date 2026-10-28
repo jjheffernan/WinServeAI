@@ -174,7 +174,7 @@ cargo run -p winserve -- start          # one-shot foreground (no IPC owner)
 | --- | --- |
 | `print-cmd` | Print resolved `llama-server` path + argv (no spawn). |
 | `print-config` | Load and print the effective YAML config. |
-| `serve` | **Resident owner:** acquire lockfile, listen on IPC, start backend, stay up until Ctrl+C. Second `serve`/tray refuses with “already running”. |
+| `serve` | **Resident owner:** acquire lockfile, listen on IPC, start backend, stay up until Ctrl+C. A second `serve` refuses with “already running”. A second tray sends `show` and exits. |
 | `start` | One-shot: spawn backend, print READY, block until Ctrl+C — **does not** take the lock / IPC. Prefer `serve` or the tray for day-to-day. |
 | `status` | Attach to resident via IPC when present; otherwise print `Stopped` + configured endpoint. |
 | `stop` / `restart` | Attach to resident (`serve` or tray). Fail with a clear error if none is running. |

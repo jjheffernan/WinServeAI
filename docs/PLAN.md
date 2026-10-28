@@ -19,6 +19,8 @@ A Windows user can:
 
 Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive hardware matrix) is **post-MVP**.
 
+**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). Strata’s gaps we keep: no chat UI, no model download, one llama.cpp backend. The extra is a tinker layer — host, port, GPU layers, context, flash attention — edited in the GUI and stored in YAML. Flags stay in `runtime/llama.rs`.
+
 ### Policy for this build-out
 
 * **Testing is non-blocking.** Ship slices without waiting on A2 Windows smoke, new unit suites, or CI green as a gate. Prefer draft PRs that compile (`cargo check -p winserve`) and document manual verify steps.
@@ -68,7 +70,7 @@ Work top → bottom. Later slices assume earlier APIs exist.
 | **G2** | Lockfile | `%LOCALAPPDATA%\WinServeAI\manager.lock` (PID + pipe name); stale lock if PID dead |
 | **G3** | Named-pipe IPC | Minimal cmds: `status`, `start`, `stop`, `restart`, `health` / endpoint; localhost same-user only |
 | **G4** | CLI attach | `winserve status\|stop\|restart` talk to resident owner; clear error if none running |
-| **G5** | Single-instance | Second `serve`/tray start refuses with “already running” |
+| **G5** | Single-instance | Second `serve` refuses with “already running”. A second tray asks the owner to show its window and exits |
 
 **Exit:** With serve running, CLI can stop/restart without owning the child. Job Object lifetime stays in the owner process.
 
@@ -119,7 +121,7 @@ Spec: [specs/F-installer.md](specs/F-installer.md). Vision requires this for MVP
 | ID | Slice | Deliverable |
 | --- | --- | --- |
 | **F0** | Release layout script | Produce `{app}` tree: `winserve.exe`, `winserve-tray.exe`, `bin/llama-server.exe` (+ CUDA DLLs if applicable), `config/default.yaml`, `notices/` |
-| **F1** | Inno Setup script | Install that tree under Program Files (or chosen dir) |
+| **F1** | Inno Setup script | Per-user `{autopf}` by default; all-users Program Files if the wizard elevates |
 | **F2** | Shortcuts | Desktop + Start Menu → **tray/manager**, never `llama-server` alone |
 | **F3** | Firewall | Add rule only when bind is non-loopback; delete on uninstall |
 | **F4** | Notices | `THIRD_PARTY_NOTICES` + llama.cpp MIT (+ NVIDIA notice for CUDA builds) |

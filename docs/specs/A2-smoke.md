@@ -25,7 +25,7 @@ A2 stays **open** in PLAN until an operator has run the full Windows path (inclu
 
 1. **Branch:** `dev`.
 2. **MSVC Build Tools** with **Desktop development with C++** so `link.exe` exists (see [development.md](../development.md) — *Fix: linker link.exe not found*). VS Code alone is not enough.
-3. **Pin:** Download llama.cpp **[b9866](https://github.com/ggml-org/llama.cpp/releases/tag/b9866)** Windows asset (CUDA build preferred when NVIDIA driver matches).
+3. **Pin:** Download llama.cpp **[b9866](https://github.com/ggml-org/llama.cpp/releases/tag/b9866)** Windows Vulkan asset. Use the CUDA asset when testing the faster NVIDIA build.
 4. Extract into `bin/`:
    - `bin/llama-server.exe`
    - CUDA runtime DLLs **beside** the exe (same directory).

@@ -5,12 +5,12 @@
 # Examples:
 #   .\scripts\fetch-llama-pin.ps1
 #   .\scripts\fetch-llama-pin.ps1 -Variant cuda-12.4
-#   .\scripts\fetch-llama-pin.ps1 -Pin b9866 -Variant vulkan
+#   .\scripts\fetch-llama-pin.ps1 -Pin b9866 -Variant cpu
 
 param(
     [string]$Pin = "b9866",
     [ValidateSet("cpu", "cuda-12.4", "cuda-13.3", "vulkan")]
-    [string]$Variant = "cpu",
+    [string]$Variant = "vulkan",
     [string]$RepoRoot = ""
 )
 

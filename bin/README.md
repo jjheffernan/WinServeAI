@@ -8,7 +8,7 @@ External **llama-server** binary (not built by this repo).
 | --- | --- |
 | **Upstream** | [ggml-org/llama.cpp](https://github.com/ggml-org/llama.cpp) |
 | **Pinned release** | [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866) — also [`VERSION`](VERSION) |
-| **Windows asset** | Prefer the CUDA build matching your driver (e.g. `llama-b9866-bin-win-cuda-12.4-x64.zip`), or CPU/Vulkan if no NVIDIA GPU |
+| **Windows asset** | Vulkan (`llama-b9866-bin-win-vulkan-x64.zip`) — NVIDIA, AMD, and Intel. CUDA is the faster NVIDIA option. |
 
 ```text
 bin/llama-server.exe   # Windows (required for winserve start)
@@ -20,17 +20,17 @@ bin/llama-server       # non-Windows (optional for local experiments)
 **Helper (preferred):**
 
 ```powershell
-# Windows — CPU build into bin/ (default pin b9866)
+# Windows — Vulkan into bin/ (default pin b9866)
 .\scripts\fetch-llama-pin.ps1
 
-# Or CUDA / Vulkan
+# Faster NVIDIA build, or CPU only
 .\scripts\fetch-llama-pin.ps1 -Variant cuda-12.4
-.\scripts\fetch-llama-pin.ps1 -Variant vulkan
+.\scripts\fetch-llama-pin.ps1 -Variant cpu
 ```
 
 ```bash
 # macOS/Linux helper (can also fetch Windows zips into bin/)
-./scripts/fetch-llama-pin.sh --variant win-cpu
+./scripts/fetch-llama-pin.sh
 ```
 
 **Manual:**

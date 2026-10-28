@@ -4,13 +4,13 @@
 #
 # Examples:
 #   ./scripts/fetch-llama-pin.sh
-#   ./scripts/fetch-llama-pin.sh --variant win-cpu
-#   PIN=b9866 ./scripts/fetch-llama-pin.sh --variant win-cuda-12.4
+#   ./scripts/fetch-llama-pin.sh --variant win-cuda-12.4
+#   PIN=b9866 ./scripts/fetch-llama-pin.sh --variant win-cpu
 
 set -euo pipefail
 
 PIN="${PIN:-b9866}"
-VARIANT="win-cpu"
+VARIANT="win-vulkan"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BIN="$ROOT/bin"
 

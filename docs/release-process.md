@@ -48,7 +48,7 @@ Stable never ships an unrecorded llama-server build. Preview builds may track `d
 | --- | --- |
 | **llama.cpp tag** | [`b9866`](https://github.com/ggml-org/llama.cpp/releases/tag/b9866) |
 | **Recorded in** | [`bin/VERSION`](../bin/VERSION) (one line: `b9866`) |
-| **Fetch defaults** | `scripts/fetch-llama-pin.ps1` / `.sh` default `PIN=b9866` |
+| **Fetch defaults** | `scripts/fetch-llama-pin.ps1` / `.sh` default pin `b9866`, Windows variant **vulkan** |
 | **Notices** | [`notices/THIRD_PARTY_NOTICES.md`](../notices/THIRD_PARTY_NOTICES.md) lists **b9866** |
 | **Installer** | Stage via `scripts/stage-release.*` after fetch; ship that same pin |
 

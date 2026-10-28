@@ -6,7 +6,7 @@
 //! ```
 
 use crate::runtime::gguf;
-use crate::runtime::llama::{build_command, default_binary};
+use crate::runtime::llama::{build_command, default_binary, format_args_for_log};
 use crate::runtime::process::{ChildProcess, ProcessError};
 use crate::server::config::{Config, ConfigError};
 use crate::server::health::{self, HealthError};
@@ -211,7 +211,11 @@ impl ServerManager {
         }
 
         let (program, args) = self.build_command();
-        self.logs.server(&format!("starting {} {}", program.display(), args.join(" ")));
+        self.logs.server(&format!(
+            "starting {} {}",
+            program.display(),
+            format_args_for_log(&args)
+        ));
 
         let (tx, mut rx) = mpsc::unbounded_channel::<String>();
         // One sink for the process lifetime. A second open keeps the files

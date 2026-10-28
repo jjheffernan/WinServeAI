@@ -8,11 +8,11 @@
 
 ## Core principles
 
-* Windows-first, easy, GUI-first (tray). Same install → pick a local model → localhost API loop as Strata, without its chat app or model catalog
-* Tinkerable through the YAML fields the GUI already edits (host, port, GPU fit/layers, context, flash attention). No freeform llama flag box
+* Windows-first, easy, GUI-first (tray). Same install → pick a local model → localhost API loop as Strata. Chat is an addon client of `/v1`, not part of the server
+* Tinkerable through the YAML fields the GUI already edits (host, port, GPU fit/layers, context, flash attention, API key). No freeform llama flag box
 * API-first (OpenAI-compatible via llama-server)
 * Headless inference
-* Zero chat UI
+* No chat inside the server. Optional frontends live in `addons/` and authenticate with `server.api_key`
 * Zero model management ecosystem
 * Stable over bleeding edge
 * Native installer

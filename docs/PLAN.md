@@ -19,7 +19,7 @@ A Windows user can:
 
 Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive hardware matrix) is **post-MVP**.
 
-**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). Strata’s gaps we keep: no chat UI, no model download, one llama.cpp backend. The extra is a tinker layer — host, port, GPU layers, context, flash attention — edited in the GUI and stored in YAML. Flags stay in `runtime/llama.rs`.
+**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). One llama.cpp backend. Chat is `addons/chat`, a client of that API. Any other frontend needs the base URL and `server.api_key` (`Authorization: Bearer`). The tinker layer is host, port, GPU layers, context, flash attention, and the key, stored in YAML. Flags stay in `runtime/llama.rs`.
 
 ### Policy for this build-out
 

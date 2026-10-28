@@ -170,6 +170,7 @@ struct SettingsDto {
     gpu_layers: String,
     context: u32,
     flash_attention: bool,
+    api_key: String,
     logging_dir: String,
     config_path: String,
     editable: bool,
@@ -191,6 +192,7 @@ fn settings_dto(mgr: &ServerManager) -> SettingsDto {
         gpu_layers: cfg.gpu.layers.clone(),
         context: cfg.runtime.context,
         flash_attention: cfg.runtime.flash_attention,
+        api_key: cfg.server.api_key.clone(),
         logging_dir: cfg.logging.dir.display().to_string(),
         config_path: mgr.config_path().display().to_string(),
         editable,
@@ -208,6 +210,7 @@ struct SettingsPatch {
     gpu_layers: String,
     context: u32,
     flash_attention: bool,
+    api_key: String,
 }
 
 #[tauri::command]
@@ -224,6 +227,7 @@ async fn manager_apply_settings(
     next.gpu.layers = patch.gpu_layers;
     next.runtime.context = patch.context;
     next.runtime.flash_attention = patch.flash_attention;
+    next.server.api_key = patch.api_key;
     mgr.apply_config(next).map_err(|e| e.to_string())?;
     Ok(settings_dto(&mgr))
 }

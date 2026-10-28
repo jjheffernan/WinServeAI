@@ -9,7 +9,7 @@ Client  →  http://{host}:{port}/v1/...   (llama-server)
 App/CLI →  ServerManager                 (start / stop / wait ready)
 ```
 
-There is **no chat UI**, no request proxy, and no plugin API. One backend only.
+The server does not render a page. Frontends are separate clients. See [addons/README.md](../addons/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
 
 See [architecture.md](./architecture.md) for the full process boundary.
 

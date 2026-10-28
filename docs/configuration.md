@@ -12,6 +12,7 @@ Human-readable YAML is the source of truth. Schema and defaults live in `config/
 server:
   port: 8080
   host: 127.0.0.1
+  api_key: ""   # Bearer token for frontends; empty is fine on loopback
 
 model:
   path: ""   # first-run: set to a local .gguf (see docs/first-run.md)
@@ -148,7 +149,7 @@ Escape hatches:
 
 Always mapped from other sections (never written as flags in YAML):
 
-* `--host`, `--port`, `--model`, `--ctx-size`
+* `--host`, `--port`, `--model`, `--ctx-size`, `--api-key` (only when `server.api_key` is set)
 * `-fa on` when `runtime.flash_attention` is true
 
 ## Localhost vs LAN
@@ -158,7 +159,7 @@ Always mapped from other sections (never written as flags in YAML):
 | `127.0.0.1` or `localhost` | This machine only (MVP default, safe) | Do **not** open an inbound rule |
 | `0.0.0.0` | All interfaces (LAN opt-in) | May need an inbound allow for `llama-server.exe` or the configured port |
 
-LAN is opt-in. Clients on other machines should use the host’s LAN IP (for example `http://192.168.1.10:8080/v1`), not `http://0.0.0.0:8080/v1`.
+LAN is opt-in. Set `server.api_key` before binding past loopback. Clients send `Authorization: Bearer <key>`. Use the host’s LAN IP (for example `http://192.168.1.10:8080/v1`), not `http://0.0.0.0:8080/v1`.
 
 Installer guidance: firewall rules only when bind is non-loopback ([installer.md](installer.md)).
 

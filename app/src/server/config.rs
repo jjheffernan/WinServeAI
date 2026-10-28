@@ -32,6 +32,9 @@ pub struct ServerSection {
     pub host: String,
     #[serde(default = "default_port")]
     pub port: u16,
+    /// Sent to clients as `Authorization: Bearer`. Empty means localhost with no key.
+    #[serde(default)]
+    pub api_key: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +72,13 @@ pub struct LoggingSection {
     /// How many rotated siblings to keep (`server.log.1` … `.N`).
     #[serde(default = "default_keep")]
     pub keep: u32,
+}
+
+pub fn is_loopback_host(host: &str) -> bool {
+    matches!(
+        host.trim().trim_matches(['[', ']']).to_ascii_lowercase().as_str(),
+        "127.0.0.1" | "localhost" | "::1"
+    )
 }
 
 fn default_host() -> String {
@@ -116,6 +126,7 @@ impl Default for Config {
             server: ServerSection {
                 host: default_host(),
                 port: default_port(),
+                api_key: String::new(),
             },
             model: ModelSection {
                 path: PathBuf::new(),
@@ -194,6 +205,12 @@ impl Config {
                 self.server.port
             ));
         }
+        if !is_loopback_host(&self.server.host) && self.server.api_key.trim().is_empty() {
+            w.push(
+                "server.api_key is empty while host is not loopback — set a key before other machines connect"
+                    .into(),
+            );
+        }
         w
     }
 
@@ -252,5 +269,18 @@ mod tests {
         let parsed: Config = serde_yaml::from_str(&text).unwrap();
         assert_eq!(parsed.server.port, 8080);
         assert_eq!(parsed.gpu.layers, "auto");
+        assert!(parsed.server.api_key.is_empty());
+    }
+
+    #[test]
+    fn warns_when_lan_has_no_api_key() {
+        let mut c = Config::default();
+        c.server.host = "0.0.0.0".into();
+        assert!(c
+            .warnings()
+            .iter()
+            .any(|s| s.contains("server.api_key")));
+        c.server.api_key = "secret".into();
+        assert!(!c.warnings().iter().any(|s| s.contains("server.api_key")));
     }
 }

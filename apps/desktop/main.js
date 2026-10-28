@@ -33,6 +33,7 @@ const setGpuAuto = document.getElementById("set-gpu-auto");
 const setGpuLayers = document.getElementById("set-gpu-layers");
 const setContext = document.getElementById("set-context");
 const setFa = document.getElementById("set-fa");
+const setApiKey = document.getElementById("set-api-key");
 const btnBrowseModel = document.getElementById("btn-browse-model");
 const firstRunEl = document.getElementById("first-run");
 const btnFirstBrowse = document.getElementById("btn-first-browse");
@@ -82,6 +83,7 @@ function syncSettingsEnabled() {
     setGpuLayers,
     setContext,
     setFa,
+    setApiKey,
     btnSaveSettings,
     btnBrowseModel,
   ].forEach((el) => {
@@ -111,6 +113,7 @@ function fillSettings(dto) {
   setGpuLayers.value = dto.gpuLayers ?? "auto";
   setContext.value = dto.context ?? 32768;
   setFa.checked = !!dto.flashAttention;
+  setApiKey.value = dto.apiKey ?? "";
   settingsPath.textContent = dto.configPath || "";
   settingsEditable = !!dto.editable;
   if (settingsEditable) {
@@ -130,6 +133,7 @@ function readSettingsPatch() {
     gpuLayers: setGpuLayers.value.trim() || "auto",
     context: Number(setContext.value),
     flashAttention: setFa.checked,
+    apiKey: setApiKey.value.trim(),
   };
 }
 

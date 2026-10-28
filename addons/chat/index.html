@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WinServeAI chat</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+      body { margin: 0; background: #0f1419; color: #e7ecf1; }
+      main { max-width: 40rem; margin: 0 auto; padding: 1rem; }
+      h1 { font-size: 1.1rem; }
+      p { color: #8b98a8; font-size: 0.85rem; }
+      label { display: grid; gap: 0.25rem; font-size: 0.75rem; color: #8b98a8; margin-bottom: 0.6rem; }
+      input, textarea, button { font: inherit; }
+      input, textarea {
+        background: #0b0f14; color: #e7ecf1; border: 1px solid #2a3441; border-radius: 6px; padding: 0.45rem 0.55rem;
+      }
+      #log { min-height: 14rem; white-space: pre-wrap; background: #171d25; border: 1px solid #2a3441; border-radius: 8px; padding: 0.75rem; }
+      .row { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+      button { background: #1a56db; color: white; border: 0; border-radius: 6px; padding: 0.5rem 0.9rem; cursor: pointer; }
+      #err { color: #f87171; min-height: 1.2em; font-size: 0.8rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Chat</h1>
+      <p>Standalone client. It only knows the OpenAI URL and, when you set one, the API key. Swap this page for any other frontend that can do the same.</p>
+      <label>Base URL<input id="base" type="text" value="http://127.0.0.1:8080/v1" /></label>
+      <label>API key<input id="key" type="password" placeholder="empty on this PC" autocomplete="off" /></label>
+      <div id="log"></div>
+      <label>Message<textarea id="msg" rows="3"></textarea></label>
+      <div class="row"><button id="send" type="button">Send</button></div>
+      <p id="err"></p>
+    </main>
+    <script>
+      const baseEl = document.getElementById("base");
+      const keyEl = document.getElementById("key");
+      const logEl = document.getElementById("log");
+      const msgEl = document.getElementById("msg");
+      const errEl = document.getElementById("err");
+      const saved = JSON.parse(localStorage.getItem("winserve-chat") || "{}");
+      if (saved.base) baseEl.value = saved.base;
+      if (saved.key) keyEl.value = saved.key;
+      const messages = [];
+
+      function save() {
+        localStorage.setItem("winserve-chat", JSON.stringify({ base: baseEl.value.trim(), key: keyEl.value.trim() }));
+      }
+
+      function paint() {
+        logEl.textContent = messages.map((m) => m.role + ": " + m.content).join("\n\n") || "(no messages)";
+      }
+
+      document.getElementById("send").onclick = async () => {
+        errEl.textContent = "";
+        const text = msgEl.value.trim();
+        if (!text) return;
+        save();
+        messages.push({ role: "user", content: text });
+        msgEl.value = "";
+        paint();
+        const headers = { "Content-Type": "application/json" };
+        const key = keyEl.value.trim();
+        if (key) headers.Authorization = "Bearer " + key;
+        const base = baseEl.value.trim().replace(/\/$/, "");
+        try {
+          const resp = await fetch(base + "/chat/completions", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ model: "local", messages, stream: false }),
+          });
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok) throw new Error(data.error?.message || resp.status + " " + resp.statusText);
+          const answer = data.choices?.[0]?.message?.content || "";
+          messages.push({ role: "assistant", content: answer });
+          paint();
+        } catch (e) {
+          messages.pop();
+          paint();
+          errEl.textContent = String(e.message || e);
+        }
+      };
+      paint();
+    </script>
+  </body>
+</html>

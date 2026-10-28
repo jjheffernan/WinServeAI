@@ -1,6 +1,9 @@
 server:
   port: 8080
   host: 127.0.0.1
+  # Empty on this PC. Set a key before binding past loopback.
+  # Frontends send Authorization: Bearer <key>. See addons/chat.
+  api_key: ""
 
 model:
   # First-run: set to a local .gguf (tray Settings → Browse, or edit this file).

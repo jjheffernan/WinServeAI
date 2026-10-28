@@ -8,7 +8,8 @@
 
 ## Core principles
 
-* Windows-first
+* Windows-first, easy, GUI-first (tray). Same install → pick a local model → localhost API loop as Strata, without its chat app or model catalog
+* Tinkerable through the YAML fields the GUI already edits (host, port, GPU fit/layers, context, flash attention). No freeform llama flag box
 * API-first (OpenAI-compatible via llama-server)
 * Headless inference
 * Zero chat UI

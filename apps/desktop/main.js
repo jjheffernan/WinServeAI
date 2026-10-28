@@ -238,7 +238,7 @@ async function browseModelPath() {
     syncFirstRunBanner(path);
     settingsNote.className = "ok";
     settingsNote.textContent =
-      "Selected .gguf path — click Save settings to write YAML.";
+      "Selected .gguf — click Save.";
     document.getElementById("settings-form")?.scrollIntoView({
       behavior: "smooth",
       block: "nearest",

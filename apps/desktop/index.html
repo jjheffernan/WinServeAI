@@ -23,9 +23,24 @@
         color: var(--text);
       }
       main {
-        max-width: 28rem;
+        max-width: 36rem;
         margin: 0 auto;
         padding: 1.25rem 1.25rem 1.75rem;
+      }
+      details.fold {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin-bottom: 1rem;
+      }
+      details.fold > summary {
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        color: var(--text);
+        font-size: 0.9rem;
+      }
+      details.fold > .fold-body {
+        padding: 0 1rem 1rem;
       }
       h1 {
         font-size: 1.15rem;
@@ -266,14 +281,14 @@
     <main>
       <h1>WinServeAI</h1>
       <p class="hint">
-        Start / stop / status via <code>ServerManager</code> only. Ready means the
-        OpenAI endpoint answered — not merely that a process is alive.
+        Pick a local model, start, and paste the URL into Cursor or any OpenAI
+        client. Ready means the API answered.
       </p>
 
       <aside id="first-run" aria-live="polite">
-        <strong>First run — set a model path</strong>
-        No weights are bundled. Choose a local <code>.gguf</code>, then Save
-        settings, then Start.
+        <strong>Choose a model to start</strong>
+        No weights are bundled. Pick a local <code>.gguf</code>, save, then
+        Start.
         <div class="row">
           <button id="btn-first-browse" type="button">Browse for .gguf…</button>
         </div>
@@ -294,17 +309,77 @@
           <dt>OpenAI base</dt>
           <dd id="endpoint">…</dd>
         </dl>
-        <div class="row">
-          <button id="btn-start" type="button">Start</button>
-          <button id="btn-stop" class="secondary" type="button">Stop</button>
-          <button id="btn-restart" class="secondary" type="button">Restart</button>
-          <button id="btn-refresh" class="secondary" type="button">Refresh</button>
-          <button id="btn-copy" class="secondary" type="button">Copy URL</button>
+        <form id="settings-form" class="form">
+          <label>
+            <span>Model</span>
+            <div class="row">
+              <input
+                id="set-model"
+                name="modelPath"
+                type="text"
+                autocomplete="off"
+                placeholder="Path to a local .gguf"
+                style="flex: 1; min-width: 12rem"
+              />
+              <button id="btn-browse-model" class="secondary" type="button">
+                Browse…
+              </button>
+            </div>
+          </label>
+          <div class="row">
+            <button id="btn-start" type="button">Start</button>
+            <button id="btn-stop" class="secondary" type="button">Stop</button>
+            <button id="btn-restart" class="secondary" type="button">Restart</button>
+            <button id="btn-save-settings" type="submit">Save</button>
+            <button id="btn-copy" class="secondary" type="button">Copy URL</button>
+          </div>
+          <p id="error" aria-live="polite"></p>
+          <p id="settings-note"></p>
+
+      <details class="fold">
+        <summary>Advanced</summary>
+        <div class="fold-body">
+          <div class="form">
+            <label>
+              <span>Host</span>
+              <input id="set-host" name="host" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Port</span>
+              <input id="set-port" name="port" type="number" min="1" max="65535" />
+            </label>
+            <label class="check">
+              <input id="set-gpu-auto" name="gpuAuto" type="checkbox" />
+              Fit the model to the GPU automatically
+            </label>
+            <label>
+              <span>GPU layers</span>
+              <input id="set-gpu-layers" name="gpuLayers" type="text" placeholder="auto or a number" />
+            </label>
+            <label>
+              <span>Context length</span>
+              <input id="set-context" name="context" type="number" min="1" />
+            </label>
+            <label class="check">
+              <input id="set-fa" name="flashAttention" type="checkbox" />
+              Flash attention
+            </label>
+            <div class="row">
+              <button id="btn-reload-settings" class="secondary" type="button">
+                Reload
+              </button>
+              <button id="btn-refresh" class="secondary" type="button">Refresh</button>
+            </div>
+            <p class="log-dir" id="settings-path"></p>
+          </div>
         </div>
-        <p id="error" aria-live="polite"></p>
+      </details>
+        </form>
       </section>
 
-      <section class="panel" aria-label="Logs">
+      <details class="fold">
+        <summary>Logs</summary>
+        <div class="fold-body">
         <div class="tabs" role="tablist">
           <button type="button" class="active" data-stream="server" role="tab">
             server.log
@@ -314,67 +389,12 @@
         </div>
         <pre id="log-view" role="log" aria-live="polite">(no lines yet)</pre>
         <p class="log-dir" id="log-dir"></p>
-      </section>
-
-      <section class="panel" aria-label="Settings">
-        <form id="settings-form" class="form">
-          <label>
-            <span>server.host</span>
-            <input id="set-host" name="host" type="text" autocomplete="off" />
-          </label>
-          <label>
-            <span>server.port</span>
-            <input id="set-port" name="port" type="number" min="1" max="65535" />
-          </label>
-          <label>
-            <span>model.path</span>
-            <div class="row">
-              <input
-                id="set-model"
-                name="modelPath"
-                type="text"
-                autocomplete="off"
-                style="flex: 1; min-width: 0"
-              />
-              <button id="btn-browse-model" class="secondary" type="button">
-                Browse…
-              </button>
-            </div>
-          </label>
-          <label class="check">
-            <input id="set-gpu-auto" name="gpuAuto" type="checkbox" />
-            gpu.auto
-          </label>
-          <label>
-            <span>gpu.layers</span>
-            <input id="set-gpu-layers" name="gpuLayers" type="text" placeholder="auto or integer" />
-          </label>
-          <label>
-            <span>runtime.context</span>
-            <input id="set-context" name="context" type="number" min="1" />
-          </label>
-          <label class="check">
-            <input id="set-fa" name="flashAttention" type="checkbox" />
-            runtime.flash_attention
-          </label>
-          <div class="row">
-            <button id="btn-save-settings" type="submit">Save settings</button>
-            <button id="btn-reload-settings" class="secondary" type="button">
-              Reload
-            </button>
-          </div>
-          <p id="settings-note"></p>
-          <p class="log-dir" id="settings-path"></p>
-        </form>
-      </section>
+        </div>
+      </details>
 
       <p class="canon">
-        Canonical states:
-        <strong>Stopped</strong>, <strong>Starting</strong>, <strong>Ready</strong>,
-        <strong>Failed</strong>, <strong>Stopping</strong>, <strong>Crashed</strong>.
-        There is no “Running” label — use Ready after readiness. Log viewer is
-        read-only (tails <code>logs/</code>). Settings require Stopped / Failed /
-        Crashed (stop first while Starting / Ready / Stopping).
+        Stopped, Starting, Ready, Failed, Stopping, Crashed. Ready means the
+        API answered. Stop before changing the model or Advanced settings.
       </p>
     </main>
     <script src="/main.js"></script>

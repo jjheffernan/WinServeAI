@@ -101,9 +101,62 @@ function syncSettingsEnabled() {
 }
 
 function syncFirstRunBanner(modelPath) {
-  const needs = !(modelPath || "").trim();
-  firstRunEl.classList.toggle("visible", needs);
+  const hasModel = !!(modelPath || "").trim();
+  const ready = currentStatus === "Ready";
+  firstRunEl.classList.toggle("visible", !ready);
+  document.getElementById("step-model").classList.toggle("done", hasModel);
+  document.getElementById("step-start").classList.toggle("done", ready || currentStatus === "Starting");
+  document.getElementById("step-ready").classList.toggle("done", ready);
   btnFirstBrowse.disabled = busy || !settingsEditable;
+}
+
+function card(label, value, sub, pct) {
+  const el = document.createElement("article");
+  el.className = "card";
+  const k = document.createElement("div");
+  k.className = "k";
+  k.textContent = label;
+  const v = document.createElement("div");
+  v.className = "v";
+  v.textContent = value;
+  el.append(k, v);
+  if (sub) {
+    const s = document.createElement("div");
+    s.className = "s";
+    s.textContent = sub;
+    el.append(s);
+  }
+  if (pct != null) {
+    const bar = document.createElement("span");
+    bar.className = "bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    bar.append(fill);
+    el.append(bar);
+  }
+  return el;
+}
+
+async function paintOverview() {
+  const root = document.getElementById("overview");
+  let ov;
+  try {
+    ov = await invoke("manager_overview");
+  } catch (e) {
+    root.replaceChildren();
+    return;
+  }
+  const ramPct = ov.ramTotalMb ? (ov.ramUsedMb / ov.ramTotalMb) * 100 : 0;
+  const ctxPct = ov.contextSize ? (ov.contextUsed / ov.contextSize) * 100 : 0;
+  const model = (ov.modelPath || "").split(/[/\\]/).pop() || "no model";
+  const login = ov.apiKeySet ? "API key set" : "No key on this PC";
+  root.replaceChildren(
+    card("Model state", ov.status === "Ready" ? ov.slotState : ov.status, model),
+    card("GPU", ov.gpuName || "CPU", ov.vramMb ? `${ov.vramMb} MB` : "no discrete VRAM"),
+    card("Memory", `${ov.ramUsedMb} / ${ov.ramTotalMb} MB`, "", ramPct),
+    card("Context", `${ov.contextUsed} / ${ov.contextSize}`, `${ov.promptTokens} prompt · ${ov.outputTokens} out`, ctxPct),
+    card("Address", ov.endpoint || "…", login),
+  );
 }
 
 function fillSettings(dto) {
@@ -181,6 +234,7 @@ async function refresh() {
   }
   await refreshLogs();
   await reloadSettings();
+  await paintOverview();
 }
 
 async function run(cmd, optimisticStatus) {

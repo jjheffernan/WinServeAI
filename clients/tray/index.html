@@ -23,10 +23,31 @@
         color: var(--text);
       }
       main {
-        max-width: 36rem;
+        max-width: 56rem;
         margin: 0 auto;
         padding: 1.25rem 1.25rem 1.75rem;
       }
+      .steps { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+      .steps li.done { color: #4ade80; }
+      .overview {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.6rem;
+        margin-bottom: 1rem;
+      }
+      .card {
+        background: #101810;
+        border: 1px solid #1e3a2f;
+        border-radius: 8px;
+        padding: 0.65rem 0.75rem;
+        min-height: 4.6rem;
+      }
+      .card .k { color: #8b98a8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+      .card .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.05rem; margin-top: 0.25rem; }
+      .card .s { color: #8b98a8; font-size: 0.75rem; margin-top: 0.2rem; }
+      .bar { display: block; height: 0.45rem; background: #1a2e24; border-radius: 99px; margin-top: 0.45rem; overflow: hidden; }
+      .bar > span { display: block; height: 100%; background: #3dd68c; }
+      .card.wide { grid-column: span 2; }
       details.fold {
         background: var(--panel);
         border: 1px solid var(--border);
@@ -286,13 +307,18 @@
       </p>
 
       <aside id="first-run" aria-live="polite">
-        <strong>Choose a model to start</strong>
-        No weights are bundled. Pick a local <code>.gguf</code>, save, then
-        Start.
+        <strong>Set up this PC</strong>
+        <ol class="steps">
+          <li id="step-model">Choose a .gguf and save</li>
+          <li id="step-start">Start</li>
+          <li id="step-ready">When it says Ready, copy the URL into another app</li>
+        </ol>
         <div class="row">
           <button id="btn-first-browse" type="button">Browse for .gguf…</button>
         </div>
       </aside>
+
+      <section id="overview" class="overview" aria-label="Overview"></section>
 
       <section class="panel" aria-label="Status">
         <div class="badge-row">

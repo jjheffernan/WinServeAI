@@ -162,6 +162,66 @@ fn config_path(root: &Path) -> PathBuf {
         .unwrap_or_else(|| root.join("config").join("default.yaml"))
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct OverviewDto {
+    status: String,
+    endpoint: String,
+    model_path: String,
+    context: u32,
+    gpu_name: String,
+    vram_mb: u64,
+    ram_total_mb: u64,
+    ram_used_mb: u64,
+    slot_state: String,
+    prompt_tokens: u64,
+    output_tokens: u64,
+    context_used: u64,
+    context_size: u64,
+    api_key_set: bool,
+}
+
+#[tauri::command]
+async fn manager_overview(state: State<'_, Arc<AppState>>) -> Result<OverviewDto, String> {
+    let mut mgr = state.manager.lock().await;
+    let status = mgr.get_status().as_str().to_string();
+    let endpoint = mgr.openai_base();
+    let cfg = mgr.config();
+    let model_path = cfg.model.path.display().to_string();
+    let context = cfg.runtime.context;
+    let api_key_set = !cfg.server.api_key.trim().is_empty();
+    drop(mgr);
+
+    let hw = winserve::system::detect();
+    let gpu = hw.gpus.first();
+    let slot = if status == "Ready" {
+        winserve::server::health::read_slots(&endpoint).await
+    } else {
+        winserve::server::health::parse_slots("")
+    };
+    let ram_used = hw.memory.total_mb.saturating_sub(hw.memory.available_mb);
+    Ok(OverviewDto {
+        status,
+        endpoint,
+        model_path,
+        context,
+        gpu_name: gpu.map(|g| g.name.clone()).unwrap_or_else(|| "CPU".into()),
+        vram_mb: gpu.map(|g| g.vram_mb).unwrap_or(0),
+        ram_total_mb: hw.memory.total_mb,
+        ram_used_mb: ram_used,
+        slot_state: slot.state.to_string(),
+        prompt_tokens: slot.prompt_tokens,
+        output_tokens: slot.output_tokens,
+        context_used: slot.context_used,
+        context_size: if slot.context_size > 0 {
+            slot.context_size
+        } else {
+            u64::from(context)
+        },
+        api_key_set,
+    })
+}
+
 #[tauri::command]
 async fn manager_status(state: State<'_, Arc<AppState>>) -> Result<ManagerSnapshot, String> {
     let mut mgr = state.manager.lock().await;
@@ -411,6 +471,7 @@ pub fn run() {
         .manage(state)
         .invoke_handler(tauri::generate_handler![
             manager_status,
+            manager_overview,
             manager_start,
             manager_stop,
             manager_restart,

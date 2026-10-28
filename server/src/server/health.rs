@@ -54,8 +54,90 @@ async fn probe_ready(client: &reqwest::Client, url: &str) -> bool {
     }
 }
 
+/// One llama-server slot, enough for the overview. Missing fields stay zero.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SlotSnap {
+    pub state: &'static str,
+    pub prompt_tokens: u64,
+    pub output_tokens: u64,
+    pub context_used: u64,
+    pub context_size: u64,
+}
+
+pub fn parse_slots(body: &str) -> SlotSnap {
+    let empty = SlotSnap {
+        state: "Idle",
+        prompt_tokens: 0,
+        output_tokens: 0,
+        context_used: 0,
+        context_size: 0,
+    };
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(body) else {
+        return empty;
+    };
+    let slot = value
+        .as_array()
+        .and_then(|rows| rows.first())
+        .unwrap_or(&value);
+    let num = |key: &str| slot.get(key).and_then(|v| v.as_u64()).unwrap_or(0);
+    let prompt = num("n_prompt_tokens");
+    let decoded = num("n_decoded");
+    let n_ctx = num("n_ctx");
+    let n_past = num("n_past");
+    let processing = slot
+        .get("is_processing")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let state = if !processing {
+        "Idle"
+    } else if decoded == 0 {
+        "Reading"
+    } else {
+        "Generating"
+    };
+    SlotSnap {
+        state,
+        prompt_tokens: prompt,
+        output_tokens: decoded,
+        context_used: if n_past > 0 { n_past } else { prompt.saturating_add(decoded) },
+        context_size: n_ctx,
+    }
+}
+
+pub async fn read_slots(openai_base: &str) -> SlotSnap {
+    let origin = openai_base.trim_end_matches('/').trim_end_matches("/v1");
+    let url = format!("{origin}/slots");
+    let Ok(client) = reqwest::Client::builder()
+        .timeout(Duration::from_secs(1))
+        .no_proxy()
+        .build()
+    else {
+        return parse_slots("");
+    };
+    let Ok(resp) = client.get(&url).send().await else {
+        return parse_slots("");
+    };
+    if !resp.status().is_success() {
+        return parse_slots("");
+    }
+    parse_slots(&resp.text().await.unwrap_or_default())
+}
+
 #[cfg(test)]
 mod tests {
+    use super::parse_slots;
+
+    #[test]
+    fn slot_generating_uses_decoded_tokens() {
+        let snap = parse_slots(
+            r#"[{"is_processing":true,"n_ctx":32000,"n_decoded":100,"n_past":400,"n_prompt_tokens":300}]"#,
+        );
+        assert_eq!(snap.state, "Generating");
+        assert_eq!(snap.output_tokens, 100);
+        assert_eq!(snap.context_used, 400);
+        assert_eq!(snap.context_size, 32000);
+    }
+
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;

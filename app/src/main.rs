@@ -159,6 +159,13 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
+        "tui" => match run_tui(&root, &cfg_path).await {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("error: tui failed: {e}");
+                ExitCode::FAILURE
+            }
+        },
         "stop" | "restart" => match attach(cmd.as_str()).await {
             Ok(resp) => {
                 print_attach(&resp);
@@ -175,7 +182,9 @@ async fn main() -> ExitCode {
         },
         other => {
             eprintln!("unknown command: {other}");
-            eprintln!("usage: winserve <serve|start|stop|restart|status|print-config|print-cmd>");
+            eprintln!(
+                "usage: winserve <serve|tui|start|stop|restart|status|print-config|print-cmd>"
+            );
             ExitCode::FAILURE
         }
     }
@@ -222,6 +231,57 @@ async fn run_serve(root: &std::path::Path, cfg_path: &std::path::Path) -> Result
     let _ = mgr.stop().await;
     drop(lock);
     Ok(())
+}
+
+/// Terminal monitor. Owns the manager when nothing else does; otherwise attaches.
+async fn run_tui(root: &std::path::Path, cfg_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {
+    let cfg = Config::load(cfg_path)?;
+    let info = winserve::tui::ScreenInfo {
+        model: cfg.model.path.display().to_string(),
+        context: cfg.runtime.context,
+        gpu_layers: cfg.gpu.layers.clone(),
+        log_dir: if cfg.logging.dir.is_absolute() {
+            cfg.logging.dir.clone()
+        } else {
+            root.join(&cfg.logging.dir)
+        },
+        owns: false,
+    };
+
+    if let Some(owner) = live_owner()? {
+        return lift_tui(winserve::tui::run(None, Some(owner.pipe), info).await);
+    }
+
+    let (lock, lock_info) = match LockGuard::acquire_default(lockfile::DEFAULT_PIPE_NAME) {
+        Ok(pair) => pair,
+        Err(winserve::ipc::lockfile::LockError::AlreadyRunning { pipe, .. }) => {
+            return lift_tui(winserve::tui::run(None, Some(pipe), info).await);
+        }
+        Err(e) => return Err(e.into()),
+    };
+
+    let mut mgr = ServerManager::load_config(root, cfg_path)?;
+    let (tx, mut rx) = mpsc::channel::<Command>(8);
+    let ipc = tokio::spawn(pipe::listen(lock_info.pipe.clone(), tx.clone()));
+    let resident = tokio::spawn(async move {
+        resident::run(&mut mgr, &mut rx).await;
+    });
+    let mut owned = info;
+    owned.owns = true;
+    let result = winserve::tui::run(Some(tx.clone()), None, owned).await;
+    let (cmd, ack) = Command::new(CommandKind::Stop);
+    if tx.send(cmd).await.is_ok() {
+        let _ = ack.await;
+    }
+    drop(tx);
+    let _ = resident.await;
+    ipc.abort();
+    drop(lock);
+    lift_tui(result)
+}
+
+fn lift_tui(result: Result<(), String>) -> Result<(), Box<dyn std::error::Error>> {
+    result.map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e).into())
 }
 
 async fn run_start(root: &std::path::Path, cfg_path: &std::path::Path) -> Result<(), Box<dyn std::error::Error>> {

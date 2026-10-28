@@ -164,6 +164,7 @@ Binary name: `winserve`. Default command is `start` if you pass no subcommand.
 cargo run -p winserve -- print-cmd
 cargo run -p winserve -- print-config
 cargo run -p winserve -- serve          # resident owner (lockfile + IPC)
+cargo run -p winserve -- tui            # same owner, with the terminal monitor
 cargo run -p winserve -- status         # attach to resident, else Stopped
 cargo run -p winserve -- stop
 cargo run -p winserve -- restart
@@ -175,7 +176,8 @@ cargo run -p winserve -- start          # one-shot foreground (no IPC owner)
 | `print-cmd` | Print resolved `llama-server` path + argv (no spawn). |
 | `print-config` | Load and print the effective YAML config. |
 | `serve` | **Resident owner:** acquire lockfile, listen on IPC, start backend, stay up until Ctrl+C. A second `serve` refuses with “already running”. A second tray sends `show` and exits. |
-| `start` | One-shot: spawn backend, print READY, block until Ctrl+C — **does not** take the lock / IPC. Prefer `serve` or the tray for day-to-day. |
+| `tui` | Same owner as `serve`, drawn as a monitor: `1` overview, `2` logs, `3` URL, `s`/`x`/`r` start/stop/restart. `q` stops the server when this process owns it, and leaves it running when attached. |
+| `start` | If a tray, `serve`, or `tui` already owns the manager, attach and start there. Otherwise one-shot: spawn, print READY, block until Ctrl+C. |
 | `status` | Attach to resident via IPC when present; otherwise print `Stopped` + configured endpoint. |
 | `stop` / `restart` | Attach to resident (`serve` or tray). Fail with a clear error if none is running. |
 
@@ -185,7 +187,7 @@ cargo run -p winserve -- start          # one-shot foreground (no IPC owner)
 | --- | --- | --- |
 | Lockfile | `%LOCALAPPDATA%\WinServeAI\manager.lock` | `$XDG_RUNTIME_DIR` / `$TMPDIR` / `/tmp` + `WinServeAI/manager.lock` |
 | Pipe name | `winserve-manager` → `\\.\pipe\winserve-manager` | Same logical name; loopback TCP + `.port` file beside the lock |
-| Owners | `winserve serve` **or** `winserve-tray` | Same |
+| Owners | `winserve serve`, `winserve tui`, **or** `winserve-tray` | Same |
 
 `scripts/stop.ps1` prefers `winserve stop` when the lock is live; `-Force` falls
 back to process-name kill.

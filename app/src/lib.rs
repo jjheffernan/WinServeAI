@@ -25,6 +25,7 @@ pub mod ipc;
 pub mod runtime;
 pub mod server;
 pub mod system;
+pub mod tui;
 
 pub use server::manager::ServerManager;
 pub use server::config::Config;

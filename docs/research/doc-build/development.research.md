@@ -18,12 +18,12 @@
 | Fact | Source |
 | --- | --- |
 | Workspace members: `["app"]` only | root `Cargo.toml` |
-| Package / bin name: `winserve` | `app/Cargo.toml` (`[[bin]] name = "winserve"`) |
+| Package / bin name: `winserve` | `server/Cargo.toml` (`[[bin]] name = "winserve"`) |
 | No `packages/*` crates in this tree | layout + `AGENTS.md` |
 
 Old multi-crate layout (`packages/launcher`, `packages/config`, …) lives only under example worktrees / history — **not** the product tree.
 
-### CLI (`app/src/main.rs`)
+### CLI (`server/src/main.rs`)
 
 | Command | Behavior |
 | --- | --- |
@@ -50,7 +50,7 @@ Missing config → error: copy `config/default.yaml` and set `model.path`.
 
 * Source of truth: `config/default.yaml` (see `docs/configuration.md`)
 * Sections: `server`, `model`, `gpu`, `runtime`, `logging`
-* No raw llama flags in YAML; argv only in `app/src/runtime/llama.rs`
+* No raw llama flags in YAML; argv only in `server/src/runtime/llama.rs`
 
 ### Scripts
 
@@ -61,10 +61,10 @@ Missing config → error: copy `config/default.yaml` and set `model.path`.
 | `scripts/reset.ps1` | `stop.ps1` + delete files under `logs/` (keeps config/models) |
 | `scripts/check.sh` | `cargo check -p winserve` + `cargo test -p winserve` |
 
-### App layout (`app/`)
+### App layout (`server/`)
 
 ```text
-app/
+server/
   Cargo.toml          # package winserve
   src/
     main.rs           # CLI
@@ -88,7 +88,7 @@ app/
 3. CLI: `print-cmd`, `print-config`, `start`, `status`; stop via Ctrl+C or `stop.ps1`
 4. Config path + `WINSERVE_CONFIG`
 5. PowerShell scripts and `check.sh`
-6. Repo + `app/` layout; **no `packages/` monorepo**
+6. Repo + `server/` layout; **no `packages/` monorepo**
 7. Links: architecture, configuration, logging — no duplicate schema/flag tables
 
 ## Out of scope for this doc
@@ -100,8 +100,8 @@ app/
 
 ## Sources
 
-* `app/src/main.rs`, `app/src/server/manager.rs`, `app/src/runtime/llama.rs`
-* `app/Cargo.toml`, root `Cargo.toml`
+* `server/src/main.rs`, `server/src/server/manager.rs`, `server/src/runtime/llama.rs`
+* `server/Cargo.toml`, root `Cargo.toml`
 * `scripts/*.ps1`, `scripts/check.sh`
 * `config/default.yaml`, `bin/README.md`
 * `docs/architecture.md`, `AGENTS.md`, `README.md`

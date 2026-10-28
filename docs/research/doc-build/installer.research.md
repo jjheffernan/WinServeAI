@@ -76,7 +76,7 @@ Canonical layout from `installer/README.md`, reconciled with architecture (`bin/
 | `{app}\logs\` | Unified logs (runtime) |
 | `{app}\notices\` | License compliance payload |
 
-**Naming note:** older research used `winserve-launcher.exe` under `bin/` and `apps/installer`. Appliance layout uses root `winserve.exe` and repo `installer/`. Shortcuts must not expose `llama-server.exe` as the primary entry — users start the manager, which owns the backend.
+**Naming note:** older research used `winserve-launcher.exe` under `bin/` and `clients/installer`. Appliance layout uses root `winserve.exe` and repo `installer/`. Shortcuts must not expose `llama-server.exe` as the primary entry — users start the manager, which owns the backend.
 
 **Inno icon pattern:**
 

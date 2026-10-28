@@ -1,17 +1,17 @@
 # Installer & Licensing
 
 > **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
-> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+> `packages/launcher` → `server/src/server/manager.rs` · `packages/process` → `server/src/runtime/process.rs` · `packages/llama` → `server/src/runtime/llama.rs` · `packages/api` / readiness → `server/src/server/health.rs` + `server/src/api/` · `packages/hardware` → `server/src/system/` · `packages/config` → `server/src/server/config.rs` · `packages/logging` → `server/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 
-Phase 0 research for Windows packaging: Inno Setup, firewall, CUDA DLL bundling, MIT notices. Builds on [installer.md](../installer.md), [prior-art.md](../prior-art.md), installer scripts under `apps/installer` (if present). Pinned `llama-server` lives in **`bin/`** (version pin in release docs), not a `vendor/llama.cpp` tree. No production code.
+Phase 0 research for Windows packaging: Inno Setup, firewall, CUDA DLL bundling, MIT notices. Builds on [installer.md](../installer.md), [prior-art.md](../prior-art.md), installer scripts under `clients/installer` (if present). Pinned `llama-server` lives in **`bin/`** (version pin in release docs), not a `vendor/llama.cpp` tree. No production code.
 
 ---
 
 ## Recommendations for installer and `bin/`
 
-### Inno Setup (`apps/installer/inno/`)
+### Inno Setup (`clients/installer/inno/`)
 
-Preferred tool ([docs/installer.md](../installer.md)). Phase 3 scripts live under `apps/installer/inno/` (stub today).
+Preferred tool ([docs/installer.md](../installer.md)). Phase 3 scripts live under `clients/installer/inno/` (stub today).
 
 | Concern | Pattern | Notes |
 | --- | --- | --- |
@@ -115,7 +115,7 @@ Model weights are **out of scope** and have separate licenses ([llama.cpp discus
 | Path | Role |
 | --- | --- |
 | `bin/` | All executables + private DLLs; no PATH mutation required |
-| `config/` | Default YAML; user edits stay human-readable (`app/src/server/config.rs`) |
+| `config/` | Default YAML; user edits stay human-readable (`server/src/server/config.rs`) |
 | `notices/` | License compliance payload; also link from About / Start Menu optional “Third-party notices” icon |
 
 Shortcuts point at tray/manager in `bin/`, with `WorkingDir: "{app}"` or `"{app}\bin"` consistently. Do not put `llama-server.exe` on the Start Menu as a primary entry — users start the **manager**, which owns the backend.

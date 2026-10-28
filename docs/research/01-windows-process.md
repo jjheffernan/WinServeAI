@@ -1,9 +1,9 @@
 # Windows Process Lifecycle
 
 > **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
-> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+> `packages/launcher` → `server/src/server/manager.rs` · `packages/process` → `server/src/runtime/process.rs` · `packages/llama` → `server/src/runtime/llama.rs` · `packages/api` / readiness → `server/src/server/health.rs` + `server/src/api/` · `packages/hardware` → `server/src/system/` · `packages/config` → `server/src/server/config.rs` · `packages/logging` → `server/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 
-Research for supervising `llama-server.exe` from the process runtime (`app/src/runtime/process.rs`, Phase 1 scaffolding). Complements [prior-art.md](../prior-art.md). Historical stub lived under `packages/process` — Tokio `Command` + `kill_on_drop(true)`, no Job Object, `graceful_stop` is hard-kill only.
+Research for supervising `llama-server.exe` from the process runtime (`server/src/runtime/process.rs`, Phase 1 scaffolding). Complements [prior-art.md](../prior-art.md). Historical stub lived under `packages/process` — Tokio `Command` + `kill_on_drop(true)`, no Job Object, `graceful_stop` is hard-kill only.
 
 **Goal:** one owner (Server Manager) that never orphans inference processes when the manager exits, crashes, or is force-killed; cooperative stop when possible; clear crash signals for optional restart.
 
@@ -40,7 +40,7 @@ Crate: [watchexec/process-wrap](https://github.com/watchexec/process-wrap) · [d
 **Ordering:** `CreationFlags` **before** `JobObject`, or include `CREATE_SUSPENDED` in flags. `JobObject` always sets `CREATE_SUSPENDED` internally and resumes unless you asked to stay suspended.
 
 ```rust
-// Tokio path (matches app/src/runtime/process.rs)
+// Tokio path (matches server/src/runtime/process.rs)
 use process_wrap::tokio::*;
 // CreationFlags(CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW)
 //   .wrap(JobObject)
@@ -114,7 +114,7 @@ Community bat pattern:
 | Unexpected exit while `Ready` | Crash / OOM / driver — candidate for restart |
 | Port listen but readiness never 200 | Stuck start — treat as failed start, not crashloop |
 
-Liveness ≠ readiness: PID alive is not “serving”; poll **`GET /v1/models`** (WinServeAI primary readiness in `app/src/server/health.rs`; optional alternate `GET /health` when present — 503 loading / 200 ready) ([prior-art](../prior-art.md), [#20684](https://github.com/ggml-org/llama.cpp/issues/20684)).
+Liveness ≠ readiness: PID alive is not “serving”; poll **`GET /v1/models`** (WinServeAI primary readiness in `server/src/server/health.rs`; optional alternate `GET /health` when present — 503 loading / 200 ready) ([prior-art](../prior-art.md), [#20684](https://github.com/ggml-org/llama.cpp/issues/20684)).
 
 ### Policy patterns (steal, don’t invent)
 
@@ -132,11 +132,11 @@ OTP / supervisor classics ([Elixir Supervisor](https://elixir.hexdocs.pm/Supervi
 
 NSSM-style always-restart ([d4-ollama-win-service](https://github.com/internetics-net/d4-ollama-win-service)) is Phase 5 service mode, not tray MVP.
 
-**Ownership:** process runtime (`app/src/runtime/process.rs`) reports exit events; Server Manager (`app/src/server/manager.rs`) owns restart policy and state machine (`Stopped → Starting → Ready | Failed → Stopping → Stopped` + `Crashed`).
+**Ownership:** process runtime (`server/src/runtime/process.rs`) reports exit events; Server Manager (`server/src/server/manager.rs`) owns restart policy and state machine (`Stopped → Starting → Ready | Failed → Stopping → Stopped` + `Crashed`).
 
 ---
 
-## Recommendations for process runtime (`app/src/runtime/process.rs`)
+## Recommendations for process runtime (`server/src/runtime/process.rs`)
 
 1. **Add `process-wrap` (Tokio)** — `CreationFlags(CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW)` + `JobObject` + `KillOnDrop`. Remove bare `Command::kill_on_drop`.
 2. **Keep the public surface small** — `ProcessSpec`, `spawn`, `graceful_stop(timeout)`, `kill`, `wait` / exit notification, `pid`, `is_running`. No health HTTP here.
@@ -232,7 +232,7 @@ pub struct RestartPolicy {
 | CTRL_C group ID pitfall | https://github.com/dotnet/docs/issues/53173 |
 | Job + signal split | https://comcomponent.com/en/blog/2026/03/20/001-windows-app-safe-child-process-handling-job-object-exit-propagation-stdio-watchdog/ |
 | Internal prior art | [docs/prior-art.md](../prior-art.md) |
-| Product process code (stub stop) | [`app/src/runtime/process.rs`](../../app/src/runtime/process.rs) |
+| Product process code (stub stop) | [`server/src/runtime/process.rs`](../../server/src/runtime/process.rs) |
 | Operator runtime guide | [docs/backend.md](../backend.md) |
 | Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 

@@ -31,7 +31,7 @@
    - Read `vision.md` and `architecture.md`.
    - **Follow architecture Rules** (link or short restatement of the six rules).
    - Confirm MVP scope (or explicit Phase 5+ / later-only work).
-   - Prefer extending **ServerManager** / `app/src/server/` and `app/src/runtime/` over special-casing UI/CLI. **No** “Backend interfaces.”
+   - Prefer extending **ServerManager** / `server/src/server/` and `server/src/runtime/` over special-casing UI/CLI. **No** “Backend interfaces.”
 3. **Pull requests**
    - One concern per PR.
    - Update docs when behavior or architecture changes.

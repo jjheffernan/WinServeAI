@@ -22,7 +22,7 @@ logging:
 | `llama.log` | `llama-server` stdout and stderr (line-tagged) |
 | `error.log` | Start failures, readiness failure, unexpected child exit |
 
-Implementation: [`app/src/server/logs.rs`](../app/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is prefixed with `ts=<unix-epoch-seconds>` and flushed immediately. No log levels.
+Implementation: [`server/src/server/logs.rs`](../server/src/server/logs.rs) (`LogSinks`). Each file is opened append-only; every line is prefixed with `ts=<unix-epoch-seconds>` and flushed immediately. No log levels.
 
 ## What is captured
 
@@ -40,7 +40,7 @@ Typical lines:
 
 ### Child stdio (`llama.log`)
 
-[`app/src/runtime/process.rs`](../app/src/runtime/process.rs) pipes both streams and forwards each line with a prefix:
+[`server/src/runtime/process.rs`](../server/src/runtime/process.rs) pipes both streams and forwards each line with a prefix:
 
 ```text
 [stdout] …
@@ -86,8 +86,8 @@ See [architecture.md](architecture.md) for the unified-logs rule and process own
 - [api.md](./api.md) — readiness failures surface in `error.log`
 - [research/01-windows-process.md](./research/01-windows-process.md) — exit codes and crash signals
 - [research/05-server-manager.md](./research/05-server-manager.md) — lifecycle ownership
-- [`app/src/server/logs.rs`](../app/src/server/logs.rs)
-- [`app/src/runtime/process.rs`](../app/src/runtime/process.rs)
+- [`server/src/server/logs.rs`](../server/src/server/logs.rs)
+- [`server/src/runtime/process.rs`](../server/src/runtime/process.rs)
 
 ### Upstream
 

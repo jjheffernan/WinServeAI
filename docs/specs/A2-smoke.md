@@ -96,7 +96,7 @@ Use `id` from `/v1/models` as `model` if the client requires an exact match. Mor
 
 Foreground `winserve start` owns the child. Stop with **Ctrl+C** in that terminal.
 
-Manager stop path (Windows): `CTRL_BREAK` to the process group, grace (~8s), then force kill. Implementation: `app/src/runtime/process.rs`. Details: [backend.md](../backend.md), [research/01-windows-process.md](../research/01-windows-process.md).
+Manager stop path (Windows): `CTRL_BREAK` to the process group, grace (~8s), then force kill. Implementation: `server/src/runtime/process.rs`. Details: [backend.md](../backend.md), [research/01-windows-process.md](../research/01-windows-process.md).
 
 Do **not** rely on `winserve stop` for MVP — CLI prints that stop needs a long-running tray/service ([E3](E-desktop.md)).
 

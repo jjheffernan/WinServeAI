@@ -12,7 +12,7 @@ webview → Tauri commands → ServerManager → runtime → bin/llama-server.ex
 From repo root (config + `bin/` resolved relative to cwd):
 
 ```bash
-cd apps/tray
+cd clients/tray
 npm install
 npm run dev
 ```
@@ -33,7 +33,7 @@ Requires a Tauri 2 host toolchain (Rust + platform webview). Binary name:
 | `manager_apply_settings` | validate + write YAML via `ServerManager::apply_config` |
 | `pick_model_path` | native dialog, `.gguf` only (no download) |
 | `manager_logs` | viewer-only tail of `server` / `llama` / `error` logs |
-| `open_chat` | opens `chat/index.html` (install) or `apps/chat/index.html` (repo) |
+| `open_chat` | opens `chat/index.html` (install) or `clients/chat/index.html` (repo) |
 
 ### Status UI (E1b)
 

@@ -2,9 +2,9 @@
 
 > **Readiness:** 3.6/5 (`mvp-ready`) — details in [readiness/server-config.md](./readiness/server-config.md)
 
-Human-readable YAML is the source of truth. Schema and defaults live in `config/default.yaml` and `app/src/server/config.rs`.
+Human-readable YAML is the source of truth. Schema and defaults live in `config/default.yaml` and `server/src/server/config.rs`.
 
-**No raw llama.cpp flags in YAML.** Mapping to argv happens only in `app/src/runtime/llama.rs`.
+**No raw llama.cpp flags in YAML.** Mapping to argv happens only in `server/src/runtime/llama.rs`.
 
 ## Default file
 
@@ -211,7 +211,7 @@ gpu:
 
 1. YAML is the only user-facing config format.
 2. No raw llama.cpp flags in YAML — only high-level fields above.
-3. Argv mapping lives solely in [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs).
+3. Argv mapping lives solely in [`server/src/runtime/llama.rs`](../server/src/runtime/llama.rs).
 4. UI / CLI talk to `ServerManager`; they do not invent flags ([architecture.md](architecture.md)).
 
 ## Sources / See also
@@ -226,8 +226,8 @@ gpu:
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — fit flags and readiness
 - [research/03-hardware-detection.md](./research/03-hardware-detection.md) — GPU inventory (no layer math)
 - [`config/default.yaml`](../config/default.yaml) — shipped defaults
-- [`app/src/server/config.rs`](../app/src/server/config.rs) — schema and validation
-- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — YAML → argv
+- [`server/src/server/config.rs`](../server/src/server/config.rs) — schema and validation
+- [`server/src/runtime/llama.rs`](../server/src/runtime/llama.rs) — YAML → argv
 
 ### Upstream
 

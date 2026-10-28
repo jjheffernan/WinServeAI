@@ -1,7 +1,7 @@
 # Research: `api.md`
 
 **Target:** rewrite `docs/api.md` for the appliance architecture.  
-**Sources:** [architecture.md](../../architecture.md), [prior-art.md](../../prior-art.md), [02-llama-readiness.md](../02-llama-readiness.md), `app/src/api/`, `app/src/server/health.rs`.
+**Sources:** [architecture.md](../../architecture.md), [prior-art.md](../../prior-art.md), [02-llama-readiness.md](../02-llama-readiness.md), `server/src/api/`, `server/src/server/health.rs`.
 
 ## Problem with current stub
 
@@ -11,8 +11,8 @@
 
 | Layer | Role |
 | --- | --- |
-| `ServerManager` (`app/src/server/`) | Start / stop / status; waits for readiness |
-| `app/src/api/` | **URL helpers only** (`openai_v1_url`, `models_url`, `chat_completions_url`) — not an HTTP server |
+| `ServerManager` (`server/src/server/`) | Start / stop / status; waits for readiness |
+| `server/src/api/` | **URL helpers only** (`openai_v1_url`, `models_url`, `chat_completions_url`) — not an HTTP server |
 | `bin/llama-server.exe` | Serves OpenAI-compatible routes at `http://{host}:{port}/v1` |
 
 Clients talk to **llama-server directly**. WinServeAI does not re-implement chat completions, auth, or request routing.
@@ -38,7 +38,7 @@ Optional upstream (mention only as “llama-server may also expose”): `/health
 
 Architecture and implementation agree: **READY = `GET /v1/models` returns 200**.
 
-From `app/src/server/health.rs`:
+From `server/src/server/health.rs`:
 
 - Poll `GET {base_url}/v1/models` every **250ms**
 - Per-request HTTP timeout: **2s**
@@ -89,6 +89,6 @@ On Ready, manager logs `READY {openai_v1_url}` and CLI prints the same.
 | Architecture | [architecture.md](../../architecture.md) |
 | Prior art (API-as-product) | [prior-art.md](../../prior-art.md) |
 | Readiness deep dive | [02-llama-readiness.md](../02-llama-readiness.md) |
-| URL helpers | `app/src/api/openai.rs` |
-| Probe | `app/src/server/health.rs` |
+| URL helpers | `server/src/api/openai.rs` |
+| Probe | `server/src/server/health.rs` |
 | Upstream server | https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md |

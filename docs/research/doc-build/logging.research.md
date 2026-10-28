@@ -1,11 +1,11 @@
 # Research: logging.md
 
-**Sources:** `app/src/server/logs.rs`, `app/src/server/manager.rs`, `app/src/runtime/process.rs`, `app/src/server/config.rs`, `config/default.yaml`  
+**Sources:** `server/src/server/logs.rs`, `server/src/server/manager.rs`, `server/src/runtime/process.rs`, `server/src/server/config.rs`, `config/default.yaml`  
 **Architecture lock:** unified logs under `logging.dir` (default `logs/`); `ServerManager` owns writes; no separate logging package.
 
 ## Implementation (`LogSinks`)
 
-`app/src/server/logs.rs` opens three append-only files in one directory:
+`server/src/server/logs.rs` opens three append-only files in one directory:
 
 | File | Method | Role |
 | --- | --- | --- |

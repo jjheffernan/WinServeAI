@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `app/src/runtime/llama.rs` |
+| Path | `server/src/runtime/llama.rs` |
 | Overall | **3.6 / 5** |
 | Label | `mvp-ready` |
 | Reviewed | 2026-07-04 |
@@ -11,7 +11,7 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 4/5 | Sole owner of llama.cpp flags (`app/src/runtime/llama.rs`); `default_binary` + `build_command` from config + hardware. Matches architecture rule “raw flags only here”. |
+| Design | 4/5 | Sole owner of llama.cpp flags (`server/src/runtime/llama.rs`); `default_binary` + `build_command` from config + hardware. Matches architecture rule “raw flags only here”. |
 | Implementation | 4/5 | Builds `--host`, `--port`, `--model`, `--ctx-size`, GPU layers / `--fit on`, `-fa on`. Auto+GPU path uses `--fit on` (omit `-ngl`); empty GPU list forces `--n-gpu-layers 0`. Explicit layers and flash-attention supported. |
 | Tests | 3/5 | Argv snapshots: auto+empty GPUs → `-ngl 0`; auto+GPU → `--fit on`; explicit layers / flash-attention cases. |
 | Docs | 4/5 | `docs/backend.md` documents flag ownership and mapping; research notes `--fit` in `docs/research/02-llama-readiness.md`. |

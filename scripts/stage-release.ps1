@@ -98,14 +98,14 @@ if (-not (Test-Path $ConfigSrc)) {
 Copy-Item -Force $ConfigSrc -Destination (Join-Path $OutDir "config\default.yaml")
 Write-Host "OK: config\default.yaml"
 
-$ChatSrc = Join-Path $Root "apps\chat\index.html"
+$ChatSrc = Join-Path $Root "clients\chat\index.html"
 if (Test-Path $ChatSrc) {
     Ensure-Dir (Join-Path $OutDir "chat")
     Copy-Item -Force $ChatSrc -Destination (Join-Path $OutDir "chat\index.html")
     Write-Host "OK: chat\index.html"
 }
 else {
-    Write-Host "WARN: apps\chat\index.html missing"
+    Write-Host "WARN: clients\chat\index.html missing"
 }
 
 $FirstRunSrc = Join-Path $Root "config\FIRST_RUN.txt"

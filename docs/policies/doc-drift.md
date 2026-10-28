@@ -9,9 +9,9 @@
 | Architecture rules | `docs/architecture.md`, `docs/adr/0001-*.md` | `AGENTS.md`, operator guides |
 | Module readiness scores | `docs/readiness/<id>.md` | `docs/readiness/README.md` dashboard **and** `> **Readiness:**` blocks in primary docs |
 | Overall maturity | Average in `readiness/README.md` | `docs/TODO.md` header, `docs/PLAN.md` header |
-| Config schema | `app/src/server/config.rs` + `config/default.yaml` | `docs/configuration.md` |
-| Readiness probe | `app/src/server/health.rs` | `docs/api.md`, `docs/research/02-*.md` (primary = `/v1/models`) |
-| llama flags | `app/src/runtime/llama.rs` only | Never in YAML docs as user-facing flags |
+| Config schema | `server/src/server/config.rs` + `config/default.yaml` | `docs/configuration.md` |
+| Readiness probe | `server/src/server/health.rs` | `docs/api.md`, `docs/research/02-*.md` (primary = `/v1/models`) |
+| llama flags | `server/src/runtime/llama.rs` only | Never in YAML docs as user-facing flags |
 | Branch policy | `docs/release-process.md` | `README.md`, `contributing.md`, `development.md`, `AGENTS.md` |
 | Implementation backlog | `docs/PLAN.md` / `docs/TODO.md` | Must not invent features absent from PLAN |
 
@@ -26,12 +26,12 @@
    ```
 
    Numbers and labels must match the scorecard(s) referenced.
-4. **Refresh trigger:** Any material change under `app/src/`, `config/`, `installer/`, or `bin/README.md` requires a readiness refresh before merge to `dev` (or run `scripts/check_doc_drift.py` and fix failures).
+4. **Refresh trigger:** Any material change under `server/src/`, `config/`, `installer/`, or `bin/README.md` requires a readiness refresh before merge to `dev` (or run `scripts/check_doc_drift.py` and fix failures).
 5. **No silent edits:** Do not change a banner score without updating the scorecard and dashboard in the same commit.
 
 ## Technical claim rules
 
-1. **Cite code or research:** Non-obvious behavior (probes, flags, Windows APIs) must link to a path (`app/src/…`) or research note / upstream URL. Prefer the URL index in [SOURCES.md](./SOURCES.md) for external links.
+1. **Cite code or research:** Non-obvious behavior (probes, flags, Windows APIs) must link to a path (`server/src/…`) or research note / upstream URL. Prefer the URL index in [SOURCES.md](./SOURCES.md) for external links.
 2. **Primary readiness probe** is `GET /v1/models` until `health.rs` changes. `/health` may be documented only as optional alternate.
 3. **No `packages/*` as current layout** except historical path-note banners in research notes.
 4. **No backend traits / plugins** as planned work unless ADR supersedes 0001.

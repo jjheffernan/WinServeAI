@@ -12,11 +12,11 @@
 
 One line per finding: location, problem, fix.
 
-- `app/src/runtime/process.rs:L116-122`: 🟡 risk: `send_ctrl_break` is no-op. Implement `GenerateConsoleCtrlEvent` / Job Object or document force-kill-only as accepted MVP.
-- `app/src/main.rs` `stop`/`restart`: 🟡 risk: CLI claims stop/restart but exits failure. Wire long-running manager or remove commands until tray/service exists.
-- `app/src/system/gpu.rs`: 🟡 risk: empty GPU list forces CPU `--n-gpu-layers 0` path always. Implement DXGI or detect via `nvidia-smi` fallback before shipping auto GPU.
-- `app/src/server/health.rs`: 🔵 nit: only polls `/v1/models`. Optional `/health` fallback already documented; add when pin supports it.
-- `app/src/server/logs.rs`: 🔵 nit: no timestamps on lines. Prefix ISO time for crash forensics.
+- `server/src/runtime/process.rs:L116-122`: 🟡 risk: `send_ctrl_break` is no-op. Implement `GenerateConsoleCtrlEvent` / Job Object or document force-kill-only as accepted MVP.
+- `server/src/main.rs` `stop`/`restart`: 🟡 risk: CLI claims stop/restart but exits failure. Wire long-running manager or remove commands until tray/service exists.
+- `server/src/system/gpu.rs`: 🟡 risk: empty GPU list forces CPU `--n-gpu-layers 0` path always. Implement DXGI or detect via `nvidia-smi` fallback before shipping auto GPU.
+- `server/src/server/health.rs`: 🔵 nit: only polls `/v1/models`. Optional `/health` fallback already documented; add when pin supports it.
+- `server/src/server/logs.rs`: 🔵 nit: no timestamps on lines. Prefix ISO time for crash forensics.
 - `scripts/stop.ps1`: 🟡 risk: `Stop-Process -Force` orphans no Job Object children today but will fight graceful stop later. Prefer signaling manager when it exists.
 - `bin/`: 🔴 bug (release): no `llama-server.exe` — `start` always fails until operator drops binary. Ship pin instructions in first-run / installer only is OK for dev; block release checklist.
 - Tests: 🔴 bug (maturity): zero automated tests. Add config parse + argv snapshot tests before Phase 1 exit.
@@ -29,11 +29,11 @@ One line per finding: location, problem, fix.
 
 One line per finding: location, what to cut, replacement.
 
-- `app/src/api/openai.rs`: yagni: thin URL helpers only — keep (not a proxy). No cut.
+- `server/src/api/openai.rs`: yagni: thin URL helpers only — keep (not a proxy). No cut.
 - `docs/research/doc-build/*.research.md`: shrink: research briefs served rebuild; keep for audit trail, do not expand.
 - `scripts/pr_review_loop/hooks/echo_*.py`: yagni: stubs for dry-run — keep until real agent cmds wired.
 - No `packages/*` backend trait reintroduced — **good** (prior monorepo was correctly deleted).
-- `app/ui/.gitkeep`: delete: empty Phase 2 path is fine; no code to cut.
+- `server/ui/.gitkeep`: delete: empty Phase 2 path is fine; no code to cut.
 
 **No speculative multi-backend layers found.** Appliance shape holds.
 

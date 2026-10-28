@@ -9,11 +9,11 @@ App/CLI → ServerManager → runtime (llama + process) → bin/llama-server.exe
 ## Do not mess this up
 
 1. **One backend only** — llama.cpp. No backend traits, plugins, or multi-provider layers.
-2. **One orchestrator** — `ServerManager` (`app/src/server/manager.rs`). UI/CLI only call it.
-3. **Raw llama flags only in** `app/src/runtime/llama.rs`.
+2. **One orchestrator** — `ServerManager` (`server/src/server/manager.rs`). UI/CLI only call it.
+3. **Raw llama flags only in** `server/src/runtime/llama.rs`.
 4. **YAML config is source of truth** (`config/default.yaml`).
 5. **External boundary is explicit** — `bin/llama-server.exe` is not our code.
-6. **No** model downloads, chat UI, Docker, agent frameworks, or dashboards.
+6. **No** model downloads, chat inside the server, Docker, agent frameworks, or dashboards. Optional chat page: `clients/chat`.
 
 Read `docs/architecture.md` and `docs/build-spec.md` before structural changes.
 
@@ -30,13 +30,13 @@ Open PRs against **`dev`**. Release promotions are PRs from `dev` → `main`.
 
 | Path | Role |
 | --- | --- |
-| `app/src/server/` | Manager, config, health, logs |
-| `app/src/runtime/` | Process + llama argv |
-| `app/src/system/` | GPU / memory / network probes |
-| `app/src/api/` | OpenAI URL helpers (passthrough) |
-| `app/` | Server program. People do not open this folder. |
-| `apps/tray/` | The window |
-| `apps/chat/` | Optional chat page. Any other frontend uses the base URL and API key. |
+| `server/src/server/` | Manager, config, health, logs |
+| `server/src/runtime/` | Process + llama argv |
+| `server/src/system/` | GPU / memory / network probes |
+| `server/src/api/` | OpenAI URL helpers (passthrough) |
+| `server/` | Server program. People do not open this folder. |
+| `clients/tray/` | The window |
+| `clients/chat/` | Optional chat page. Any other frontend uses the base URL and API key. |
 | `bin/` | External llama-server binary |
 | `config/` | default.yaml |
 | `logs/` | server.log, llama.log, error.log |

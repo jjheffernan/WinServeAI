@@ -8,12 +8,12 @@ Thanks for helping build WinServeAI. This is infrastructure software — prefer 
 2. **Follow the architecture Rules** (non-negotiable):
    - One backend: llama.cpp only. No backend traits, plugins, or multi-provider layers.
    - One orchestrator: `ServerManager`. UI/CLI only call it.
-   - Raw llama flags only in `app/src/runtime/llama.rs`.
+   - Raw llama flags only in `server/src/runtime/llama.rs`.
    - YAML config is the source of truth (`config/default.yaml`).
    - Unified logs under `logs/`.
-   - No model downloads, no chat inside the server, no Docker, no multi-provider support. Optional chat page: `apps/chat`.
+   - No model downloads, no chat inside the server, no Docker, no multi-provider support. Optional chat page: `clients/chat`.
 3. Confirm the change fits MVP scope (see vision), or is explicitly deferred work.
-4. Prefer extending `ServerManager` (`app/src/server/`) and runtime (`app/src/runtime/`) over special-casing the UI or CLI.
+4. Prefer extending `ServerManager` (`server/src/server/`) and runtime (`server/src/runtime/`) over special-casing the UI or CLI.
 
 Dev setup and commands: [`development.md`](development.md).
 

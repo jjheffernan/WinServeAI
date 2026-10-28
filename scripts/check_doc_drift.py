@@ -119,9 +119,9 @@ def check_packages_layout(errors: list[str]) -> None:
 
 
 def check_health_probe(errors: list[str]) -> None:
-    health = (ROOT / "app/src/server/health.rs").read_text(encoding="utf-8")
+    health = (ROOT / "server/src/server/health.rs").read_text(encoding="utf-8")
     if "/v1/models" not in health:
-        errors.append("app/src/server/health.rs: primary probe /v1/models missing")
+        errors.append("server/src/server/health.rs: primary probe /v1/models missing")
     api = (DOCS / "api.md").read_text(encoding="utf-8")
     if "/v1/models" not in api:
         errors.append("docs/api.md: must document primary readiness GET /v1/models")

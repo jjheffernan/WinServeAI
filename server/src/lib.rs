@@ -6,7 +6,7 @@
 //! Windows App / CLI
 //!        │
 //!        ▼
-//!   ServerManager   (app/server)
+//!   ServerManager   (server/server)
 //!        │
 //!        ▼
 //!   runtime/llama   builds command, owns process

@@ -24,14 +24,14 @@ Clients talk to llama-server directly. WinServeAI starts the process, captures l
 | Our system | External system |
 | --- | --- |
 | YAML config (`config/default.yaml`) | `bin/llama-server.exe` |
-| `app/src/runtime/llama.rs` → argv | GGUF model files (user paths) |
-| `app/src/runtime/process.rs` → lifecycle | CUDA / runtime DLLs beside the binary |
+| `server/src/runtime/llama.rs` → argv | GGUF model files (user paths) |
+| `server/src/runtime/process.rs` → lifecycle | CUDA / runtime DLLs beside the binary |
 | Unified logs under `logs/` | OpenAI-compatible routes on `/v1` |
 | Readiness: `GET /v1/models` | |
 
 Rules:
 
-1. **Raw llama.cpp flags exist only in `app/src/runtime/llama.rs`.** Config and UI never store or invent flags.
+1. **Raw llama.cpp flags exist only in `server/src/runtime/llama.rs`.** Config and UI never store or invent flags.
 2. **Only `ServerManager` owns the child process.** UI/CLI call `start` / `stop` / `status` — they never spawn or kill `llama-server` themselves.
 3. **`bin/llama-server.exe` is not our code.** Pin a `b####` release and ship required DLLs next to the exe (Windows `PATH` is unreliable).
 
@@ -148,9 +148,9 @@ Multi-backend support, backend traits, plugins, chat inside the server, model do
 - [research/01-windows-process.md](./research/01-windows-process.md) — Job Objects, graceful stop
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — readiness and fit flags
 - [research/05-server-manager.md](./research/05-server-manager.md) — state machine
-- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — only place with llama flags
-- [`app/src/runtime/process.rs`](../app/src/runtime/process.rs) — spawn / stop
-- [`app/src/server/health.rs`](../app/src/server/health.rs) — `GET /v1/models` readiness
+- [`server/src/runtime/llama.rs`](../server/src/runtime/llama.rs) — only place with llama flags
+- [`server/src/runtime/process.rs`](../server/src/runtime/process.rs) — spawn / stop
+- [`server/src/server/health.rs`](../server/src/server/health.rs) — `GET /v1/models` readiness
 
 ### Upstream
 

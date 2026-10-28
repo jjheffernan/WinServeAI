@@ -5,10 +5,10 @@
 | Path | Role |
 | --- | --- |
 | `config/default.yaml` | Shipped default YAML |
-| `app/src/server/config.rs` | Schema, defaults, load/save/validate, URL helpers |
-| `app/src/runtime/llama.rs` | **Only** place that maps YAML → llama.cpp argv |
-| `app/src/main.rs` | `WINSERVE_CONFIG` resolution, CLI (`print-config`, `print-cmd`) |
-| `app/src/server/manager.rs` | Loads config, opens `logging.dir`, preflight model/port |
+| `server/src/server/config.rs` | Schema, defaults, load/save/validate, URL helpers |
+| `server/src/runtime/llama.rs` | **Only** place that maps YAML → llama.cpp argv |
+| `server/src/main.rs` | `WINSERVE_CONFIG` resolution, CLI (`print-config`, `print-cmd`) |
+| `server/src/server/manager.rs` | Loads config, opens `logging.dir`, preflight model/port |
 | `docs/architecture.md` | YAML source of truth; flags only in `runtime/llama` |
 | `docs/installer.md` / `docs/research/04-installer-licensing.md` | Localhost vs LAN firewall |
 
@@ -105,5 +105,5 @@ Port preflight: `network::port_available(host, port)` — warning only if bind m
 3. GPU decision matrix (auto / layers / CPU vs GPU)
 4. Localhost vs LAN bind + firewall note
 5. `WINSERVE_CONFIG` + default path
-6. Explicit “no raw llama flags” + pointer to `app/src/runtime/llama.rs`
+6. Explicit “no raw llama flags” + pointer to `server/src/runtime/llama.rs`
 7. Link architecture / logging / api as needed; do not invent fields

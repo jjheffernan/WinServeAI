@@ -11,9 +11,9 @@ Windows App → ServerManager → llama-server.exe → http://localhost:8080/v1
 ## Layout
 
 ```text
-app/           the server program (nobody opens this folder)
-apps/tray/     the window
-apps/chat/     optional chat page (base URL + API key)
+server/           the server program (nobody opens this folder)
+clients/tray/     the window
+clients/chat/     optional chat page (base URL + API key)
 bin/           llama-server.exe (external)
 config/        default.yaml
 logs/          server.log, llama.log, error.log
@@ -52,9 +52,9 @@ API: `http://127.0.0.1:8080/v1` · First run: [docs/first-run.md](docs/first-run
 
 1. One backend: llama.cpp
 2. One orchestrator: `ServerManager`
-3. Raw llama flags only in `app/src/runtime/llama.rs`
+3. Raw llama flags only in `server/src/runtime/llama.rs`
 4. YAML config is source of truth
-5. No plugin loader, model downloads, or Docker. Chat is `apps/chat`, a client of `/v1`
+5. No plugin loader, model downloads, or Docker. Chat is `clients/chat`, a client of `/v1`
 
 See [docs/architecture.md](docs/architecture.md) and [docs/build-spec.md](docs/build-spec.md).
 

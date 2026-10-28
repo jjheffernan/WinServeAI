@@ -19,7 +19,7 @@ A Windows user can:
 
 Matches roadmap **v0.4** + vision MVP. Phase 4 stability (migration, extensive hardware matrix) is **post-MVP**.
 
-**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). One llama.cpp backend. Chat is `apps/chat`, a client of that API. Any other frontend needs the base URL and `server.api_key` (`Authorization: Bearer`). The tinker layer is host, port, GPU layers, context, flash attention, and the key, stored in YAML. Flags stay in `runtime/llama.rs`.
+**Shape vs Strata:** same easy Windows loop (installer, shortcut, pick a GGUF, local `/v1`, quit frees the GPU). One llama.cpp backend. Chat is `clients/chat`, a client of that API. Any other frontend needs the base URL and `server.api_key` (`Authorization: Bearer`). The tinker layer is host, port, GPU layers, context, flash attention, and the key, stored in YAML. Flags stay in `runtime/llama.rs`.
 
 ### Policy for this build-out
 
@@ -74,7 +74,7 @@ Work top → bottom. Later slices assume earlier APIs exist.
 
 **Exit:** With serve running, CLI can stop/restart without owning the child. Job Object lifetime stays in the owner process.
 
-**Files (expected):** `app/src/ipc/` (new), `app/src/main.rs`, `app/src/server/manager.rs`, docs for ops.
+**Files (expected):** `server/src/ipc/` (new), `server/src/main.rs`, `server/src/server/manager.rs`, docs for ops.
 
 ---
 
@@ -147,7 +147,7 @@ Spec: [specs/F-installer.md](specs/F-installer.md). Vision requires this for MVP
 - [x] Installer packages tray + pinned binary + notices (F) — sources + staging + ISCC in CI; clean-machine install→Ready open
 - [ ] Quit/stop leaves no orphan `llama-server` — code present; Windows operator proof open
 - [ ] OpenAI client works against `/v1` with a local GGUF — A2 open
-- [x] No download or multi-backend surface. Chat is a separate `/v1` client (`apps/chat`)
+- [x] No download or multi-backend surface. Chat is a separate `/v1` client (`clients/chat`)
 
 ---
 

@@ -1,7 +1,7 @@
 # Research: `backend.md` (runtime)
 
 **Target:** rewrite `docs/backend.md` as the **runtime** doc (llama.cpp process boundary).  
-**Sources:** [architecture.md](../../architecture.md), [01-windows-process.md](../01-windows-process.md), [02-llama-readiness.md](../02-llama-readiness.md), `app/src/runtime/`, `app/src/server/manager.rs`.
+**Sources:** [architecture.md](../../architecture.md), [01-windows-process.md](../01-windows-process.md), [02-llama-readiness.md](../02-llama-readiness.md), `server/src/runtime/`, `server/src/server/manager.rs`.
 
 ## Problem with current stub
 
@@ -23,7 +23,7 @@ ServerManager  →  runtime/llama (argv) + runtime/process (spawn/stop)
 
 ## Runtime boundary (our system vs external)
 
-| Our system (`app/`) | External (`bin/`, models, DLLs) |
+| Our system (`server/`) | External (`bin/`, models, DLLs) |
 | --- | --- |
 | YAML config | `llama-server.exe` |
 | `runtime/llama.rs` → argv | GGUF model files |
@@ -34,13 +34,13 @@ ServerManager  →  runtime/llama (argv) + runtime/process (spawn/stop)
 Rules:
 
 1. **No backend trait, no plugins, no multi-provider layer.** One binary, one orchestrator.
-2. **Raw llama.cpp flags only in `app/src/runtime/llama.rs`.** Config, UI, and `ServerManager` never invent `-ngl` / `--fit` strings.
+2. **Raw llama.cpp flags only in `server/src/runtime/llama.rs`.** Config, UI, and `ServerManager` never invent `-ngl` / `--fit` strings.
 3. **Process ownership only via `ServerManager` → `runtime/process`.** UI/CLI never spawn or kill `llama-server` directly.
 4. **`bin/llama-server.exe` is not our code.** Pin a `b####` release; ship DLLs next to the exe (PATH is unreliable on Windows).
 
 ## `llama.rs` — flags only
 
-Code truth (`app/src/runtime/llama.rs`):
+Code truth (`server/src/runtime/llama.rs`):
 
 | Responsibility | Detail |
 | --- | --- |
@@ -66,7 +66,7 @@ Anti-pattern (called out in research/02): inventing layer counts for “auto” 
 
 ## Process lifecycle
 
-Owned by `ServerManager` (`app/src/server/manager.rs`), executed by `runtime/process.rs`.
+Owned by `ServerManager` (`server/src/server/manager.rs`), executed by `runtime/process.rs`.
 
 ### Start
 

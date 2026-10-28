@@ -5,7 +5,7 @@ Research snapshot for WinServeAI scaffolding (process ownership, hardware, insta
 Related internal docs: [architecture.md](./architecture.md), [vision.md](./vision.md), [research.md](./research.md) (checklist), [installer.md](./installer.md), [backend.md](./backend.md).
 
 > **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
-> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+> `packages/launcher` → `server/src/server/manager.rs` · `packages/process` → `server/src/runtime/process.rs` · `packages/llama` → `server/src/runtime/llama.rs` · `packages/api` / readiness → `server/src/server/health.rs` + `server/src/api/` · `packages/hardware` → `server/src/system/` · `packages/config` → `server/src/server/config.rs` · `packages/logging` → `server/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 
 ---
 
@@ -17,7 +17,7 @@ WinServeAI’s niche is **Windows-native, headless, OpenAI-compatible inference 
 | --- | --- | --- |
 | Positioning | Ollama’s “API is the product”; llama-server’s `/v1` surface | LM Studio / Jan / GPT4All chat-first UX; LocalAI’s multi-backend kitchen sink |
 | Process ownership | Windows **Job Objects** (`KILL_ON_JOB_CLOSE`); single Server Manager | UI spawning `llama-server`; NSSM-as-product (optional later, not MVP) |
-| Readiness | Poll **`GET /v1/models`** until 200 (`app/src/server/health.rs`); optional alternate `GET /health` (503 loading / 200 ready) when present | Treating process start as “ready”; short timeouts under load; treating `/health` as the only probe |
+| Readiness | Poll **`GET /v1/models`** until 200 (`server/src/server/health.rs`); optional alternate `GET /health` (503 loading / 200 ready) when present | Treating process start as “ready”; short timeouts under load; treating `/health` as the only probe |
 | Hardware | DXGI for Windows VRAM; NVML for NVIDIA totals; leave auto-fit to llama.cpp `--fit` | Reimplementing layer math; trusting NVML per-process under WDDM |
 | Installer | Inno Setup + `netsh advfirewall` (program or port rule); uninstall deletes rule | Opening firewall for localhost-only binds |
 | Licensing | Ship MIT notice for llama.cpp **with binaries** | Bundling models; omitting third-party notices (Ollama got called out for this) |
@@ -91,7 +91,7 @@ WinServeAI’s niche is **Windows-native, headless, OpenAI-compatible inference 
 | [LocalAI backend/README](https://github.com/mudler/LocalAI/blob/master/backend/README.md) | `backend.proto` gRPC contract; child-process backends; WatchDog — **aspirational**, too heavy for MVP |
 | [LocalAI Backend System (DeepWiki)](https://deepwiki.com/mudler/LocalAI/3.2-backend-system) | ModelLoader + process lifecycle overview |
 | [Jan extensions](https://janhq-jan-19.mintlify.app/extensions/overview) | `BaseExtension` lifecycle; inference as extension type — UI-centric, but lifecycle shape is clean |
-| WinServeAI appliance | **No** Rust `Backend` trait. Single crate owns spawn of `bin/llama-server.exe` via Server Manager (`app/src/server/manager.rs`) + runtime (`app/src/runtime/`) |
+| WinServeAI appliance | **No** Rust `Backend` trait. Single crate owns spawn of `bin/llama-server.exe` via Server Manager (`server/src/server/manager.rs`) + runtime (`server/src/runtime/`) |
 
 ### Licensing compliance (cautionary)
 
@@ -126,7 +126,7 @@ WinServeAI’s niche is **Windows-native, headless, OpenAI-compatible inference 
 | [Send Ctrl+C / SIGINT on Windows](https://stackoverflow.com/questions/813086/can-i-send-a-ctrl-c-sigint-to-an-application-on-windows) | `AttachConsole` + `GenerateConsoleCtrlEvent` for graceful stop |
 | [CTRL+C to a Windows subprocess](https://stackoverflow.com/questions/40762545/how-to-send-a-ctrlc-sigint-to-a-subprocess-in-windows) | `CREATE_NEW_PROCESS_GROUP`; prefer `CTRL_BREAK_EVENT` (cannot be disabled) |
 
-**Readiness (non-SE but essential):** distinguish **liveness** (process alive) vs **readiness** (model loaded). **WinServeAI readiness probe today = `GET /v1/models`** (`app/src/server/health.rs`). Upstream `GET /health` (503 until loaded, 200 when ready) is a useful alternate when present — do not treat it as the only probe. Under heavy load probes may stall — see [llama.cpp#20684](https://github.com/ggml-org/llama.cpp/issues/20684). vLLM’s probe split (`/health` vs `/v1/models`) is documented in [llm-d readiness-probes.md](https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md) — useful mental model even without K8s.
+**Readiness (non-SE but essential):** distinguish **liveness** (process alive) vs **readiness** (model loaded). **WinServeAI readiness probe today = `GET /v1/models`** (`server/src/server/health.rs`). Upstream `GET /health` (503 until loaded, 200 when ready) is a useful alternate when present — do not treat it as the only probe. Under heavy load probes may stall — see [llama.cpp#20684](https://github.com/ggml-org/llama.cpp/issues/20684). vLLM’s probe split (`/health` vs `/v1/models`) is documented in [llm-d readiness-probes.md](https://github.com/llm-d/llm-d/blob/main/docs/readiness-probes.md) — useful mental model even without K8s.
 
 ---
 
@@ -159,28 +159,28 @@ For engineering signal, **GitHub issues/discussions and SO beat X**. Treat X as 
 
 ## Scaffolding recommendations (concrete additions to single-crate layout — prioritized, minimal, YAGNI)
 
-Ordered for Phase 0–1. Do **not** implement chat, downloads, or multi-backend plugins yet. Layout is **`app/`** (crate `winserve`) + **`bin/llama-server.exe`** — no `packages/*`, no Rust `Backend` trait.
+Ordered for Phase 0–1. Do **not** implement chat, downloads, or multi-backend plugins yet. Layout is **`server/`** (crate `winserve`) + **`bin/llama-server.exe`** — no `packages/*`, no Rust `Backend` trait.
 
-### P0 — process runtime (`app/src/runtime/process.rs`) (must)
+### P0 — process runtime (`server/src/runtime/process.rs`) (must)
 
 1. Spawn `bin/llama-server.exe` with stdout/stderr pipes; record PID + exit code.
 2. On Windows, wrap with **`process-wrap` `JobObject`** (`KILL_ON_JOB_CLOSE`). Graceful path: send Ctrl+C / `GenerateConsoleCtrlEvent` or llama-server’s preferred stop, wait timeout, then kill job.
 3. Crash detection: `try_wait` / exit watcher → surface `Crashed { code }` to Server Manager; optional single restart with backoff (config flag, default off).
 4. Unit-test with a tiny stub exe (not full llama) on Windows CI if available.
 
-### P0 — llama runtime + readiness (`app/src/runtime/llama.rs`, `app/src/server/health.rs`)
+### P0 — llama runtime + readiness (`server/src/runtime/llama.rs`, `server/src/server/health.rs`)
 
 1. Map high-level config → argv only (host, port, model path, context; prefer **omit `-ngl`** and let **`--fit`** run unless user overrides).
 2. Readiness loop: poll **`GET /v1/models`** until 200 or timeout; treat 503 as “still loading”; connection refused as “not up yet”. Optional alternate: `GET /health` (503/200) when present on the pin — not the only probe.
 3. Document pinned `bin/llama-server.exe` release tag (`b####`) + CUDA/CPU build matrix in `docs/backend.md` / release docs.
 
-### P0 — hardware inventory (`app/src/system/`)
+### P0 — hardware inventory (`server/src/system/`)
 
 1. **Inventory:** DXGI adapter list (name, dedicated VRAM budget); WMI or `sysinfo` for CPU/RAM.
 2. **NVIDIA totals:** optional dynamic load of `nvml.dll` for free/total (device-wide), not per-process.
 3. Expose a small struct: `{ gpus: [...], total_ram_mb, recommended: { fit: true } }` — no layer calculator.
 
-### P0 — config (`app/src/server/config.rs`)
+### P0 — config (`server/src/server/config.rs`)
 
 1. Keep human YAML only (`host`, `port`, `model`, `context`, `gpu: auto|off|layers: N`).
 2. Never store raw llama flags in v1; if advanced escape hatch is needed later, gate it.
@@ -190,11 +190,11 @@ Ordered for Phase 0–1. Do **not** implement chat, downloads, or multi-backend 
 1. Add `THIRD_PARTY_NOTICES.md` (or `notices/`) including llama.cpp MIT text + copyright; **copy into installer payload**.
 2. Script or doc step: when updating the `bin/llama-server.exe` pin (tag in release docs), refresh notices.
 
-### P1 — Server Manager (`app/src/server/manager.rs`)
+### P1 — Server Manager (`server/src/server/manager.rs`)
 
 1. Sole owner of start/stop/status/health; UI/CLI only call into it.
 2. State machine: `Stopped → Starting → Ready | Failed → Stopping → Stopped` (+ `Crashed`).
-3. Forward process logs through `app/src/server/logs.rs`.
+3. Forward process logs through `server/src/server/logs.rs`.
 
 ### P1 — installer (Inno Setup)
 
@@ -245,7 +245,7 @@ Ordered for Phase 0–1. Do **not** implement chat, downloads, or multi-backend 
 ## See also
 
 - Phase-0 deep dives: [research/01](./research/01-windows-process.md) · [02](./research/02-llama-readiness.md) · [03](./research/03-hardware-detection.md) · [04](./research/04-installer-licensing.md) · [05](./research/05-server-manager.md)
-- Product readiness: [`app/src/server/health.rs`](../app/src/server/health.rs) (`GET /v1/models`)
+- Product readiness: [`server/src/server/health.rs`](../server/src/server/health.rs) (`GET /v1/models`)
 - Canonical external URL index: [policies/SOURCES.md](./policies/SOURCES.md)
 
 ---

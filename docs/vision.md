@@ -12,7 +12,7 @@
 * Tinkerable through the YAML fields the GUI already edits (host, port, GPU fit/layers, context, flash attention, API key). No freeform llama flag box
 * API-first (OpenAI-compatible via llama-server)
 * Headless inference
-* No chat inside the server. Optional frontends live in `apps/chat` and authenticate with `server.api_key`
+* No chat inside the server. Optional frontends live in `clients/chat` and authenticate with `server.api_key`
 * Zero model management ecosystem
 * Stable over bleeding edge
 * Native installer

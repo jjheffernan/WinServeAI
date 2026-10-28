@@ -97,7 +97,7 @@ Note which GPUs were exercised in the release notes. Inventory policy: [research
 
 ## Checklist (stable)
 
-Single crate only — package name **`winserve`** (`app/`). There are no `packages/*` release units.
+Single crate only — package name **`winserve`** (`server/`). There are no `packages/*` release units.
 
 1. **Crate tests / build**
    ```bash

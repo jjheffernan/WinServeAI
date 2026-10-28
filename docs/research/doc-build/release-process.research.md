@@ -1,7 +1,7 @@
 # Research: release-process.md
 
 **Target:** rewrite [docs/release-process.md](../../release-process.md)  
-**Architecture lock:** single crate `winserve` (`app/`), llama.cpp only, pin in `bin/`.  
+**Architecture lock:** single crate `winserve` (`server/`), llama.cpp only, pin in `bin/`.  
 **Problem with stub:** checklist says “workspace packages”; layout is appliance, not `packages/*`.
 
 ---
@@ -10,7 +10,7 @@
 
 | Source | Takeaway |
 | --- | --- |
-| [architecture.md](../../architecture.md) | `app/` + `bin/llama-server.exe`; one orchestrator |
+| [architecture.md](../../architecture.md) | `server/` + `bin/llama-server.exe`; one orchestrator |
 | [AGENTS.md](../../../AGENTS.md) / [README.md](../../../README.md) | Crate name `winserve`; MIT + bundle llama notices |
 | [bin/README.md](../../../bin/README.md) | External binary; `THIRD_PARTY_NOTICES` with installer |
 | [installer/README.md](../../../installer/README.md) | Ship `winserve.exe` + `bin/llama-server.exe` + notices |

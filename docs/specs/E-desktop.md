@@ -12,7 +12,7 @@ Ship a thin Windows desktop shell so basic use needs **no CLI**: start / stop / 
 Desktop UI (webview / tray)
        │  Tauri commands / IPC only
        ▼
-  ServerManager     (app/src/server/manager.rs)
+  ServerManager     (server/src/server/manager.rs)
        │
        ▼
   runtime → bin/llama-server.exe → /v1
@@ -24,7 +24,7 @@ Desktop UI (webview / tray)
 * Model downloads, marketplace, HuggingFace, or “pull” flows
 * Backend traits, plugins, multi-provider, or alternate runtimes
 * Spawning `llama-server` from the webview, Tauri sidecar, or shell plugin
-* Raw llama flags in UI or config UI (flags stay in `app/src/runtime/llama.rs`)
+* Raw llama flags in UI or config UI (flags stay in `server/src/runtime/llama.rs`)
 * Docker, auth, remote management, metrics dashboard (Phase 5+)
 * Auto-restart as default product behavior
 
@@ -37,7 +37,7 @@ Desktop UI (webview / tray)
 | **Start** | Button / tray “Start” | `start()` → Starting → Ready \| Failed |
 | **Stop** | Button / tray “Stop” | `stop()` → Stopping → Stopped (idempotent) |
 | **Status** | Always-visible badge / tray tooltip | `status()` / `get_status()`, `health()`, `endpoint()` / `openai_base()` |
-| **Logs** | Scrollable viewer (server + llama + error) | Read via manager/log helpers (`app/src/server/logs.rs`); UI is a **viewer only** |
+| **Logs** | Scrollable viewer (server + llama + error) | Read via manager/log helpers (`server/src/server/logs.rs`); UI is a **viewer only** |
 | **Settings** | Form bound to YAML fields | `config()` / load + validate + write YAML; reject unsafe edits while Starting/Ready/Stopping (require stop first) |
 
 ### UI rules
@@ -64,7 +64,7 @@ CLI remains available for headless/dev; desktop is not a second orchestrator.
 
 ## E3 — Long-running manager (options + recommendation)
 
-Today CLI `stop` / `restart` fail with “requires a long-running manager process” (`app/src/main.rs`). Desktop must fix ownership so stop/restart work from UI (and preferably CLI).
+Today CLI `stop` / `restart` fail with “requires a long-running manager process” (`server/src/main.rs`). Desktop must fix ownership so stop/restart work from UI (and preferably CLI).
 
 ### Option A — Tray-owned only
 
@@ -118,19 +118,19 @@ Canonical states from [research/05](../research/05-server-manager.md): Stopped, 
 
 | Path | Change |
 | --- | --- |
-| `app/src/server/manager.rs` | Stable API for UI/IPC; possibly async event hooks |
-| `app/src/server/config.rs` | Settings validation already present; wire update path |
-| `app/src/server/logs.rs` | Log subscription / tail for UI |
-| `app/src/main.rs` | CLI attaches via lockfile+IPC for `stop`/`restart`/`status`; optional `serve` if split |
-| `app/src/ipc/` *(new)* | Named pipe server/client, lockfile helpers (Windows-first) |
-| `app/ui/` or `src-tauri/` *(new)* | Tauri project: commands wrap manager/IPC only |
-| `app/ui/**` frontend | Start/stop/status/logs/settings + path picker |
+| `server/src/server/manager.rs` | Stable API for UI/IPC; possibly async event hooks |
+| `server/src/server/config.rs` | Settings validation already present; wire update path |
+| `server/src/server/logs.rs` | Log subscription / tail for UI |
+| `server/src/main.rs` | CLI attaches via lockfile+IPC for `stop`/`restart`/`status`; optional `serve` if split |
+| `server/src/ipc/` *(new)* | Named pipe server/client, lockfile helpers (Windows-first) |
+| `server/ui/` or `src-tauri/` *(new)* | Tauri project: commands wrap manager/IPC only |
+| `server/ui/**` frontend | Start/stop/status/logs/settings + path picker |
 | `config/default.yaml` | Unchanged schema; UI writes same keys |
 | `docs/development.md`, `docs/architecture.md` | Document tray + IPC after implementation |
 | `docs/PLAN.md` | Check E1–E3 when done |
 | `installer/` | Shortcut target may become tray exe (coordinate with [F-installer.md](F-installer.md)) |
 
-Do **not** add `app/src/runtime/llama.rs` flags from UI code. Do **not** introduce backend traits.
+Do **not** add `server/src/runtime/llama.rs` flags from UI code. Do **not** introduce backend traits.
 
 ## Implementation order (when coding)
 

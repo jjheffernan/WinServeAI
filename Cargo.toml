@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["app", "apps/tray/src-tauri"]
+members = ["server", "clients/tray/src-tauri"]
 
 [workspace.package]
 version = "0.1.0"

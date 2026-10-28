@@ -27,21 +27,21 @@
 
 | ID | Path | Primary docs |
 | --- | --- | --- |
-| `server-manager` | `app/src/server/manager.rs` | `backend.md`, `research/05` |
-| `server-config` | `app/src/server/config.rs` + `config/default.yaml` | `configuration.md` |
-| `server-health` | `app/src/server/health.rs` | `api.md`, `research/02` |
-| `server-logs` | `app/src/server/logs.rs` | `logging.md` |
-| `runtime-llama` | `app/src/runtime/llama.rs` | `backend.md` |
-| `runtime-process` | `app/src/runtime/process.rs` | `backend.md`, `research/01` |
-| `system` | `app/src/system/*` | `research/03` |
-| `api` | `app/src/api/*` | `api.md` |
-| `cli` | `app/src/main.rs` | `development.md` |
+| `server-manager` | `server/src/server/manager.rs` | `backend.md`, `research/05` |
+| `server-config` | `server/src/server/config.rs` + `config/default.yaml` | `configuration.md` |
+| `server-health` | `server/src/server/health.rs` | `api.md`, `research/02` |
+| `server-logs` | `server/src/server/logs.rs` | `logging.md` |
+| `runtime-llama` | `server/src/runtime/llama.rs` | `backend.md` |
+| `runtime-process` | `server/src/runtime/process.rs` | `backend.md`, `research/01` |
+| `system` | `server/src/system/*` | `research/03` |
+| `api` | `server/src/api/*` | `api.md` |
+| `cli` | `server/src/main.rs` | `development.md` |
 | `bin` | `bin/` | `backend.md`, `release-process.md` |
 | `installer` | `installer/` | `installer.md`, `research/04` |
 | `scripts-ops` | `scripts/{start,stop,reset}.ps1`, `smoke-openai.ps1`, `smoke-check.sh` | `development.md`, `specs/A2-smoke.md` |
 | `scripts-pr-loop` | `scripts/pr_review_loop/` | `scripts/pr_review_loop/README.md` |
 | `docs` | `docs/` | `INDEX.md` |
-| `ui` | `app/ui/` | (Phase 2) |
+| `ui` | `server/ui/` | (Phase 2) |
 
 ## Deliverables
 

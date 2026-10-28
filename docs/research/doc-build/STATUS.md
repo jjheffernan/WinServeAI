@@ -12,7 +12,7 @@ Architecture lock: appliance wrapper — `ServerManager` only, llama.cpp only, n
 | Affirmative `packages/*` layout | **PASS** — none in rebuilt guides |
 | “Backend interfaces” | **PASS** — none |
 | `packages/*` only as ban/warning | OK in `development.md`, `release-process.md` |
-| Phase-0 research `01–05` / `prior-art.md` | **PASS** — path-note banners + light `app/src/…` mapping (see leftover cleanup) |
+| Phase-0 research `01–05` / `prior-art.md` | **PASS** — path-note banners + light `server/src/…` mapping (see leftover cleanup) |
 
 ## Per-file status
 
@@ -62,8 +62,8 @@ All PLAN targets have `*.research.md`:
 
 Completed after operator guides (11/11 PASS):
 
-1. **Path drift** — Added appliance path-note banners to `research/01–05` and `prior-art.md`. Light in-body fixes: broken `../../packages/…` links → `app/src/…`; recommendation headings map to `app/src/server`, `app/src/runtime`, `app/src/system`, `bin/`. Scaffolding P0/P1 in `prior-art.md` no longer prescribe `packages/*` or a Rust `Backend` trait. Pin references use `bin/llama-server.exe` + release-doc version tags (not `vendor/llama.cpp`).
-2. **Readiness consistency** — Primary probe documented as **`GET /v1/models`** (`app/src/server/health.rs`). `GET /health` (503 loading / 200 ready) is an optional alternate when present on the pin — not the only probe. Updated in `research/02-llama-readiness.md`, `prior-art.md`, and light touch-ups in `01` / `03` / `05`.
+1. **Path drift** — Added appliance path-note banners to `research/01–05` and `prior-art.md`. Light in-body fixes: broken `../../packages/…` links → `server/src/…`; recommendation headings map to `server/src/server`, `server/src/runtime`, `server/src/system`, `bin/`. Scaffolding P0/P1 in `prior-art.md` no longer prescribe `packages/*` or a Rust `Backend` trait. Pin references use `bin/llama-server.exe` + release-doc version tags (not `vendor/llama.cpp`).
+2. **Readiness consistency** — Primary probe documented as **`GET /v1/models`** (`server/src/server/health.rs`). `GET /health` (503 loading / 200 ready) is an optional alternate when present on the pin — not the only probe. Updated in `research/02-llama-readiness.md`, `prior-art.md`, and light touch-ups in `01` / `03` / `05`.
 
 Research notes were **not** fully rewritten; banners + path/readiness fixes only.
 

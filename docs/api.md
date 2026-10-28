@@ -9,7 +9,7 @@ Client  →  http://{host}:{port}/v1/...   (llama-server)
 App/CLI →  ServerManager                 (start / stop / wait ready)
 ```
 
-The server does not render a page. Frontends are separate clients. See [apps/README.md](../apps/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
+The server does not render a page. Frontends are separate clients. See [clients/README.md](../clients/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
 
 See [architecture.md](./architecture.md) for the full process boundary.
 
@@ -27,7 +27,7 @@ Default (`config/default.yaml`):
 http://127.0.0.1:8080/v1
 ```
 
-Helpers in `app/src/api/` only format these URLs for the manager and CLI. They are not an HTTP server.
+Helpers in `server/src/api/` only format these URLs for the manager and CLI. They are not an HTTP server.
 
 ## Endpoints
 
@@ -57,7 +57,7 @@ GET http://{host}:{port}/v1/models
 | Connection refused / other errors | Not listening yet — keep waiting |
 | No success within **120s** | Startup fails (timeout) |
 
-Poll interval is ~250ms. Implementation: [`app/src/server/health.rs`](../app/src/server/health.rs) (`wait_until_ready`).
+Poll interval is ~250ms. Implementation: [`server/src/server/health.rs`](../server/src/server/health.rs) (`wait_until_ready`).
 
 **Primary:** `GET {base}/v1/models` — HTTP 2xx ⇒ ready.  
 **Fallback:** if models is not yet ready, try `GET {base}/health` — HTTP 2xx ⇒ ready (many llama-server builds return 503 while loading, 200 when ready).  
@@ -142,7 +142,7 @@ console.log(resp.choices[0].message.content);
 
 WinServeAI does not ship:
 
-- A chat page inside the server. The optional page is `apps/chat`
+- A chat page inside the server. The optional page is `clients/chat`
 - Model download / registry APIs
 - Auth, multi-tenant gateways, or metrics dashboards
 - Multi-backend or plugin endpoints
@@ -159,8 +159,8 @@ Those belong to external clients and later phases, not this appliance’s HTTP s
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — probes, `--fit`, pin policy
 - [research/05-server-manager.md](./research/05-server-manager.md) — Ready vs Starting state machine
 - [prior-art.md](./prior-art.md) — liveness vs readiness patterns
-- [`app/src/server/health.rs`](../app/src/server/health.rs) — primary probe implementation
-- [`app/src/api/`](../app/src/api/) — OpenAI URL helpers (passthrough only)
+- [`server/src/server/health.rs`](../server/src/server/health.rs) — primary probe implementation
+- [`server/src/api/`](../server/src/api/) — OpenAI URL helpers (passthrough only)
 
 ### Upstream
 

@@ -16,7 +16,7 @@ Readiness scores refreshed in D6 (overall **3.0/5**).
 | `cargo check -p winserve` | OK |
 | `cargo clippy -p winserve --all-targets` | OK (no warnings) |
 | `python3 scripts/check_doc_drift.py` | **doc drift OK** |
-| `TODO` / `FIXME` in `app/src` | none |
+| `TODO` / `FIXME` in `server/src` | none |
 
 ---
 
@@ -71,7 +71,7 @@ Cross-platform unit tests pass on macOS/Linux, but the following paths are **`#[
 | --- | --- | --- |
 | `runtime/process.rs` | Job Object assign/close; `CREATE_NEW_PROCESS_GROUP`; `GenerateConsoleCtrlEvent(CTRL_BREAK)` | `spawn_and_stop_sleep_command` (uses `cmd /C ping`); stop returns; no orphan after manager kill (manual or integration) |
 | `system/gpu.rs` | DXGI `CreateDXGIFactory1` / `EnumAdapters1` / optional `IDXGIAdapter3` budget | `detect_gpus_does_not_panic`; on NVIDIA hosts, non-empty list + VRAM when `nvidia-smi` present |
-| `app/Cargo.toml` | `windows` crate features (JobObjects, Console, Dxgi, …) | `cargo check` / `cargo test -p winserve` must compile |
+| `server/Cargo.toml` | `windows` crate features (JobObjects, Console, Dxgi, …) | `cargo check` / `cargo test -p winserve` must compile |
 
 Cross-platform but Windows-relevant:
 
@@ -88,7 +88,7 @@ Cross-platform but Windows-relevant:
 ## Leftovers pass actions
 
 - No compile/test fixes required on this host.
-- No obsolete `TODO` comments in `app/src` to remove.
+- No obsolete `TODO` comments in `server/src` to remove.
 - Clippy-clean; no unused-import cleanup needed.
 - Doc drift refreshed in D6 readiness pass.
 

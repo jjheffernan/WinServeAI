@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `app/src/main.rs` |
+| Path | `server/src/main.rs` |
 | Overall | **3.6 / 5** |
 | Label | `mvp-partial` |
 | Reviewed | 2026-07-31 |
@@ -11,9 +11,9 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 4/5 | CLI is a thin caller of `ServerManager` (`app/src/main.rs`); `serve` owns lockfile+IPC; `status|stop|restart` attach. Matches architecture (UI/CLI → manager only). |
+| Design | 4/5 | CLI is a thin caller of `ServerManager` (`server/src/main.rs`); `serve` owns lockfile+IPC; `status|stop|restart` attach. Matches architecture (UI/CLI → manager only). |
 | Implementation | 4/5 | `serve` resident owner; `start` one-shot foreground; attach path for `status|stop|restart`; `print-config` / `print-cmd` as before. |
-| Tests | 3/5 | `app/tests/cli_exit_codes.rs`: missing config, unknown command, `print-config`, `status` without resident → Stopped/success, `stop` without resident → failure. No live attach/`serve` smoke yet. |
+| Tests | 3/5 | `server/tests/cli_exit_codes.rs`: missing config, unknown command, `print-config`, `status` without resident → Stopped/success, `stop` without resident → failure. No live attach/`serve` smoke yet. |
 | Docs | 4/5 | `docs/development.md` documents serve / attach / tray and lockfile paths. |
 | Windows readiness | 3/5 | Named pipe + `%LOCALAPPDATA%\WinServeAI\manager.lock`; PowerShell scripts invoke `winserve.exe`. |
 

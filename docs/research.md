@@ -37,7 +37,7 @@ See [research/01](research/01-windows-process.md), [research/05](research/05-ser
 
 * [x] YAML (chosen for v1)
 * [ ] Migration strategy
-* [x] Schema validation (serde structs in `app/src/server/config.rs`; research in doc-build)
+* [x] Schema validation (serde structs in `server/src/server/config.rs`; research in doc-build)
 
 ## Logging
 

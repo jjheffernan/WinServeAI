@@ -3,8 +3,8 @@
 > **Readiness:** cli 3.6/5 (`mvp-partial`), scripts-ops 3.8/5 (`mvp-partial`) — details in [readiness/cli.md](./readiness/cli.md), [readiness/scripts-ops.md](./readiness/scripts-ops.md)
 
 WinServeAI owns process lifecycle for an external `bin/llama-server.exe` via
-**`ServerManager`**. The manager crate is `winserve` (`app/`). The window is
-`winserve-tray` (`apps/tray/`). There is no backend-trait
+**`ServerManager`**. The manager crate is `winserve` (`server/`). The window is
+`winserve-tray` (`clients/tray/`). There is no backend-trait
 workspace and no `packages/` monorepo.
 
 See [architecture.md](architecture.md) for the runtime boundary, lockfile, and
@@ -89,15 +89,15 @@ Host should be `x86_64-pc-windows-msvc`, not `gnu`.
 ## Repo layout
 
 ```text
-app/                       # package winserve — ServerManager + CLI
+server/                       # package winserve — ServerManager + CLI
   src/main.rs              # CLI: serve | start | stop | status | restart | …
   src/server/              # manager, config, health, logs, resident loop
   src/ipc/                 # lockfile + named-pipe (Windows) / loopback TCP (dev)
   src/runtime/             # llama argv + process spawn (external boundary)
   src/system/              # GPU / memory / network probes
   src/api/                 # OpenAI URL helpers (passthrough)
-apps/tray/              # the window (Tauri 2 → winserve-tray)
-apps/chat/              # optional chat page; only talks to /v1
+clients/tray/              # the window (Tauri 2 → winserve-tray)
+clients/chat/              # optional chat page; only talks to /v1
 bin/                       # llama-server.exe (not built by this repo)
 config/                    # default.yaml (empty model.path until first run)
 logs/                      # server.log, llama.log, error.log (created at runtime)
@@ -111,7 +111,7 @@ Root workspace:
 
 ```toml
 [workspace]
-members = ["app", "apps/tray/src-tauri"]
+members = ["server", "clients/tray/src-tauri"]
 ```
 
 Do **not** reintroduce `packages/config`, `packages/launcher`, or other
@@ -202,12 +202,12 @@ target/release/winserve-tray.exe   # or CARGO_TARGET_DIR equivalent
 
 ## Desktop tray (`winserve-tray`)
 
-Tauri 2 shell under `apps/tray/`. Webview commands call **`ServerManager`
+Tauri 2 shell under `clients/tray/`. Webview commands call **`ServerManager`
 only** — never spawn `llama-server` from JS. While running, the tray holds the
 same lockfile + IPC pipe so CLI `status|stop|restart` attach.
 
 ```bash
-cd apps/tray && npm install && npm run dev
+cd clients/tray && npm install && npm run dev
 # or from repo root:
 cargo run -p winserve-tray
 ```
@@ -216,7 +216,7 @@ Canonical status labels: Stopped / Starting / Ready / Failed / Stopping /
 Crashed. Settings + `.gguf` Browse require Stopped / Failed / Crashed. Quit
 calls `stop()`; Job Object remains the orphan backstop.
 
-Details: [apps/tray/README.md](../apps/tray/README.md),
+Details: [clients/tray/README.md](../clients/tray/README.md),
 [specs/E-desktop.md](specs/E-desktop.md).
 
 ## External binary
@@ -273,7 +273,7 @@ CLI / tray ──► ServerManager ──► runtime/llama + process ──► b
      └── IPC attach ──┘   (serve or tray owns lockfile + pipe)
 ```
 
-Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs). UI and config must not invent flags.
+Raw llama.cpp flags exist only in [`server/src/runtime/llama.rs`](../server/src/runtime/llama.rs). UI and config must not invent flags.
 
 ## Sources / See also
 
@@ -285,14 +285,14 @@ Raw llama.cpp flags exist only in [`app/src/runtime/llama.rs`](../app/src/runtim
 - [configuration.md](./configuration.md) — YAML schema and `WINSERVE_CONFIG`
 - [api.md](./api.md) — readiness (`GET /v1/models`) and client examples
 - [logging.md](./logging.md) — `logs/` streams
-- [apps/tray/README.md](../apps/tray/README.md) — tray commands
+- [clients/tray/README.md](../clients/tray/README.md) — tray commands
 - [contributing.md](./contributing.md) — PR and branch rules
 - [release-process.md](./release-process.md) — `dev` vs `main`, pin policy
 - [PLAN.md](./PLAN.md) — ordered implementation milestones
 - [policies/doc-drift.md](./policies/doc-drift.md) — `python3 scripts/check_doc_drift.py`
 - [bin/README.md](../bin/README.md) — place `llama-server.exe`
-- [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
-- [`app/src/ipc/`](../app/src/ipc/) — lockfile + pipe
+- [`server/src/server/health.rs`](../server/src/server/health.rs) — readiness probe
+- [`server/src/ipc/`](../server/src/ipc/) — lockfile + pipe
 
 ### Upstream
 

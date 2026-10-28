@@ -1,6 +1,6 @@
-# Apps
+# Clients
 
-People open these. The server program lives in `app/` and is not one of them.
+People open these. The server program lives in `server/` and is not one of them.
 
 | Folder | What it is |
 | --- | --- |

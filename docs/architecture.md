@@ -7,7 +7,7 @@ WinServeAI is a **Windows-native llama.cpp appliance wrapper**, not a multi-back
 ```text
 CLI (winserve) ──┐
                  │  attach: status | stop | restart
-winserve-tray ───┼──► ServerManager     (app/server)  ← only orchestration API
+winserve-tray ───┼──► ServerManager     (server/server)  ← only orchestration API
   (or serve)     │         │
                  │         ▼
                  │    runtime/llama     builds argv (ONLY place with llama flags)
@@ -62,14 +62,14 @@ IPC attach for `status` / `stop` / `restart`.
 ## Layout
 
 ```text
-app/                 # crate winserve
+server/                 # crate winserve
   src/server/        # manager, config, health, logs, resident
   src/ipc/           # lockfile + pipe
   src/runtime/       # llama + process (external boundary)
   src/api/           # OpenAI URL helpers (passthrough)
   src/system/        # gpu, memory, network
-apps/tray/           # the window people open (Tauri 2 → winserve-tray)
-apps/chat/           # optional chat page; only talks to /v1
+clients/tray/           # the window people open (Tauri 2 → winserve-tray)
+clients/chat/           # optional chat page; only talks to /v1
 bin/                 # llama-server.exe
 config/              # default.yaml (+ FIRST_RUN.txt for install tree)
 logs/                # server.log, llama.log, error.log
@@ -86,7 +86,7 @@ docs/
 3. **Raw flags only in `runtime/llama.rs`.**
 4. **Config is YAML source of truth.**
 5. **Unified logs** under `logs/`.
-6. **No model downloads, no chat inside the server, no Docker, no multi-provider support.** The optional chat page is `apps/chat`.
+6. **No model downloads, no chat inside the server, no Docker, no multi-provider support.** The optional chat page is `clients/chat`.
 7. **One resident owner** — lockfile + pipe; never two managers fighting over the Job Object.
 
 Abstractions for “many backends” come later *only if needed*.
@@ -106,9 +106,9 @@ Abstractions for “many backends” come later *only if needed*.
 - [research/02-llama-readiness.md](./research/02-llama-readiness.md) — `GET /v1/models`
 - [specs/E-desktop.md](./specs/E-desktop.md) — tray shell
 - [prior-art.md](./prior-art.md) — external analogues (Steal/Avoid)
-- [`app/src/server/health.rs`](../app/src/server/health.rs) — readiness probe
-- [`app/src/runtime/llama.rs`](../app/src/runtime/llama.rs) — argv only here
-- [`app/src/ipc/`](../app/src/ipc/) — lockfile + pipe
+- [`server/src/server/health.rs`](../server/src/server/health.rs) — readiness probe
+- [`server/src/runtime/llama.rs`](../server/src/runtime/llama.rs) — argv only here
+- [`server/src/ipc/`](../server/src/ipc/) — lockfile + pipe
 
 ### Upstream
 

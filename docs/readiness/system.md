@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `app/src/system/*` |
+| Path | `server/src/system/*` |
 | Overall | **3.8 / 5** |
 | Label | `mvp-ready` |
 | Reviewed | 2026-07-31 |
@@ -11,7 +11,7 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 4/5 | Modules `gpu`, `memory`, `network` and `HardwareInfo` / `detect()` in `app/src/system/mod.rs` match architecture and `docs/research/03-hardware-detection.md`. Inventory only — no layer calculator. |
+| Design | 4/5 | Modules `gpu`, `memory`, `network` and `HardwareInfo` / `detect()` in `server/src/system/mod.rs` match architecture and `docs/research/03-hardware-detection.md`. Inventory only — no layer calculator. |
 | Implementation | 4/5 | Windows: DXGI adapter enum + dedicated VRAM (`gpu.rs` `win::detect_dxgi`); optional `nvidia-smi` for device totals / fallback when DXGI empty. RAM via `sysinfo` (`memory.rs`). `network::port_available` via `TcpListener::bind`. Soft miss: empty GPU list → CPU path, never fails `detect()`. NVML FFI deferred. |
 | Tests | 3/5 | `port_available` bind/release; `memory::detect` reports RAM; `detect_gpus` does not panic. DXGI adapter identity is an **environment gate** (known NVIDIA Windows host), not simulated in CI. |
 | Docs | 4/5 | Research deep dive (`docs/research/03-hardware-detection.md`); operator coverage in configuration/backend GPU rules; DXGI known-hardware proof documented as env gate (this scorecard). |

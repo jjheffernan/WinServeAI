@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `app/src/server/logs.rs` |
+| Path | `server/src/server/logs.rs` |
 | Overall | **3.8 / 5** |
 | Label | `mvp-ready` |
 | Reviewed | 2026-07-30 |

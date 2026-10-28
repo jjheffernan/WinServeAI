@@ -11,9 +11,9 @@ WinServeAI could grow into a multi-backend platform (traits, plugins, many runti
 
 Ship a single-crate appliance:
 
-1. **One orchestrator:** `ServerManager` (`app/src/server/`) is the only process-control API. UI/CLI call it; nothing else owns `llama-server.exe`.
+1. **One orchestrator:** `ServerManager` (`server/src/server/`) is the only process-control API. UI/CLI call it; nothing else owns `llama-server.exe`.
 2. **One backend:** llama.cpp only. No backend trait, no plugins, no multi-provider support.
-3. **External boundary:** `bin/llama-server.exe` is an external system. Raw flags and argv live only in `app/src/runtime/llama.rs`.
+3. **External boundary:** `bin/llama-server.exe` is an external system. Raw flags and argv live only in `server/src/runtime/llama.rs`.
 4. **Config:** human-readable YAML is the source of truth; no raw backend flags in config.
 5. **Logs:** unified under `logs/`. Readiness via OpenAI-compatible probes (`/v1/models` / health as documented).
 

@@ -3,7 +3,7 @@
 **Audience:** implementers on `dev`  
 **Scope:** process Job Object + CTRL_BREAK, DXGI/NVML, tests, bin pin, log timestamps, config validation  
 **Date:** 2026-07-04  
-**Code reviewed:** `app/src` as of this write (stubs for job/CTRL_BREAK/DXGI)
+**Code reviewed:** `server/src` as of this write (stubs for job/CTRL_BREAK/DXGI)
 
 No readiness score changes in this doc.
 
@@ -163,14 +163,14 @@ One line: location · problem · fix.
 
 | Milestone | Primary files |
 | --- | --- |
-| B1–B2 Job + CTRL_BREAK | `app/src/runtime/process.rs` |
-| B3 port preflight | `app/src/system/network.rs`, `manager.rs` |
+| B1–B2 Job + CTRL_BREAK | `server/src/runtime/process.rs` |
+| B3 port preflight | `server/src/system/network.rs`, `manager.rs` |
 | B4 exit → Crashed | `manager.rs` (+ process `wait`) |
-| C1–C2 DXGI/NVML | `app/src/system/gpu.rs` |
-| C3–C4 auto `--fit` | `app/src/runtime/llama.rs` + hardware |
+| C1–C2 DXGI/NVML | `server/src/system/gpu.rs` |
+| C3–C4 auto `--fit` | `server/src/runtime/llama.rs` + hardware |
 | D1–D2 tests | `config.rs`, `llama.rs`, `health.rs`, `network.rs` |
-| D4 timestamps | `app/src/server/logs.rs` |
-| D5 validation | `app/src/server/config.rs` |
+| D4 timestamps | `server/src/server/logs.rs` |
+| D5 validation | `server/src/server/config.rs` |
 | A1 bin pin | `bin/README.md` (binary not committed) |
 
 Deeper background: [`docs/research/01-windows-process.md`](../research/01-windows-process.md), [`docs/research/03-hardware-detection.md`](../research/03-hardware-detection.md), [`docs/PLAN.md`](../PLAN.md).

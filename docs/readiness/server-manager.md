@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Path | `app/src/server/manager.rs` |
+| Path | `server/src/server/manager.rs` |
 | Overall | **3.4 / 5** |
 | Label | `mvp-partial` |
 | Reviewed | 2026-07-30 |
@@ -11,7 +11,7 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 4/5 | Sole orchestration API (`load_config`, `detect_hardware`, `build_command`, `start`/`stop`/`restart`, `status`/`get_status`) in `app/src/server/manager.rs`; aligned with `docs/architecture.md`, `docs/research/05-server-manager.md`, ADR-0001. |
+| Design | 4/5 | Sole orchestration API (`load_config`, `detect_hardware`, `build_command`, `start`/`stop`/`restart`, `status`/`get_status`) in `server/src/server/manager.rs`; aligned with `docs/architecture.md`, `docs/research/05-server-manager.md`, ADR-0001. |
 | Implementation | 4/5 | Happy path: validate config/binary/model, port preflight **fails** start when busy, spawn via `ChildProcess`, wait readiness, set `Ready`; `stop` grace 8s; `restart` = stop+start; `get_status` marks `Crashed` on unexpected exit. `apply_config` blocked while Starting/Ready/Stopping. Resident ownership is outside this module (`serve` / tray + IPC). |
 | Tests | 1/5 | `apply_config` unit coverage; lifecycle still mostly indirect via config/process/health units. |
 | Docs | 4/5 | Operator path in `docs/backend.md` / `development.md` / `architecture.md`; state machine research in `docs/research/05-server-manager.md`. |

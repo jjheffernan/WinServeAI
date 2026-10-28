@@ -102,7 +102,7 @@ fn snapshot(manager: &mut ServerManager, error: Option<String>) -> ManagerSnapsh
 fn chat_page(root: &Path) -> Option<PathBuf> {
     [
         root.join("chat").join("index.html"),
-        root.join("apps").join("chat").join("index.html"),
+        root.join("clients").join("chat").join("index.html"),
     ]
     .into_iter()
     .find(|path| path.is_file())

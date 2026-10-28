@@ -1,15 +1,15 @@
 # llama-server Readiness & Fit
 
 > **Path note (appliance layout):** This note was written against an earlier `packages/*` monorepo. Map old paths to the current single crate:
-> `packages/launcher` → `app/src/server/manager.rs` · `packages/process` → `app/src/runtime/process.rs` · `packages/llama` → `app/src/runtime/llama.rs` · `packages/api` / readiness → `app/src/server/health.rs` + `app/src/api/` · `packages/hardware` → `app/src/system/` · `packages/config` → `app/src/server/config.rs` · `packages/logging` → `app/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
+> `packages/launcher` → `server/src/server/manager.rs` · `packages/process` → `server/src/runtime/process.rs` · `packages/llama` → `server/src/runtime/llama.rs` · `packages/api` / readiness → `server/src/server/health.rs` + `server/src/api/` · `packages/hardware` → `server/src/system/` · `packages/config` → `server/src/server/config.rs` · `packages/logging` → `server/src/server/logs.rs` · `packages/backend` / traits → **removed** (no backend trait).
 
-Research for WinServeAI process readiness, health probes, auto GPU fit, release pinning, and port conflicts. No production code — actionable guidance for llama runtime (`app/src/runtime/llama.rs`) and readiness (`app/src/server/health.rs`).
+Research for WinServeAI process readiness, health probes, auto GPU fit, release pinning, and port conflicts. No production code — actionable guidance for llama runtime (`server/src/runtime/llama.rs`) and readiness (`server/src/server/health.rs`).
 
 Upstream: [ggml-org/llama.cpp `tools/server`](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) · [server README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md). Internal context: [prior-art.md](../prior-art.md).
 
 ## WinServeAI readiness (product)
 
-**WinServeAI readiness probe today = `GET /v1/models`** (see [`app/src/server/health.rs`](../../app/src/server/health.rs)). Poll until **200**; treat connection refused / non-200 as still starting; overall timeout (e.g. 120s). Process alive ≠ ready.
+**WinServeAI readiness probe today = `GET /v1/models`** (see [`server/src/server/health.rs`](../../server/src/server/health.rs)). Poll until **200**; treat connection refused / non-200 as still starting; overall timeout (e.g. 120s). Process alive ≠ ready.
 
 `GET /health` (503 while loading, 200 when ready) is a **useful alternate** when present on the pinned `llama-server` build — do **not** treat it as the only probe, and do not document it as WinServeAI’s gate. Operator surface: [api.md](../api.md).
 
@@ -20,7 +20,7 @@ Upstream: [ggml-org/llama.cpp `tools/server`](https://github.com/ggml-org/llama.
 - OpenAI-compatible model list; single element in single-model mode.
 - While loading: middleware **503** on routes (not a bypass).
 - When ready: **200** with `data[0].id` (path or `--alias`). `meta` may be `null` in some modes while loading ([README](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)).
-- **Product code polls this endpoint** (`app/src/server/health.rs`). Also useful for client smoke (`scripts/smoke-openai.ps1`). Mental model: [llm-d readiness probes](https://github.com/llm-d/llm-d) (`/health` vs `/v1/models`) — liveness ≠ readiness.
+- **Product code polls this endpoint** (`server/src/server/health.rs`). Also useful for client smoke (`scripts/smoke-openai.ps1`). Mental model: [llm-d readiness probes](https://github.com/llm-d/llm-d) (`/health` vs `/v1/models`) — liveness ≠ readiness.
 
 ### `GET /health` (optional alternate when available)
 
@@ -62,7 +62,7 @@ From [Discussion #18049](https://github.com/ggml-org/llama.cpp/discussions/18049
 
 Current CLI also documents `-ngl` default as `auto` and accepts `auto` / `all` ([README flags](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)). Safest auto path: **omit `-ngl` entirely** so fit owns allocation. Fit can take **seconds to tens of seconds** (multi-GPU) — budget that into readiness timeout.
 
-**Do not** reimplement layer math in `app/src/system/` for auto. Inventory (DXGI / NVML) is for UI and diagnostics only.
+**Do not** reimplement layer math in `server/src/system/` for auto. Inventory (DXGI / NVML) is for UI and diagnostics only.
 
 ### Release pinning & CLI drift
 
@@ -82,19 +82,19 @@ Patterns to steal (Ollama issues, llama sleep/wake):
 
 ---
 
-## Recommendations for llama runtime and readiness (`app/src/runtime/llama.rs`, `app/src/server/health.rs`)
+## Recommendations for llama runtime and readiness (`server/src/runtime/llama.rs`, `server/src/server/health.rs`)
 
 ### Gap today (historical monorepo stubs)
 
 | Location (old → new) | Current behavior | Problem |
 | --- | --- | --- |
-| `packages/llama` → `app/src/runtime/llama.rs` `build_args` | Always passes `--n-gpu-layers` (auto → `auto_gpu_layers()` → `99`) | **Disables `--fit`**; invents layer counts prior-art says to avoid |
+| `packages/llama` → `server/src/runtime/llama.rs` `build_args` | Always passes `--n-gpu-layers` (auto → `auto_gpu_layers()` → `99`) | **Disables `--fit`**; invents layer counts prior-art says to avoid |
 | llama `health` | `healthy: state == Running` | Process start ≠ model ready |
 | llama `start` | Sets `Running` immediately after spawn | Should stay `Starting` until probe succeeds |
-| readiness (`app/src/server/health.rs`) | Must poll HTTP | No stub — implement `GET /v1/models` |
-| `packages/hardware` → `app/src/system/` `auto_gpu_layers` | Placeholder `99` / `0` | Wrong abstraction for auto |
+| readiness (`server/src/server/health.rs`) | Must poll HTTP | No stub — implement `GET /v1/models` |
+| `packages/hardware` → `server/src/system/` `auto_gpu_layers` | Placeholder `99` / `0` | Wrong abstraction for auto |
 
-### Readiness (`app/src/server/health.rs`)
+### Readiness (`server/src/server/health.rs`)
 
 - Implement `wait_until_ready(endpoint, timeout)`:
   - Poll **`GET /v1/models`** (primary; matches product).
@@ -107,7 +107,7 @@ Patterns to steal (Ollama issues, llama sleep/wake):
 - Defaults: interval ~250–500ms; overall timeout **≥ 120s** (large models + fit); per-request timeout **≥ 5s** (load under contention).
 - Keep UI-agnostic: only host/port URLs, no llama flags.
 
-### Llama runtime (`app/src/runtime/llama.rs`) (argv + lifecycle)
+### Llama runtime (`server/src/runtime/llama.rs`) (argv + lifecycle)
 
 - **`gpu_layers: auto`:** omit `-ngl` / `--n-gpu-layers`. Rely on default `--fit on`. Do not call `auto_gpu_layers`.
 - **`gpu_layers: "0"` / off:** pass `--n-gpu-layers 0` (CPU-only; fit won’t move layers).
@@ -118,12 +118,12 @@ Patterns to steal (Ollama issues, llama sleep/wake):
 - Prefer live readiness probe over local state alone; map 200 → healthy, 503 → starting/not-ready, dead process → crashed.
 - Surface bind/load failures from exit code + last stderr lines.
 
-### Hardware inventory (`app/src/system/`)
+### Hardware inventory (`server/src/system/`)
 
 - Inventory only (GPU name, VRAM, CUDA). Delete or stop using `auto_gpu_layers` for launch argv.
 - Optional later: expose `recommended: { fit: true }` for UI copy — not layer numbers.
 
-### Server Manager (`app/src/server/manager.rs`)
+### Server Manager (`server/src/server/manager.rs`)
 
 - Sole owner of start → wait-ready → status. Do not mark Ready until readiness succeeds.
 - Port preflight before spawn.
@@ -167,7 +167,7 @@ Human YAML only; never store raw llama flags.
 | Ollama port / HNS edge cases | https://github.com/ollama/ollama/issues/12206 |
 | Prior art (this repo) | [docs/prior-art.md](../prior-art.md) |
 | Operator API guide | [docs/api.md](../api.md) |
-| Product readiness code | [`app/src/server/health.rs`](../../app/src/server/health.rs) |
+| Product readiness code | [`server/src/server/health.rs`](../../server/src/server/health.rs) |
 | Canonical external URLs | [docs/policies/SOURCES.md](../policies/SOURCES.md) |
 
 ---

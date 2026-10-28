@@ -25,7 +25,7 @@ A dev tree also needs `bin/llama-server.exe` (pin **b9866**: `scripts/fetch-llam
 ## What not to do
 
 - Do not use the installer or window as a model marketplace.
-- Do not put raw llama.cpp flags in YAML (flags stay in `app/src/runtime/llama.rs`).
+- Do not put raw llama.cpp flags in YAML (flags stay in `server/src/runtime/llama.rs`).
 
 ## See also
 

@@ -140,6 +140,14 @@ fn open_chat() -> Result<(), String> {
     open_html(&path).map_err(|e| format!("could not open chat: {e}"))
 }
 
+fn model_file_name(path: &str) -> String {
+    std::path::Path::new(path)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_string()
+}
+
 fn find_root() -> PathBuf {
     // Prefer cwd (repo / install root), then walk up from the executable.
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
@@ -164,13 +172,22 @@ fn config_path(root: &Path) -> PathBuf {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct GpuDto {
+    name: String,
+    vram_mb: u64,
+    vram_used_mb: u64,
+    usage_pct: Option<u8>,
+    model: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 struct OverviewDto {
     status: String,
     endpoint: String,
     model_path: String,
     context: u32,
-    gpu_name: String,
-    vram_mb: u64,
+    gpus: Vec<GpuDto>,
     ram_total_mb: u64,
     ram_used_mb: u64,
     slot_state: String,
@@ -190,10 +207,14 @@ async fn manager_overview(state: State<'_, Arc<AppState>>) -> Result<OverviewDto
     let model_path = cfg.model.path.display().to_string();
     let context = cfg.runtime.context;
     let api_key_set = !cfg.server.api_key.trim().is_empty();
+    let pid = mgr.llama_pid();
     drop(mgr);
 
-    let hw = winserve::system::detect();
-    let gpu = hw.gpus.first();
+    let file = model_file_name(&model_path);
+    let mut hw = winserve::system::detect();
+    if let Some(pid) = pid {
+        winserve::system::gpu::note_host(&mut hw.gpus, pid, &file);
+    }
     let slot = if status == "Ready" {
         winserve::server::health::read_slots(&endpoint).await
     } else {
@@ -205,8 +226,17 @@ async fn manager_overview(state: State<'_, Arc<AppState>>) -> Result<OverviewDto
         endpoint,
         model_path,
         context,
-        gpu_name: gpu.map(|g| g.name.clone()).unwrap_or_else(|| "CPU".into()),
-        vram_mb: gpu.map(|g| g.vram_mb).unwrap_or(0),
+        gpus: hw
+            .gpus
+            .iter()
+            .map(|g| GpuDto {
+                name: g.name.clone(),
+                vram_mb: g.vram_mb,
+                vram_used_mb: g.vram_used_mb,
+                usage_pct: g.usage_pct,
+                model: g.hosted_model.clone(),
+            })
+            .collect(),
         ram_total_mb: hw.memory.total_mb,
         ram_used_mb: ram_used,
         slot_state: slot.state.to_string(),

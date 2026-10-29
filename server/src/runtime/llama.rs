@@ -84,6 +84,7 @@ mod tests {
             gpus: vec![GpuInfo {
                 name: "Test GPU".into(),
                 vram_mb: 8192,
+                ..GpuInfo::default()
             }],
             memory: MemoryInfo::default(),
             cpu_threads: 8,

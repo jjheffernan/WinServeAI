@@ -299,6 +299,10 @@ impl ServerManager {
         self.status
     }
 
+    pub fn llama_pid(&self) -> Option<u32> {
+        self.child.as_ref().map(|child| child.pid)
+    }
+
     pub fn openai_base(&self) -> String {
         self.config.openai_v1_url()
     }

@@ -17,21 +17,26 @@
       * {
         box-sizing: border-box;
       }
+      html {
+        overflow-x: clip;
+      }
       body {
         margin: 0;
+        min-height: 100vh;
         background: var(--bg);
         color: var(--text);
+        overflow-x: clip;
       }
       main {
-        max-width: 56rem;
-        margin: 0 auto;
-        padding: 1.25rem 1.25rem 1.75rem;
+        width: 100%;
+        margin: 0;
+        padding: 1rem 1rem 1.5rem;
       }
       .steps { margin: 0.4rem 0 0; padding-left: 1.2rem; }
       .steps li.done { color: #4ade80; }
       .overview {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
         gap: 0.6rem;
         margin-bottom: 1rem;
       }
@@ -40,10 +45,16 @@
         border: 1px solid #1e3a2f;
         border-radius: 8px;
         padding: 0.65rem 0.75rem;
+        min-width: 0;
         min-height: 4.6rem;
       }
-      .card .k { color: #8b98a8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
-      .card .v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 1.05rem; margin-top: 0.25rem; }
+      .card .k { color: #8b98a8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+      .card .v {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 1.05rem;
+        margin-top: 0.25rem;
+        overflow-wrap: anywhere;
+      }
       .card .s { color: #8b98a8; font-size: 0.75rem; margin-top: 0.2rem; }
       .bar { display: block; height: 0.45rem; background: #1a2e24; border-radius: 99px; margin-top: 0.45rem; overflow: hidden; }
       .bar > span { display: block; height: 100%; background: #3dd68c; }
@@ -172,6 +183,17 @@
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
+        min-width: 0;
+      }
+      .model-line {
+        display: flex;
+        gap: 0.5rem;
+        min-width: 0;
+      }
+      .model-line input {
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 100%;
       }
       button {
         background: #1a56db;
@@ -338,14 +360,13 @@
         <form id="settings-form" class="form">
           <label>
             <span>Model</span>
-            <div class="row">
+            <div class="model-line">
               <input
                 id="set-model"
                 name="modelPath"
                 type="text"
                 autocomplete="off"
                 placeholder="Path to a local .gguf"
-                style="flex: 1; min-width: 12rem"
               />
               <button id="btn-browse-model" class="secondary" type="button">
                 Browse…

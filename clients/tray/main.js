@@ -137,6 +137,29 @@ function card(label, value, sub, pct) {
   return el;
 }
 
+function modelFileName(path) {
+  return (path || "").split(/[/\\]/).pop() || "";
+}
+
+function gpuCards(ov) {
+  const list = ov.gpus || [];
+  if (!list.length) {
+    const hosted = ov.status === "Ready" ? modelFileName(ov.modelPath) : "";
+    return [card("CPU", "CPU", hosted ? `${hosted} on CPU` : "no discrete VRAM")];
+  }
+  return list.map((g) => {
+    const name = g.name || "GPU";
+    const mem = g.vramMb
+      ? g.usagePct == null
+        ? `${g.vramMb} MB`
+        : `${g.vramUsedMb} / ${g.vramMb} MB`
+      : "no discrete VRAM";
+    const sub = g.model ? `${g.model} · ${mem}` : mem;
+    if (g.usagePct == null) return card(name, name, sub);
+    return card(name, `${g.usagePct}%`, sub, g.usagePct);
+  });
+}
+
 async function paintOverview() {
   const root = document.getElementById("overview");
   let ov;
@@ -148,11 +171,11 @@ async function paintOverview() {
   }
   const ramPct = ov.ramTotalMb ? (ov.ramUsedMb / ov.ramTotalMb) * 100 : 0;
   const ctxPct = ov.contextSize ? (ov.contextUsed / ov.contextSize) * 100 : 0;
-  const model = (ov.modelPath || "").split(/[/\\]/).pop() || "no model";
+  const model = modelFileName(ov.modelPath) || "no model";
   const login = ov.apiKeySet ? "API key set" : "No key on this PC";
   root.replaceChildren(
     card("Model state", ov.status === "Ready" ? ov.slotState : ov.status, model),
-    card("GPU", ov.gpuName || "CPU", ov.vramMb ? `${ov.vramMb} MB` : "no discrete VRAM"),
+    ...gpuCards(ov),
     card("Memory", `${ov.ramUsedMb} / ${ov.ramTotalMb} MB`, "", ramPct),
     card("Context", `${ov.contextUsed} / ${ov.contextSize}`, `${ov.promptTokens} prompt · ${ov.outputTokens} out`, ctxPct),
     card("Address", ov.endpoint || "…", login),

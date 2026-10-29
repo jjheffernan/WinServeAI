@@ -11,6 +11,7 @@ Cross-cutting suites:
 | `server/tests/cli_exit_codes.rs` | CLI exit codes without resident/GGUF |
 | `tests/windows/a2-smoke.ps1` | A2 wrapper → `scripts/smoke-openai.ps1` (**operator + GGUF**) |
 | `tests/windows/orphan-quit.ps1` | Manager-kill leaves no `llama-server` |
+| `tests/windows/launch-guide.md` | Sandbox install checklist (setup.exe + one `.gguf`) |
 | `tests/windows/install-ready.ps1` | Install → Ready operator checklist |
 | `tests/windows/tray-quit.ps1` | Tray singleton + CLI attach; Quit orphan proof manual |
 

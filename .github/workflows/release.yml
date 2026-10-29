@@ -1,0 +1,95 @@
+# Publish a GitHub release when an annotated tag is pushed.
+# Stable vX.Y.Z must be on main. Preview vX.Y.Z-rc.N must be on dev.
+# This job fetches the Vulkan llama-server pin. Day-to-day CI does not.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check tag, version, and branch
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          python scripts/check_release_tag.py $tag
+          $kind = git cat-file -t $tag
+          if ($kind -ne "tag") { throw "$tag must be an annotated tag" }
+          git fetch origin main dev
+          if ($LASTEXITCODE -ne 0) { throw "could not fetch main and dev" }
+          if ($tag -match "-rc\.") {
+            git merge-base --is-ancestor HEAD origin/dev
+            if ($LASTEXITCODE -ne 0) { throw "preview tags must point at dev" }
+          } else {
+            git merge-base --is-ancestor HEAD origin/main
+            if ($LASTEXITCODE -ne 0) { throw "stable tags must point at main" }
+          }
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Fetch Vulkan llama-server pin
+        shell: pwsh
+        run: |
+          $pin = (Get-Content bin/VERSION -Raw).Trim()
+          .\scripts\fetch-llama-pin.ps1 -Pin $pin -Variant vulkan
+          if (-not (Test-Path bin\llama-server.exe)) { throw "fetch did not produce bin\llama-server.exe" }
+
+      - name: Build release binaries
+        run: |
+          cargo build -p winserve --release
+          cargo build -p winserve-tray --release
+
+      - name: Stage payload
+        shell: pwsh
+        run: .\scripts\stage-release.ps1 -Configuration release -SkipBuild -RequireLlama -OutDir installer\inno\files
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Compile installer
+        shell: pwsh
+        run: |
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe not found" }
+          & $iscc installer\inno\WinServeAI.iss
+          $setup = Get-ChildItem dist\WinServeAI-*-setup.exe | Select-Object -First 1
+          if (-not $setup) { throw "setup.exe missing" }
+          $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower()
+          Set-Content dist\SHA256SUMS "$hash  $($setup.Name)"
+          $pin = (Get-Content bin/VERSION -Raw).Trim()
+          Set-Content dist\NOTES.md "llama.cpp pin: $pin (Vulkan)`n`n$hash  $($setup.Name)"
+          Set-Content dist\setup-path.txt $setup.FullName
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $setup = Get-Content dist\setup-path.txt
+          $ghArgs = @(
+            "release", "create", $tag, $setup, "dist/SHA256SUMS",
+            "--title", $tag, "--notes-file", "dist/NOTES.md"
+          )
+          if ($tag -match "-rc\.") { $ghArgs += "--prerelease" }
+          gh @ghArgs

@@ -10,8 +10,8 @@ See [architecture.md](architecture.md). Deep dives: [research/02-llama-readiness
 
 | Branch | Role |
 | --- | --- |
-| **`main`** | **Releases only.** Stable tags, release candidates, and release artifacts ship from here. Do not land day-to-day work directly on `main`. |
-| **`dev`** | **Default working branch.** Experimental / preview integration. Feature branches PR into `dev`. |
+| **`main`** | **Releases only.** Stable tags `vX.Y.Z` ship from here. Do not land day-to-day work directly on `main`. |
+| **`dev`** | **Default working branch.** Feature branches PR into `dev`. Preview tags `vX.Y.Z-rc.N` are cut here. |
 
 ```text
 feature/* ──PR──► dev ──release PR──► main ──tag──► stable
@@ -35,8 +35,8 @@ main
 
 | Channel | Branch | When | Pin | Support |
 | --- | --- | --- | --- | --- |
-| **preview** | `dev` (or RC tag) | Ongoing integration / release candidate | Known-good `b####` (may move on `dev`) | Best-effort / soak |
-| **stable** | `main` | After checklist + release PR | Fixed `b####`, validated | Supported |
+| **preview** | `dev`, tag `vX.Y.Z-rc.N` | Soak before a stable tag | Same `b####` as `bin/VERSION` | Best-effort |
+| **stable** | `main`, tag `vX.Y.Z` | About monthly, after the checklist | Fixed `b####`, validated | Supported |
 
 Stable never ships an unrecorded llama-server build. Preview builds may track `dev` tip.
 
@@ -111,9 +111,9 @@ Single crate only — package name **`winserve`** (`server/`). There are no `pac
 6. **Config** — migration notes from previous stable when YAML schema changed (when applicable).
 7. **Notices** — see below; present in installer and any zip/portable artifact.
 8. **Changelog** — winserve version + llama.cpp `b####` + notable changes.
-9. **Tag and publish** — see Tags.
+9. **Tag and publish** — annotated tag, then push it. [`.github/workflows/release.yml`](../.github/workflows/release.yml) fetches the Vulkan pin, builds the setup, and attaches the setup plus `SHA256SUMS`.
 
-Preview uses the same checklist except hardware matrix may be partial. Nightly may skip installer/matrix.
+Preview uses the same checklist except the hardware matrix may be partial.
 
 ---
 
@@ -138,22 +138,29 @@ Install layout reference: [installer/README.md](../installer/README.md), [bin/RE
 
 ## Tags
 
-| Channel | Tag pattern | Example |
-| --- | --- | --- |
-| stable | `vX.Y.Z` | `v0.1.0` |
-| preview | `vX.Y.Z-rc.N` or `vX.Y.Z-preview.N` | `v0.1.0-rc.1` |
-| nightly | `nightly-YYYYMMDD` (optional) | `nightly-20260704` |
+Stable tags are about monthly, on the 1st. [`.github/workflows/release-window.yml`](../.github/workflows/release-window.yml) opens a release-window issue then. GitHub runs that schedule from `main`. The issue is the reminder. A person still pushes the tag after the checklist. There is no weekly tag and no nightly tag.
 
-- Tags version **winserve** only (the `app` crate). Do not invent per-package tags.
-- Release body **must** list the llama.cpp pin (`b####` and commit if known).
-- One tag ↔ one winserve version ↔ one documented `bin/` pin.
+| Channel | Where | Tag | Example |
+| --- | --- | --- | --- |
+| stable | commit on `main` | `vX.Y.Z` | `v0.1.0` |
+| preview | commit on `dev` | `vX.Y.Z-rc.N` | `v0.1.0-rc.1` |
+
+- The tag versions **winserve** (`server/`). Do not invent per-package tags.
+- `vX.Y.Z` must match `Cargo.toml`, `server/Cargo.toml`, the tray package, `tauri.conf.json`, and `MyAppVersion`.
+- One tag ↔ one winserve version ↔ the `b####` in `bin/VERSION`.
+- Tags are annotated. Pushing the tag runs the release workflow.
 
 ```text
-# after checklist
-git tag -a vX.Y.Z -m "vX.Y.Z (llama.cpp b####)"
-git push origin vX.Y.Z
-# attach installer + zip + checksums on the GitHub release
+# preview, on dev
+git tag -a v0.1.0-rc.1 -m "v0.1.0-rc.1 (llama.cpp b9866)"
+git push origin v0.1.0-rc.1
+
+# stable, on main, after the release PR
+git tag -a v0.1.0 -m "v0.1.0 (llama.cpp b9866)"
+git push origin v0.1.0
 ```
+
+`python3 scripts/check_release_tag.py` checks the version files. Pass the tag name to check the name too.
 
 ## Sources / See also
 

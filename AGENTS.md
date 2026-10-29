@@ -21,8 +21,8 @@ Read `docs/architecture.md` and `docs/build-spec.md` before structural changes.
 
 | Branch | Purpose |
 | --- | --- |
-| **`dev`** | Default working branch — experimental / preview. Land work here. |
-| **`main`** | Releases only. Do not commit day-to-day changes on `main`. |
+| **`dev`** | Default working branch — experimental / preview. Land work here. Preview tags `vX.Y.Z-rc.N` are cut here. |
+| **`main`** | Releases only — stable tags `vX.Y.Z`. Do not commit day-to-day changes on `main`. |
 
 Open PRs against **`dev`**. Release promotions are PRs from `dev` → `main`.
 

@@ -1,0 +1,49 @@
+# On the 1st of each month, open a release-window issue.
+# GitHub runs scheduled workflows from the default branch (main).
+# The issue is the reminder. A person still pushes the tag.
+
+name: release-window
+
+on:
+  schedule:
+    - cron: "0 15 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Open the release window
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          info=$(python3 scripts/check_release_tag.py)
+          open=$(gh issue list --state open --search "in:title Release window" --json number --jq length)
+          if [ "$open" != "0" ]; then
+            echo "A release window issue is already open."
+            exit 0
+          fi
+          month=$(date -u +%Y-%m)
+          body="$info
+
+          Monthly stable tag. Cut it from main after the checklist in docs/release-process.md.
+
+          - [ ] dev is promoted to main
+          - [ ] python3 scripts/check_release_tag.py passes
+          - [ ] The tagged installer includes llama-server.exe
+          - [ ] Stop frees the GPU (no orphan llama-server)
+          - [ ] An OpenAI client reaches /v1 with a local GGUF
+
+          Preview tag, on dev: git tag -a vX.Y.Z-rc.N -m \"vX.Y.Z-rc.N (llama.cpp b####)\" && git push origin vX.Y.Z-rc.N
+
+          Stable tag, on main: git tag -a vX.Y.Z -m \"vX.Y.Z (llama.cpp b####)\" && git push origin vX.Y.Z
+
+          Pushing the tag runs the release workflow. It fetches the Vulkan pin and attaches the setup."
+          gh issue create --title "Release window $month" --body "$body"

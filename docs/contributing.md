@@ -21,8 +21,8 @@ Dev setup and commands: [`development.md`](development.md).
 
 | Branch | Purpose |
 | --- | --- |
-| **`dev`** | Default working branch — experimental / preview. Open PRs here. |
-| **`main`** | Releases only — stable tags and release artifacts. |
+| **`dev`** | Default working branch — experimental / preview. Open PRs here. Preview tags `vX.Y.Z-rc.N` are cut here. |
+| **`main`** | Releases only — stable tags `vX.Y.Z` and their installers. |
 
 ```bash
 git checkout dev

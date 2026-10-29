@@ -14,8 +14,8 @@ named-pipe IPC. First-run model path: [first-run.md](first-run.md).
 
 | Branch | Purpose |
 | --- | --- |
-| **`dev`** | Default working branch — experimental / preview integration |
-| **`main`** | Releases only — do not develop here |
+| **`dev`** | Default working branch — experimental / preview integration. Preview tags `vX.Y.Z-rc.N` are cut here. |
+| **`main`** | Releases only — stable tags `vX.Y.Z`. Do not develop here. |
 
 ```bash
 git checkout dev

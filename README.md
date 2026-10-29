@@ -27,8 +27,8 @@ docs/          architecture, prior-art, build-spec
 
 | Branch | Purpose |
 | --- | --- |
-| **`dev`** | Default working branch — experimental / preview |
-| **`main`** | Releases only — stable tags and release artifacts |
+| **`dev`** | Default working branch — experimental / preview. Preview tags `vX.Y.Z-rc.N` are cut here. |
+| **`main`** | Releases only — stable tags `vX.Y.Z` and their installers |
 
 Day-to-day work and PRs go to **`dev`**. Promote `dev` → `main` only for releases (see [docs/release-process.md](docs/release-process.md)).
 

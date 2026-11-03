@@ -2,45 +2,61 @@
 
 > **Readiness:** api 3.2/5 (`mvp-partial`), server-health 3.8/5 (`mvp-ready`) — details in [readiness/api.md](./readiness/api.md), [readiness/server-health.md](./readiness/server-health.md)
 
-WinServeAI is an **appliance wrapper** around `llama-server.exe`. It does not implement an OpenAI HTTP stack of its own. Clients talk to **llama-server’s OpenAI-compatible routes** at `/v1` once `ServerManager` reports READY.
+WinServeAI is an **appliance wrapper** around `llama-server.exe`. It does not implement an HTTP API stack of its own. Clients talk to **llama-server** once `ServerManager` reports READY. Common completion wire formats (chat, Responses, Anthropic Messages, legacy completions) are all llama-server routes on one process.
 
 ```text
-Client  →  http://{host}:{port}/v1/...   (llama-server)
-App/CLI →  ServerManager                 (start / stop / wait ready)
+Client  →  http://{host}:{port}/…   (llama-server)
+App/CLI →  ServerManager            (start / stop / wait ready)
 ```
 
-The server does not render a page. Frontends are separate clients. See [clients/README.md](../clients/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>`. One backend only. No request proxy.
+The server does not render a page. Frontends are separate clients. See [clients/README.md](../clients/README.md). When `server.api_key` is set, llama-server expects `Authorization: Bearer <key>` (OpenAI clients) or `x-api-key` / Bearer (Anthropic-style clients). One backend only. No request proxy.
 
 See [architecture.md](./architecture.md) for the full process boundary.
 
-## Base URL
+## Base URLs
 
 Derived from YAML (`server.host`, `server.port`):
 
-```text
-http://{server.host}:{server.port}/v1
-```
+| Client style | Base URL | Notes |
+| --- | --- | --- |
+| **OpenAI** | `http://{host}:{port}/v1` | SDKs append `/chat/completions`, `/models`, … |
+| **Anthropic** | `http://{host}:{port}` | SDKs append `/v1/messages` themselves — do **not** put `/v1` on this base |
 
 Default (`config/default.yaml`):
 
 ```text
-http://127.0.0.1:8080/v1
+OpenAI:    http://127.0.0.1:8080/v1
+Anthropic: http://127.0.0.1:8080
 ```
+
+If an Anthropic client 404s on `/v1/v1/messages`, the base was set to `…/v1` by mistake — drop the trailing `/v1`.
 
 Helpers in `server/src/api/` only format these URLs for the manager and CLI. They are not an HTTP server.
 
 ## Endpoints
 
-Served by **llama-server** (passthrough). Exact behavior follows the pinned llama.cpp release.
+Served by **llama-server** (passthrough). Exact behavior follows the pinned llama.cpp release (**b9866**).
+
+### Completion methods (supported)
+
+| Method | Path | Client / OpenClaw `api` | Notes |
+| --- | --- | --- | --- |
+| `POST` | `/v1/chat/completions` | OpenAI SDKs · `openai-completions` | Primary chat path |
+| `POST` | `/v1/responses` | OpenAI Responses · `openai-responses` | Translated to chat internally; use OpenAI base (`…/v1`) |
+| `POST` | `/v1/messages` | Anthropic SDKs · `anthropic-messages` | Use Anthropic base (`…` without `/v1`) |
+| `POST` | `/v1/completions` | Legacy OpenAI text | Raw `prompt` string; no chat template |
+
+`scripts/smoke-openai.ps1` hits all four after `GET /v1/models` is ready (unless `-SkipChat`).
+
+### Related (not completions)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/v1/models` | List loaded model(s); **readiness probe** |
-| `POST` | `/v1/chat/completions` | Chat completions (primary client path) |
-| `POST` | `/v1/completions` | Legacy text completions |
+| `POST` | `/v1/messages/count_tokens` | Anthropic token count (no generation) |
 | `POST` | `/v1/embeddings` | Embeddings (when the build/model supports it) |
 
-llama-server may also expose non-OpenAI routes (for example `GET /health`). WinServeAI does not require clients to use them.
+llama-server may also expose `GET /health` and other native routes. WinServeAI does not require clients to use them.
 
 ## Readiness
 
@@ -83,7 +99,7 @@ Point any OpenAI-compatible client at the base URL. No API key is required for t
 curl http://127.0.0.1:8080/v1/models
 ```
 
-### curl — chat completion
+### curl — OpenAI chat completion
 
 ```bash
 curl http://127.0.0.1:8080/v1/chat/completions \
@@ -91,6 +107,42 @@ curl http://127.0.0.1:8080/v1/chat/completions \
   -d '{
     "model": "local",
     "messages": [{"role": "user", "content": "Hello"}],
+    "max_tokens": 64
+  }'
+```
+
+### curl — OpenAI Responses
+
+```bash
+curl http://127.0.0.1:8080/v1/responses \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "local",
+    "input": "Hello",
+    "max_output_tokens": 64
+  }'
+```
+
+### curl — Anthropic Messages
+
+```bash
+curl http://127.0.0.1:8080/v1/messages \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "local",
+    "max_tokens": 64,
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'
+```
+
+### curl — legacy OpenAI completions
+
+```bash
+curl http://127.0.0.1:8080/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "local",
+    "prompt": "Hello",
     "max_tokens": 64
   }'
 ```
@@ -138,6 +190,31 @@ const resp = await client.chat.completions.create({
 console.log(resp.choices[0].message.content);
 ```
 
+### OpenClaw (custom provider)
+
+Same Ready process; pick one `api` per provider entry. Smoke all completion routes with `scripts/smoke-openai.ps1`.
+
+| OpenClaw `api` | `baseUrl` | Route |
+| --- | --- | --- |
+| `openai-completions` | `http://127.0.0.1:8080/v1` | `/v1/chat/completions` |
+| `openai-responses` | `http://127.0.0.1:8080/v1` | `/v1/responses` |
+| `anthropic-messages` | `http://127.0.0.1:8080` | `/v1/messages` |
+
+```json5
+{
+  models: {
+    providers: {
+      winserve: {
+        baseUrl: "http://127.0.0.1:8080/v1", // or …:8080 for anthropic-messages
+        apiKey: "local",
+        api: "openai-completions", // or openai-responses | anthropic-messages
+        models: [{ id: "local", name: "WinServeAI", contextWindow: 32768, maxTokens: 8192 }]
+      }
+    }
+  }
+}
+```
+
 ## Out of scope
 
 WinServeAI does not ship:
@@ -146,6 +223,8 @@ WinServeAI does not ship:
 - Model download / registry APIs
 - Auth, multi-tenant gateways, or metrics dashboards
 - Multi-backend or plugin endpoints
+- A separate multi-protocol gateway — completion methods are llama-server routes on one process
+- Guarantees that every strict Responses streaming client (e.g. some AI SDK versions) accepts upstream SSE shape — prefer chat or Anthropic if a client rejects `/v1/responses` streams
 
 Those belong to external clients and later phases, not this appliance’s HTTP surface.
 

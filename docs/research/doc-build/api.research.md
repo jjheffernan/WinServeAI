@@ -28,7 +28,10 @@ Document the routes clients need for MVP smoke and OpenAI SDK usage:
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/v1/models` | List loaded model(s); **readiness probe** |
-| `POST` | `/v1/chat/completions` | Chat (primary client path) |
+| `POST` | `/v1/chat/completions` | OpenAI chat |
+| `POST` | `/v1/responses` | OpenAI Responses (pin b9866+) |
+| `POST` | `/v1/messages` | Anthropic Messages (pin b9866+) |
+| `POST` | `/v1/completions` | Legacy OpenAI text |
 | `POST` | `/v1/completions` | Legacy text completions |
 | `POST` | `/v1/embeddings` | Embeddings (when model/build supports it) |
 

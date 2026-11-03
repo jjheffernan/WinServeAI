@@ -69,18 +69,21 @@ Invoke-RestMethod http://127.0.0.1:8080/v1/models
 
 Pass: HTTP 200 and the model id is the `.gguf` path.
 
-Then one completion:
+Then the common completion routes (or run `.\scripts\smoke-openai.ps1`):
 
 ```powershell
-$body = @{
-  model = (Invoke-RestMethod http://127.0.0.1:8080/v1/models).data[0].id
-  messages = @(@{ role = "user"; content = "Say hi" })
-  max_tokens = 16
-} | ConvertTo-Json -Depth 5
-Invoke-RestMethod http://127.0.0.1:8080/v1/chat/completions -Method Post -Body $body -ContentType "application/json"
+$model = (Invoke-RestMethod http://127.0.0.1:8080/v1/models).data[0].id
+$oai = @{ model = $model; messages = @(@{ role = "user"; content = "Say hi" }); max_tokens = 16 } | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://127.0.0.1:8080/v1/chat/completions -Method Post -Body $oai -ContentType "application/json"
+$rsp = @{ model = $model; input = "Say hi"; max_output_tokens = 16 } | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://127.0.0.1:8080/v1/responses -Method Post -Body $rsp -ContentType "application/json"
+$ant = @{ model = $model; max_tokens = 16; messages = @(@{ role = "user"; content = "Say hi" }) } | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://127.0.0.1:8080/v1/messages -Method Post -Body $ant -ContentType "application/json"
+$leg = @{ model = $model; prompt = "Say hi"; max_tokens = 16 } | ConvertTo-Json -Depth 5
+Invoke-RestMethod http://127.0.0.1:8080/v1/completions -Method Post -Body $leg -ContentType "application/json"
 ```
 
-Pass: a short reply. If this returns 500 and the llama log contains `out of memory` or `Compute error` while the badge still says Ready, write `GPU load failed but Ready`. That is a known hole.
+Pass: a short reply on each. If any returns 500 and the llama log contains `out of memory` or `Compute error` while the badge still says Ready, write `GPU load failed but Ready`. That is a known hole. If `/v1/messages` or `/v1/responses` is 404, the llama.cpp pin is too old.
 
 ## 5. The window while it is serving
 

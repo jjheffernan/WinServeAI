@@ -11,11 +11,11 @@
 
 | Dimension | Score | Evidence |
 | --- | --- | --- |
-| Design | 3/5 | Passthrough-only by design: clients hit llama-server `/v1` directly (`server/src/api/mod.rs`, `openai.rs`). Matches architecture — no proxy, no chat stack. |
-| Implementation | 3/5 | `chat_completions_url` and `models_url` format URLs from `Config` (`server/src/api/openai.rs`). Complete for intended scope; not an HTTP server or proxy. Manager uses `Config::openai_v1_url` more than these helpers. |
-| Tests | 3/5 | Unit tests for URL helpers in `server/src/api/openai.rs` (sample host/port composition). |
-| Docs | 4/5 | `docs/api.md` documents base URL, endpoints, readiness, and that helpers are not a server. |
-| Windows readiness | 3/5 | Pure string formatting; works on Windows. |
+| Design | 3/5 | Passthrough-only by design: clients hit llama-server completion routes directly (`server/src/api/mod.rs`, `openai.rs`). Matches architecture — no proxy, no chat stack. |
+| Implementation | 3/5 | URL helpers for models, chat, responses, legacy completions, Anthropic messages (`server/src/api/openai.rs`). Complete for intended scope; not an HTTP server or proxy. Manager uses `Config::openai_v1_url` / `base_url` more than these helpers. |
+| Tests | 3/5 | Unit tests for URL helpers in `server/src/api/openai.rs` (four completion routes + models; no `/v1/v1`). |
+| Docs | 4/5 | `docs/api.md` documents both bases, all common completion methods, OpenClaw `api` map, readiness, and that helpers are not a server. |
+| Windows readiness | 3/5 | Pure string formatting; works on Windows. Smoke: `scripts/smoke-openai.ps1` hits chat, responses, messages, completions. |
 
 ## Gaps
 

@@ -303,7 +303,7 @@ btnCopy.onclick = async () => {
     const conn = await invoke("manager_connection");
     await navigator.clipboard.writeText(conn.card);
     settingsNote.className = "ok";
-    settingsNote.textContent = "Copied Base URL, API key, and model id.";
+    settingsNote.textContent = "Copied bases + completion API routes.";
   } catch (e) {
     errorEl.textContent = `copy failed: ${e}`;
   }

@@ -1,5 +1,6 @@
-# Windows OpenAI smoke for WinServeAI (A2).
-# Polls GET /v1/models until 200, optionally POSTs /v1/chat/completions.
+# Windows /v1 smoke for WinServeAI (A2).
+# Polls GET /v1/models until 200, optionally POSTs the common completion routes:
+#   /v1/chat/completions, /v1/responses, /v1/messages, /v1/completions
 #
 # Requires: bin\llama-server.exe from llama.cpp pin b9866 (see bin\README.md),
 #           real GGUF at model.path, Windows host. Default timeout 120s.
@@ -7,10 +8,10 @@
 #       scripts\stop.ps1 as the A2 pass path (global force-kill).
 #
 # Exit codes:
-#   0  ready (and optional chat ok)
+#   0  ready (and optional completions ok)
 #   1  preconditions failed (binary, config, model.path, port busy with -Start)
 #   2  readiness timeout or non-200 after wait
-#   3  chat completion failed (only when chat is attempted)
+#   3  a completion route failed (only when completions attempted)
 #   4  failed to start winserve (when -Start is used)
 #
 # Usage (repo root or any cwd):
@@ -200,7 +201,25 @@ if (-not $readyBody) {
 Write-Ok "GET /v1/models -> 200"
 Write-Host $readyBody
 
-# --- Optional chat ---
+# --- Optional common completion routes ---
+
+function Invoke-CompletionSmoke([string]$Path, [hashtable]$Body, [string]$Hint = "") {
+    $uri = "$base$Path"
+    $json = $Body | ConvertTo-Json -Depth 5
+    try {
+        $resp = Invoke-WebRequest -Uri $uri -Method POST -Body $json `
+            -ContentType "application/json" -UseBasicParsing -TimeoutSec 120
+        if ($resp.StatusCode -ne 200) {
+            $extra = if ($Hint) { " ($Hint)" } else { "" }
+            Write-Fail 3 "POST $Path -> $($resp.StatusCode)$extra"
+        }
+        Write-Ok "POST $Path -> 200"
+        Write-Host $resp.Content
+    } catch {
+        $extra = if ($Hint) { " ($Hint)" } else { "" }
+        Write-Fail 3 "POST $Path failed$extra`: $_"
+    }
+}
 
 if (-not $SkipChat) {
     $modelId = "local"
@@ -209,7 +228,7 @@ if (-not $SkipChat) {
         if ($parsed.data -and $parsed.data.Count -gt 0 -and $parsed.data[0].id) {
             $modelId = [string]$parsed.data[0].id
         } else {
-            Write-Host "WARN: models list empty; skipping chat completion"
+            Write-Host "WARN: models list empty; skipping completions"
             Write-Ok "smoke complete (models only)"
             if ($script:StartedProc -and -not $script:StartedProc.HasExited) {
                 Write-Host "NOTE: background winserve still running (pid=$($script:StartedProc.Id)); Stop-Process -Id $($script:StartedProc.Id)"
@@ -220,23 +239,20 @@ if (-not $SkipChat) {
         Write-Host "WARN: could not parse models JSON; using model=$modelId"
     }
 
-    $chatUrl = "$base/v1/chat/completions"
-    $body = @{
-        model      = $modelId
-        messages   = @(@{ role = "user"; content = "Say hi in one word." })
-        max_tokens = 16
-    } | ConvertTo-Json -Depth 5
-
-    try {
-        $chatResp = Invoke-WebRequest -Uri $chatUrl -Method POST -Body $body `
-            -ContentType "application/json" -UseBasicParsing -TimeoutSec 120
-        if ($chatResp.StatusCode -ne 200) {
-            Write-Fail 3 "POST /v1/chat/completions -> $($chatResp.StatusCode)"
-        }
-        Write-Ok "POST /v1/chat/completions -> 200"
-        Write-Host $chatResp.Content
-    } catch {
-        Write-Fail 3 "POST /v1/chat/completions failed: $_"
+    $pinHint = "need llama.cpp pin b9866+; see bin\README.md"
+    Invoke-CompletionSmoke "/v1/chat/completions" @{
+        model = $modelId; max_tokens = 16
+        messages = @(@{ role = "user"; content = "Say hi in one word." })
+    }
+    Invoke-CompletionSmoke "/v1/responses" @{
+        model = $modelId; input = "Say hi in one word."; max_output_tokens = 16
+    } $pinHint
+    Invoke-CompletionSmoke "/v1/messages" @{
+        model = $modelId; max_tokens = 16
+        messages = @(@{ role = "user"; content = "Say hi in one word." })
+    } $pinHint
+    Invoke-CompletionSmoke "/v1/completions" @{
+        model = $modelId; prompt = "Say hi in one word."; max_tokens = 16
     }
 }
 

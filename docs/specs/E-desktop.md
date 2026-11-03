@@ -44,7 +44,7 @@ Desktop UI (webview / tray)
 
 1. Webview **never** calls process/llama internals or HTTP readiness as source of truth.
 2. Show **Starting** until manager reports **Ready** (process alive ≠ Ready).
-3. Display OpenAI base URL from manager (`http://{host}:{port}/v1`) for copy-paste into external clients.
+3. Display OpenAI base (`http://{host}:{port}/v1`) and Anthropic base (`http://{host}:{port}`) for copy-paste into external clients.
 4. Optional: hardware inventory via `hardware()` — display only, no layer math.
 5. On app quit: call `stop()`; Job Object remains the backstop if force-killed ([backend.md](../backend.md)).
 

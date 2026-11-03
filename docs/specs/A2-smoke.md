@@ -1,7 +1,7 @@
 # A2 — Operator smoke path
 
 **Milestone:** [PLAN.md](../PLAN.md) A2  
-**Goal:** On Windows, `winserve start` → `GET /v1/models` **200** → OpenAI-compatible client against `/v1`, with clean stop and no orphan `llama-server`.
+**Goal:** On Windows, `winserve start` → `GET /v1/models` **200** → common completion routes (chat, Responses, Anthropic Messages, legacy completions) against llama-server, with clean stop and no orphan `llama-server`.
 
 This is the Phase 1 exit proof with a **real** pinned binary and GGUF. Unit tests alone do not close A2.
 
@@ -14,7 +14,10 @@ This is the Phase 1 exit proof with a **real** pinned binary and GGUF. Unit test
 | Model path exists | **Yes** (Windows smoke) | `smoke-openai.ps1` fails if `model.path` missing on disk |
 | Start manager | **Partial** | `-Start` background start, **or** operator runs `cargo run -p winserve -- start` |
 | `GET /v1/models` 200 | **Yes** (Windows, server up) | `scripts/smoke-openai.ps1` polls until 200 or timeout |
-| `POST /v1/chat/completions` | **Yes** (optional) | Same script when models list non-empty; `-SkipChat` to skip |
+| `POST /v1/chat/completions` | **Yes** (optional) | Same script when models list non-empty; `-SkipChat` skips all four |
+| `POST /v1/responses` | **Yes** (optional) | OpenAI Responses API on pin b9866+ |
+| `POST /v1/messages` | **Yes** (optional) | Anthropic Messages on pin b9866+ |
+| `POST /v1/completions` | **Yes** (optional) | Legacy OpenAI text completions |
 | CTRL_BREAK / graceful stop | **Manual** | Ctrl+C on foreground `start` (manager sends CTRL_BREAK to child) |
 | Orphan check after manager kill | **Manual** | Task Manager / `Get-Process llama-server` after force-kill of winserve |
 | Pin **b9866** download | **Manual** | Operator places binary per [bin/README.md](../../bin/README.md) |
@@ -76,7 +79,7 @@ Terminal 2:
 .\scripts\smoke-openai.ps1 -Start
 ```
 
-Script exit codes: `0` ok, `1` preconditions, `2` readiness timeout, `3` chat failed, `4` start failed.
+Script exit codes: `0` ok, `1` preconditions, `2` readiness timeout, `3` any completion route failed, `4` start failed.
 
 On **success**, background `winserve` stays up (script prints PID + `Stop-Process` hint). On **failure**, the script force-stops the process it started so a bad smoke does not leave an orphan manager. Prefer Option A for CTRL_BREAK / Ctrl+C proof.
 
@@ -88,9 +91,21 @@ curl http://127.0.0.1:8080/v1/models
 curl http://127.0.0.1:8080/v1/chat/completions `
   -H "Content-Type: application/json" `
   -d "{\"model\":\"local\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":64}"
+
+curl http://127.0.0.1:8080/v1/responses `
+  -H "Content-Type: application/json" `
+  -d "{\"model\":\"local\",\"input\":\"Hello\",\"max_output_tokens\":64}"
+
+curl http://127.0.0.1:8080/v1/messages `
+  -H "Content-Type: application/json" `
+  -d "{\"model\":\"local\",\"max_tokens\":64,\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}"
+
+curl http://127.0.0.1:8080/v1/completions `
+  -H "Content-Type: application/json" `
+  -d "{\"model\":\"local\",\"prompt\":\"Hello\",\"max_tokens\":64}"
 ```
 
-Use `id` from `/v1/models` as `model` if the client requires an exact match. More clients: [api.md](../api.md).
+Use `id` from `/v1/models` as `model` if the client requires an exact match. OpenAI base is `…/v1`; Anthropic base is `…` (no `/v1`). More clients: [api.md](../api.md).
 
 ## Stop (CTRL_BREAK path)
 

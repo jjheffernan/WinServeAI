@@ -291,6 +291,7 @@ async fn manager_endpoint(state: State<'_, Arc<AppState>>) -> Result<String, Str
 #[serde(rename_all = "camelCase")]
 struct ConnectionDto {
     url: String,
+    anthropic_base: String,
     api_key: String,
     model_id: String,
     card: String,
@@ -301,6 +302,7 @@ async fn manager_connection(state: State<'_, Arc<AppState>>) -> Result<Connectio
     let mgr = state.manager.lock().await;
     let cfg = mgr.config();
     let url = mgr.openai_base();
+    let anthropic_base = cfg.base_url();
     let api_key = cfg.server.api_key.clone();
     let model_id = model_file_name(&cfg.model.path.display().to_string());
     let key_line = if api_key.trim().is_empty() {
@@ -308,9 +310,18 @@ async fn manager_connection(state: State<'_, Arc<AppState>>) -> Result<Connectio
     } else {
         api_key.clone()
     };
-    let card = format!("Base URL: {url}\nAPI key: {key_line}\nModel: {model_id}");
+    // ponytail: one card lists every common completion wire format
+    let card = format!(
+        "OpenAI base: {url}\nAnthropic base: {anthropic_base}\nAPI key: {key_line}\nModel: {model_id}\n\n\
+Completion APIs (same process):\n\
+  openai-completions  → {url}/chat/completions\n\
+  openai-responses    → {url}/responses\n\
+  anthropic-messages  → {anthropic_base}/v1/messages\n\
+  legacy completions  → {url}/completions"
+    );
     Ok(ConnectionDto {
         url,
+        anthropic_base,
         api_key,
         model_id,
         card,

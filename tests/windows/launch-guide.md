@@ -61,7 +61,7 @@ Known hole: same as step 2. The line may disappear on the next poll.
 
 - [ ] Start again with the Python server stopped.
 - [ ] Wait until the badge says Ready. First load can take the whole 120 seconds.
-- [ ] Copy URL. It is `http://127.0.0.1:8080/v1`.
+- [ ] Copy connect. The clipboard has Base URL, API key, and model id. The URL is `http://127.0.0.1:8080/v1`.
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8080/v1/models

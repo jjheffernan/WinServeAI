@@ -65,6 +65,8 @@ pub struct ServerManager {
     child: Option<ChildProcess>,
     status: Status,
     last_exit: Option<i32>,
+    /// Last start/stop/crash sentence for the tray. Cleared on a successful Ready.
+    last_error: Option<String>,
     /// How long `start` waits for HTTP readiness (default 120s).
     ready_timeout: Duration,
 }
@@ -91,8 +93,28 @@ impl ServerManager {
             child: None,
             status: Status::Stopped,
             last_exit: None,
+            last_error: None,
             ready_timeout: Duration::from_secs(120),
         })
+    }
+
+    fn remember_error(&mut self, msg: String) {
+        self.last_error = Some(msg.clone());
+        self.logs.error(&msg);
+    }
+
+    pub fn last_error(&self) -> Option<&str> {
+        self.last_error.as_deref()
+    }
+
+    pub fn last_exit(&self) -> Option<i32> {
+        self.last_exit
+    }
+
+    /// Binary + argv the next start would use (same as CLI `print-cmd`). Secrets masked.
+    pub fn launch_command_line(&self) -> String {
+        let (program, args) = self.build_command();
+        format!("{} {}", program.display(), format_args_for_log(&args))
     }
 
     /// Override readiness wait (tests / controllable fake backends).
@@ -170,13 +192,18 @@ impl ServerManager {
         }
 
         self.status = Status::Starting;
+        self.last_error = None;
         self.detect_hardware();
-        self.config.validate()?;
+        if let Err(e) = self.config.validate() {
+            self.status = Status::Failed;
+            self.remember_error(e.to_string());
+            return Err(e.into());
+        }
 
         if !self.binary.exists() {
             self.status = Status::Failed;
             let msg = format!("llama-server not found at {}", self.binary.display());
-            self.logs.error(&msg);
+            self.remember_error(msg.clone());
             return Err(ManagerError::Other(msg));
         }
 
@@ -184,19 +211,19 @@ impl ServerManager {
             self.status = Status::Failed;
             let msg = "model.path is empty — set a local .gguf (docs/first-run.md / Settings Browse)"
                 .to_string();
-            self.logs.error(&msg);
+            self.remember_error(msg.clone());
             return Err(ManagerError::Other(msg));
         }
         if !self.config.model.path.exists() {
             self.status = Status::Failed;
             let msg = format!("model not found: {}", self.config.model.path.display());
-            self.logs.error(&msg);
+            self.remember_error(msg.clone());
             return Err(ManagerError::Other(msg));
         }
         if let Err(e) = gguf::require_gguf(&self.config.model.path) {
             self.status = Status::Failed;
             let msg = format!("model.path: {e}");
-            self.logs.error(&msg);
+            self.remember_error(msg.clone());
             return Err(ManagerError::Other(msg));
         }
 
@@ -206,7 +233,7 @@ impl ServerManager {
                 "port {}:{} is not available (in use or not bindable); stop the other process or change server.port",
                 self.config.server.host, self.config.server.port
             );
-            self.logs.error(&msg);
+            self.remember_error(msg.clone());
             return Err(ManagerError::Other(msg));
         }
 
@@ -228,7 +255,14 @@ impl ServerManager {
         });
 
         let workdir = program.parent().map(|p| p.to_path_buf());
-        let child = ChildProcess::spawn(program, args, workdir, tx).await?;
+        let child = match ChildProcess::spawn(program, args, workdir, tx).await {
+            Ok(child) => child,
+            Err(e) => {
+                self.status = Status::Failed;
+                self.remember_error(e.to_string());
+                return Err(e.into());
+            }
+        };
         self.logs.server(&format!("spawned pid={}", child.pid));
         self.child = Some(child);
 
@@ -250,7 +284,7 @@ impl ServerManager {
                         self.child = None;
                         self.status = Status::Failed;
                         let msg = format!("llama-server exited during startup (exit={code})");
-                        self.logs.error(&msg);
+                        self.remember_error(msg.clone());
                         return Err(ManagerError::Other(msg));
                     }
                 }
@@ -259,11 +293,13 @@ impl ServerManager {
         match result {
             Ok(()) => {
                 self.status = Status::Ready;
+                self.last_error = None;
                 self.logs.server(&format!("READY {}", self.config.openai_v1_url()));
                 Ok(())
             }
             Err(e) => {
-                self.logs.error(&format!("readiness failed: {e}"));
+                let msg = format!("readiness failed: {e}");
+                self.remember_error(msg);
                 let _ = self.stop().await;
                 self.status = Status::Failed;
                 Err(e.into())
@@ -275,25 +311,42 @@ impl ServerManager {
         self.status = Status::Stopping;
         if let Some(mut child) = self.child.take() {
             self.logs.server("stopping (grace 8s)");
-            let code = child.stop(Duration::from_secs(8)).await?;
-            self.last_exit = code;
-            self.logs.server(&format!("stopped exit={code:?}"));
+            match child.stop(Duration::from_secs(8)).await {
+                Ok(code) => {
+                    self.last_exit = code;
+                    self.logs.server(&format!("stopped exit={code:?}"));
+                    self.status = Status::Stopped;
+                    Ok(())
+                }
+                Err(e) => {
+                    let msg = format!("stop failed: {e}");
+                    self.remember_error(msg.clone());
+                    self.status = Status::Failed;
+                    Err(e.into())
+                }
+            }
+        } else {
+            self.status = Status::Stopped;
+            Ok(())
         }
-        self.status = Status::Stopped;
-        Ok(())
     }
 
     pub async fn restart(&mut self) -> Result<(), ManagerError> {
-        let _ = self.stop().await;
+        self.stop().await?;
         self.start().await
     }
 
     pub fn get_status(&mut self) -> Status {
         if let Some(child) = self.child.as_mut() {
-            if !child.is_running() {
-                self.status = Status::Crashed;
-                self.logs.error("llama-server exited unexpectedly");
+            if let Some(code) = child.poll_exit() {
+                self.last_exit = code;
                 self.child = None;
+                self.status = Status::Crashed;
+                let msg = match code {
+                    Some(c) => format!("llama-server exited unexpectedly (exit={c})"),
+                    None => "llama-server exited unexpectedly".to_string(),
+                };
+                self.remember_error(msg);
             }
         }
         self.status
@@ -366,6 +419,9 @@ mod tests {
         let err = mgr.start().await.unwrap_err().to_string();
         assert!(err.contains("llama-server not found"), "got {err}");
         assert_eq!(mgr.status(), Status::Failed);
+        assert_eq!(mgr.last_error(), Some(err.as_str()));
+        let _ = mgr.get_status();
+        assert_eq!(mgr.last_error(), Some(err.as_str()));
         let _ = std::fs::remove_dir_all(root);
     }
 

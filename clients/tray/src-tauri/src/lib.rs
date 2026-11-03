@@ -92,8 +92,10 @@ struct ManagerSnapshot {
 }
 
 fn snapshot(manager: &mut ServerManager, error: Option<String>) -> ManagerSnapshot {
+    let _ = manager.get_status();
+    let error = error.or_else(|| manager.last_error().map(str::to_string));
     ManagerSnapshot {
-        status: manager.get_status().as_str().to_string(),
+        status: manager.status().as_str().to_string(),
         endpoint: manager.openai_base(),
         error,
     }
@@ -283,6 +285,43 @@ async fn manager_restart(state: State<'_, Arc<AppState>>) -> Result<ManagerSnaps
 async fn manager_endpoint(state: State<'_, Arc<AppState>>) -> Result<String, String> {
     let mgr = state.manager.lock().await;
     Ok(mgr.openai_base())
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ConnectionDto {
+    url: String,
+    api_key: String,
+    model_id: String,
+    card: String,
+}
+
+#[tauri::command]
+async fn manager_connection(state: State<'_, Arc<AppState>>) -> Result<ConnectionDto, String> {
+    let mgr = state.manager.lock().await;
+    let cfg = mgr.config();
+    let url = mgr.openai_base();
+    let api_key = cfg.server.api_key.clone();
+    let model_id = model_file_name(&cfg.model.path.display().to_string());
+    let key_line = if api_key.trim().is_empty() {
+        "(empty — fine on this PC)".to_string()
+    } else {
+        api_key.clone()
+    };
+    let card = format!("Base URL: {url}\nAPI key: {key_line}\nModel: {model_id}");
+    Ok(ConnectionDto {
+        url,
+        api_key,
+        model_id,
+        card,
+    })
+}
+
+#[tauri::command]
+async fn manager_launch_cmd(state: State<'_, Arc<AppState>>) -> Result<String, String> {
+    let mut mgr = state.manager.lock().await;
+    mgr.detect_hardware();
+    Ok(mgr.launch_command_line())
 }
 
 #[tauri::command]
@@ -506,6 +545,8 @@ pub fn run() {
             manager_stop,
             manager_restart,
             manager_endpoint,
+            manager_connection,
+            manager_launch_cmd,
             manager_config_summary,
             manager_apply_settings,
             pick_model_path,

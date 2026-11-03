@@ -44,6 +44,7 @@ WinServeAI’s niche is **Windows-native, headless, OpenAI-compatible inference 
 | **llama-cpp-windows-manager** | https://github.com/alekk89/llama-cpp-windows-manager | Supervised `llama-server` sessions; per-model ports; logs/metrics UI ideas | Runtime download/update UI; multi-session gateway; WSL path |
 | **llama-server-manager** | https://github.com/zero4281/llama-server-manager | Thin install/start/stop wrapper; OpenAI client examples | HF download flow; interactive install menus |
 | **d4-ollama-win-service** | https://github.com/internetics-net/d4-ollama-win-service | NSSM wrap + firewall rule + log rotation + auto-restart | NSSM as required dependency for MVP tray app |
+| **Nova Studio** | https://github.com/fuxingliang/nova-studio | View/copy launch argv; Trae-style Base URL + key + model card; sticky `lastError`; port probe before load; Windows preflight script; logs as a first-class tab | WSL2 + multi-engine (vLLM/SGLang); Node API gateway in front of `/v1`; system proxy hijack; MCP / finetune / chat-in-server; crowded floating HUD |
 
 ---
 

@@ -124,6 +124,15 @@ impl ChildProcess {
         matches!(self.child.try_wait(), Ok(None))
     }
 
+    /// `None` = still running. `Some(code)` = exited (`code` may be `None` if the OS gave no status).
+    pub fn poll_exit(&mut self) -> Option<Option<i32>> {
+        match self.child.try_wait() {
+            Ok(None) => None,
+            Ok(Some(status)) => Some(status.code()),
+            Err(_) => Some(None),
+        }
+    }
+
     /// Graceful stop: CTRL_BREAK on Windows process group, then force kill after grace.
     pub async fn stop(&mut self, grace: Duration) -> Result<Option<i32>, ProcessError> {
         #[cfg(windows)]

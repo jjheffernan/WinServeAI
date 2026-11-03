@@ -18,6 +18,7 @@ const btnStop = document.getElementById("btn-stop");
 const btnRestart = document.getElementById("btn-restart");
 const btnRefresh = document.getElementById("btn-refresh");
 const btnCopy = document.getElementById("btn-copy");
+const btnLaunchCmd = document.getElementById("btn-launch-cmd");
 const btnChat = document.getElementById("btn-chat");
 const logView = document.getElementById("log-view");
 const logDirEl = document.getElementById("log-dir");
@@ -59,6 +60,7 @@ function applySnap(snap, { optimistic } = {}) {
   badgeEl.dataset.status = status;
   badgeEl.textContent = status;
   if (snap.endpoint) endpointEl.textContent = snap.endpoint;
+  // ServerManager keeps last_error across polls. Only clear when it clears.
   errorEl.textContent = snap.error || "";
   if (!optimistic) syncButtons();
 }
@@ -247,7 +249,6 @@ async function refreshLogs() {
 }
 
 async function refresh() {
-  errorEl.textContent = "";
   try {
     const snap = await invoke("manager_status");
     applySnap(snap);
@@ -298,12 +299,24 @@ btnStop.onclick = () => run("manager_stop", "Stopping");
 btnRestart.onclick = () => run("manager_restart", "Starting");
 btnRefresh.onclick = () => refresh();
 btnCopy.onclick = async () => {
-  const url = endpointEl.textContent;
-  if (!url || url === "…") return;
   try {
-    await navigator.clipboard.writeText(url);
+    const conn = await invoke("manager_connection");
+    await navigator.clipboard.writeText(conn.card);
+    settingsNote.className = "ok";
+    settingsNote.textContent = "Copied Base URL, API key, and model id.";
   } catch (e) {
     errorEl.textContent = `copy failed: ${e}`;
+  }
+};
+
+btnLaunchCmd.onclick = async () => {
+  try {
+    const line = await invoke("manager_launch_cmd");
+    await navigator.clipboard.writeText(line);
+    settingsNote.className = "ok";
+    settingsNote.textContent = "Copied launch command (api key masked).";
+  } catch (e) {
+    errorEl.textContent = `copy launch cmd failed: ${e}`;
   }
 };
 

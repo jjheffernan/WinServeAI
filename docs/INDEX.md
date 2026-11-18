@@ -45,11 +45,13 @@ Status legend:
 | [api.md](api.md) | OpenAI-compatible client surface and readiness probes | canonical |
 | [backend.md](backend.md) | Runtime layer (`runtime/llama` + `runtime/process`); not a multi-backend guide | canonical |
 | [configuration.md](configuration.md) | YAML schema, examples, localhost vs LAN | canonical |
+| [ops-resilience.md](ops-resilience.md) | Restart / power / upgrade survival; host IP stays modular | canonical |
 | [development.md](development.md) | Prerequisites, build/run, scripts, single-crate layout | canonical |
 | [contributing.md](contributing.md) | Contribution rules aligned with appliance architecture | canonical |
 | [logging.md](logging.md) | Unified `logs/` streams and capture requirements | canonical |
 | [installer.md](installer.md) | Windows packaging goals, tool choice, firewall | canonical |
 | [release-process.md](release-process.md) | Channels, llama pin policy, stable checklist | canonical |
+| [../CHANGELOG.md](../CHANGELOG.md) | Published release notes (Keep a Changelog) | canonical |
 
 ## Research
 

@@ -70,10 +70,20 @@ All top-level sections except `logging` are required in practice (they match the
 
 | Field | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `host` | string | `127.0.0.1` | Bind address passed to llama-server |
+| `host` | string | `127.0.0.1` | Bind address passed to llama-server (**operator-owned**; never auto-detected) |
 | `port` | u16 | `8080` | Listen port; must be non-zero |
+| `api_key` | string | `""` | Bearer / `x-api-key`; required before non-loopback exposure |
 
-OpenAI-compatible base URL: `http://{host}:{port}/v1` (see [api.md](api.md)).
+Client base URL: `http://{client_host}:{port}/v1` (see [api.md](api.md)). When `host` is a wildcard (`0.0.0.0` / `::`), **bind** stays wildcard but **client / READY / probe URLs** use `127.0.0.1`.
+
+#### Host / IP policy (updates and LAN)
+
+- Default is loopback. We do **not** pick a LAN, VPN, Hyper-V, or WSL address on start or upgrade.
+- Installer leaves an existing `config\default.yaml` alone (`onlyifdoesntexist`).
+- For LAN access prefer `host: 0.0.0.0` plus a non-empty `api_key`, then tell peers this PC’s real Ethernet/Wi‑Fi IP — not a WSL virtual NIC.
+- Do not paste an ephemeral interface IP into YAML unless you intend to re-edit it when that interface changes.
+
+Details: [ops-resilience.md](ops-resilience.md).
 
 ### `model`
 

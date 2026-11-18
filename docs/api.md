@@ -19,8 +19,10 @@ Derived from YAML (`server.host`, `server.port`):
 
 | Client style | Base URL | Notes |
 | --- | --- | --- |
-| **OpenAI** | `http://{host}:{port}/v1` | SDKs append `/chat/completions`, `/models`, … |
-| **Anthropic** | `http://{host}:{port}` | SDKs append `/v1/messages` themselves — do **not** put `/v1` on this base |
+| **OpenAI** | `http://{client_host}:{port}/v1` | SDKs append `/chat/completions`, `/models`, … |
+| **Anthropic** | `http://{client_host}:{port}` | SDKs append `/v1/messages` themselves — do **not** put `/v1` on this base |
+
+`client_host` is `server.host` unless that value is a wildcard bind (`0.0.0.0` / `::`), in which case URLs use `127.0.0.1`. Bind itself stays operator-owned and is never auto-rewritten on update ([ops-resilience.md](ops-resilience.md)).
 
 Default (`config/default.yaml`):
 

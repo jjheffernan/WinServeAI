@@ -1,5 +1,7 @@
 server:
   port: 8080
+  # Operator-owned bind. Never auto-picked (no LAN/WSL rewrite on update).
+  # Loopback default. For LAN listen use 0.0.0.0 + api_key (not a WSL/Hyper-V IP).
   host: 127.0.0.1
   # Empty on this PC. Set a key before binding past loopback.
   # Frontends send Authorization: Bearer <key>. See clients/chat.

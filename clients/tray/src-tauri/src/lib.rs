@@ -303,6 +303,7 @@ async fn manager_connection(state: State<'_, Arc<AppState>>) -> Result<Connectio
     let cfg = mgr.config();
     let url = mgr.openai_base();
     let anthropic_base = cfg.base_url();
+    let bind_host = cfg.server.host.clone();
     let api_key = cfg.server.api_key.clone();
     let model_id = model_file_name(&cfg.model.path.display().to_string());
     let key_line = if api_key.trim().is_empty() {
@@ -310,9 +311,15 @@ async fn manager_connection(state: State<'_, Arc<AppState>>) -> Result<Connectio
     } else {
         api_key.clone()
     };
+    // Bind stays operator-owned; client URLs never advertise 0.0.0.0 / WSL picks.
+    let bind_line = if bind_host != cfg.client_host() {
+        format!("Bind: {bind_host} (client URLs use {})\n", cfg.client_host())
+    } else {
+        format!("Bind: {bind_host}\n")
+    };
     // ponytail: one card lists every common completion wire format
     let card = format!(
-        "OpenAI base: {url}\nAnthropic base: {anthropic_base}\nAPI key: {key_line}\nModel: {model_id}\n\n\
+        "{bind_line}OpenAI base: {url}\nAnthropic base: {anthropic_base}\nAPI key: {key_line}\nModel: {model_id}\n\n\
 Completion APIs (same process):\n\
   openai-completions  → {url}/chat/completions\n\
   openai-responses    → {url}/responses\n\

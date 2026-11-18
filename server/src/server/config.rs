@@ -81,6 +81,14 @@ pub fn is_loopback_host(host: &str) -> bool {
     )
 }
 
+/// Bind-all wildcards — listen everywhere, but never advertise these as client URLs.
+pub fn is_wildcard_bind(host: &str) -> bool {
+    matches!(
+        host.trim().trim_matches(['[', ']']).to_ascii_lowercase().as_str(),
+        "0.0.0.0" | "::" | "*"
+    )
+}
+
 fn default_host() -> String {
     "127.0.0.1".into()
 }
@@ -157,10 +165,20 @@ impl Config {
         self.validate()?;
         let text = serde_yaml::to_string(self)
             .map_err(|e| ConfigError::Parse(e.to_string()))?;
-        if let Some(parent) = path.as_ref().parent() {
+        let path = path.as_ref();
+        if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(path, text)?;
+        // Atomic replace so a power cut mid-write cannot leave a half YAML.
+        let mut tmp = path.as_os_str().to_owned();
+        tmp.push(".tmp");
+        let tmp = PathBuf::from(tmp);
+        std::fs::write(&tmp, &text)?;
+        // Windows cannot rename over an existing file.
+        if path.exists() {
+            std::fs::remove_file(path)?;
+        }
+        std::fs::rename(&tmp, path)?;
         Ok(())
     }
 
@@ -211,11 +229,29 @@ impl Config {
                     .into(),
             );
         }
+        if is_wildcard_bind(&self.server.host) {
+            w.push(
+                "server.host is a wildcard bind — llama-server listens on all interfaces; client URLs use 127.0.0.1 (LAN peers need this PC's real IP, not a WSL/Hyper-V adapter)"
+                    .into(),
+            );
+        }
         w
     }
 
+    /// Host string for client URLs and readiness probes (never a wildcard).
+    ///
+    /// Bind address stays `server.host` (passed to llama-server). We do not
+    /// auto-pick a LAN/WSL interface — operator owns that field across updates.
+    pub fn client_host(&self) -> &str {
+        if is_wildcard_bind(&self.server.host) {
+            "127.0.0.1"
+        } else {
+            self.server.host.as_str()
+        }
+    }
+
     pub fn base_url(&self) -> String {
-        format!("http://{}:{}", self.server.host, self.server.port)
+        format!("http://{}:{}", self.client_host(), self.server.port)
     }
 
     pub fn openai_v1_url(&self) -> String {
@@ -282,5 +318,43 @@ mod tests {
             .any(|s| s.contains("server.api_key")));
         c.server.api_key = "secret".into();
         assert!(!c.warnings().iter().any(|s| s.contains("server.api_key")));
+    }
+
+    #[test]
+    fn wildcard_bind_advertises_loopback_not_zero() {
+        let mut c = Config::default();
+        c.server.host = "0.0.0.0".into();
+        c.server.api_key = "secret".into();
+        assert_eq!(c.client_host(), "127.0.0.1");
+        assert_eq!(c.base_url(), "http://127.0.0.1:8080");
+        assert_eq!(c.openai_v1_url(), "http://127.0.0.1:8080/v1");
+        // Bind field itself is unchanged (modular; never rewritten on save/load).
+        assert_eq!(c.server.host, "0.0.0.0");
+        assert!(c.warnings().iter().any(|s| s.contains("wildcard")));
+    }
+
+    #[test]
+    fn save_is_atomic_replace() {
+        let dir = std::env::temp_dir().join(format!(
+            "winserve-cfg-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("default.yaml");
+        let tmp = PathBuf::from(format!("{}.tmp", path.display()));
+        let mut c = Config::default();
+        c.server.port = 9090;
+        c.save(&path).unwrap();
+        assert!(path.is_file());
+        assert!(!tmp.exists());
+        c.server.port = 9091;
+        c.save(&path).unwrap();
+        let loaded = Config::load(&path).unwrap();
+        assert_eq!(loaded.server.port, 9091);
+        assert!(!tmp.exists());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

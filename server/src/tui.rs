@@ -95,6 +95,7 @@ fn kind_name(kind: CommandKind) -> &'static str {
         CommandKind::Start => "start",
         CommandKind::Stop => "stop",
         CommandKind::Restart => "restart",
+        CommandKind::Reload => "reload",
         CommandKind::Health => "health",
         CommandKind::Endpoint => "endpoint",
         CommandKind::Show => "show",

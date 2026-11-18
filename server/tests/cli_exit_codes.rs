@@ -44,6 +44,28 @@ logging:
 }
 
 #[test]
+fn version_works_without_config() {
+    let missing = unique_tmp("missing").with_extension("yaml");
+    let out = bin()
+        .env("WINSERVE_CONFIG", &missing)
+        .arg("version")
+        .output()
+        .expect("spawn winserve");
+    assert!(out.status.success(), "stderr={}", String::from_utf8_lossy(&out.stderr));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("winserve"), "stdout={stdout}");
+}
+
+#[test]
+fn help_exits_success() {
+    let out = bin().arg("--help").output().expect("spawn winserve");
+    assert!(out.status.success());
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("doctor"), "stdout={stdout}");
+    assert!(stdout.contains("config"), "stdout={stdout}");
+}
+
+#[test]
 fn missing_config_exits_failure() {
     let missing = unique_tmp("missing").with_extension("yaml");
     let out = bin()
@@ -54,6 +76,36 @@ fn missing_config_exits_failure() {
     assert_eq!(out.status.code(), Some(1), "stderr={}", String::from_utf8_lossy(&out.stderr));
     let err = String::from_utf8_lossy(&out.stderr);
     assert!(err.contains("missing config"), "stderr={err}");
+}
+
+#[test]
+fn doctor_reports_empty_model() {
+    let cfg = write_minimal_config();
+    let out = bin()
+        .env("WINSERVE_CONFIG", &cfg)
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .args(["doctor"])
+        .output()
+        .expect("spawn winserve");
+    let _ = std::fs::remove_file(&cfg);
+    // Empty model.path → doctor fails checks but still runs.
+    assert_eq!(out.status.code(), Some(1), "stdout={}", String::from_utf8_lossy(&out.stdout));
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(stdout.contains("model.path"), "stdout={stdout}");
+}
+
+#[test]
+fn config_set_host_persists() {
+    let cfg = write_minimal_config();
+    let out = bin()
+        .env("WINSERVE_CONFIG", &cfg)
+        .args(["config", "set", "host", "0.0.0.0"])
+        .output()
+        .expect("spawn winserve");
+    assert!(out.status.success(), "stderr={}", String::from_utf8_lossy(&out.stderr));
+    let text = std::fs::read_to_string(&cfg).expect("read cfg");
+    let _ = std::fs::remove_file(&cfg);
+    assert!(text.contains("0.0.0.0"), "yaml={text}");
 }
 
 #[test]

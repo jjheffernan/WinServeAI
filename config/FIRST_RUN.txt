@@ -9,3 +9,9 @@ WinServeAI
 The address is http://127.0.0.1:8080/v1
 Leave the API key empty when you only use this PC.
 You do not need to edit any files.
+
+CLI (after install, open a new terminal if PATH was enabled):
+  winserve doctor
+  winserve debug --logs 40
+  winserve config set model.path C:\path\to\model.gguf --apply
+  winserve update

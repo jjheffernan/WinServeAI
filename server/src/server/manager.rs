@@ -142,27 +142,43 @@ impl ServerManager {
     ///
     /// Rejected while Starting / Ready / Stopping — stop first (E1d).
     pub fn apply_config(&mut self, next: Config) -> Result<(), ManagerError> {
-        let _ = self.get_status();
-        match self.status {
-            Status::Starting | Status::Ready | Status::Stopping => {
-                return Err(ManagerError::Other(
-                    "stop the server before editing settings (Starting/Ready/Stopping)".into(),
-                ));
-            }
-            Status::Stopped | Status::Failed | Status::Crashed => {}
-        }
+        self.ensure_config_editable()?;
         next.validate()?;
         next.save(&self.config_path)?;
+        self.install_config(next);
+        Ok(())
+    }
+
+    /// Re-read YAML from disk into memory (after an external edit).
+    ///
+    /// Same gate as [`apply_config`]: backend must not be Starting/Ready/Stopping.
+    pub fn reload_config(&mut self) -> Result<(), ManagerError> {
+        self.ensure_config_editable()?;
+        let next = Config::load(&self.config_path)?;
+        self.install_config(next);
+        Ok(())
+    }
+
+    fn ensure_config_editable(&mut self) -> Result<(), ManagerError> {
+        let _ = self.get_status();
+        match self.status {
+            Status::Starting | Status::Ready | Status::Stopping => Err(ManagerError::Other(
+                "stop the server before editing settings (Starting/Ready/Stopping)".into(),
+            )),
+            Status::Stopped | Status::Failed | Status::Crashed => Ok(()),
+        }
+    }
+
+    fn install_config(&mut self, next: Config) {
         self.config = next;
         self.logs.server(&format!(
-            "config saved {}; endpoint will be {}",
+            "config loaded {}; endpoint will be {}",
             self.config_path.display(),
             self.config.openai_v1_url()
         ));
         for w in self.config.warnings() {
             self.logs.server(&format!("warning: {w}"));
         }
-        Ok(())
     }
 
     pub fn detect_hardware(&mut self) {

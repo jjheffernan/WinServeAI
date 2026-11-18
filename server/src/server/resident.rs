@@ -20,6 +20,8 @@ pub enum CommandKind {
     Restart,
     Health,
     Endpoint,
+    /// Re-read YAML from disk (backend must be stopped).
+    Reload,
     /// Ask the tray to show its window. The manager state does not change.
     Show,
 }
@@ -53,6 +55,7 @@ pub async fn handle(manager: &mut ServerManager, kind: CommandKind) -> Reply {
         CommandKind::Start => manager.start().await.err().map(|e| e.to_string()),
         CommandKind::Stop => manager.stop().await.err().map(|e| e.to_string()),
         CommandKind::Restart => manager.restart().await.err().map(|e| e.to_string()),
+        CommandKind::Reload => manager.reload_config().err().map(|e| e.to_string()),
     };
     Reply {
         status: manager.get_status(),

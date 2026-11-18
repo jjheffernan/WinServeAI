@@ -90,7 +90,8 @@ Host should be `x86_64-pc-windows-msvc`, not `gnu`.
 
 ```text
 server/                       # package winserve — ServerManager + CLI
-  src/main.rs              # CLI: serve | start | stop | status | restart | …
+  src/main.rs              # CLI entry
+  src/cli.rs               # doctor | debug | config | update | version
   src/server/              # manager, config, health, logs, resident loop
   src/ipc/                 # lockfile + named-pipe (Windows) / loopback TCP (dev)
   src/runtime/             # llama argv + process spawn (external boundary)
@@ -159,28 +160,32 @@ default is empty — [first-run.md](first-run.md)). Schema:
 
 ## CLI
 
-Binary name: `winserve`. Default command is `start` if you pass no subcommand.
+Binary name: **`winserve`**. The installer ships it next to the tray and (by default) adds the install folder to the **user PATH**. No args / `--help` prints usage.
 
 ```bash
-cargo run -p winserve -- print-cmd
-cargo run -p winserve -- print-config
-cargo run -p winserve -- serve          # resident owner (lockfile + IPC)
-cargo run -p winserve -- tui            # same owner, with the terminal monitor
-cargo run -p winserve -- status         # attach to resident, else Stopped
-cargo run -p winserve -- stop
-cargo run -p winserve -- restart
-cargo run -p winserve -- start          # one-shot foreground (no IPC owner)
+winserve --help
+winserve version
+winserve doctor [--fix]
+winserve debug [--logs 40] [--probe] [--fix-lock]
+winserve config [--path|--validate|--cmd]
+winserve config set <key> <value> [--apply]
+winserve update [--check]
+winserve serve | start | stop | restart | reload | status | tui
 ```
 
 | Command | Purpose |
 | --- | --- |
-| `print-cmd` | Print resolved `llama-server` path + argv (no spawn). |
-| `print-config` | Load and print the effective YAML config. |
-| `serve` | **Resident owner:** acquire lockfile, listen on IPC, start backend, stay up until Ctrl+C. A second `serve` refuses with “already running”. A second tray sends `show` and exits. |
-| `tui` | Same owner as `serve`, drawn as a monitor: `1` overview, `2` logs, `3` URL, `s`/`x`/`r` start/stop/restart. `q` stops the server when this process owns it, and leaves it running when attached. |
-| `start` | If a tray, `serve`, or `tui` already owns the manager, attach and start there. Otherwise one-shot: spawn, print READY, block until Ctrl+C. |
-| `status` | Attach to resident via IPC when present; otherwise print `Stopped` + configured endpoint. |
-| `stop` / `restart` | Attach to resident (`serve` or tray). Fail with a clear error if none is running. |
+| `version` / `--version` | Crate version + `bin/VERSION` pin (no config required). |
+| `doctor` | Install/runtime checklist; `--fix` clears a stale lock. Exit 1 on FAIL. |
+| `debug` | Snapshot, argv, GPUs; `--logs N`, `--probe`, `--fix-lock`. |
+| `config` | Show YAML; `--path` / `--validate` / `--cmd`. `set <key> <value> [--apply]` edits YAML; `--apply` is stop → save → reload → start on the resident (no reinstall). |
+| `update` | Upgrade path (config kept). `--check` hits GitHub latest tag. |
+| `print-cmd` / `print-config` | Aliases for `config --cmd` / `config`. |
+| `serve` | **Resident owner:** lockfile + IPC, start backend, stay until Ctrl+C. |
+| `tui` | Same owner as `serve`, terminal monitor (`s`/`x`/`r`, `q`). |
+| `start` | Attach+start if resident exists; else foreground one-shot until Ctrl+C. |
+| `status` | Attach status + endpoint; with no owner print `Stopped` (exit 0). |
+| `stop` / `restart` / `reload` | Attach to resident. `reload` re-reads YAML (backend must be stopped). |
 
 ### Resident lock + IPC
 

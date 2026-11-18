@@ -1,9 +1,10 @@
-//! CLI entry: serve | start | stop | status | restart
+//! CLI entry: lifecycle + doctor/debug/config/update/version.
 
 use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use tokio::sync::mpsc;
+use winserve::cli;
 use winserve::ipc::lockfile::{self, LockGuard, LockInfo};
 use winserve::ipc::pipe::{self, Response};
 use winserve::server::config::Config;
@@ -36,7 +37,7 @@ fn live_owner() -> Result<Option<LockInfo>, Box<dyn std::error::Error>> {
 
 async fn attach(cmd: &str) -> Result<Response, Box<dyn std::error::Error>> {
     let Some(info) = live_owner()? else {
-        return Err("no resident manager running (start with `winserve serve`)".into());
+        return Err("no resident manager running (start with `winserve serve` or the tray)".into());
     };
     let resp = pipe::request(&info.pipe, cmd).await?;
     Ok(resp)
@@ -49,6 +50,24 @@ fn print_attach(resp: &Response) {
     println!("{}  {}", resp.status, resp.endpoint);
 }
 
+fn flag(args: &[String], name: &str) -> bool {
+    args.iter().any(|a| a == name)
+}
+
+fn flag_value(args: &[String], name: &str) -> Option<String> {
+    let mut i = 0;
+    while i < args.len() {
+        if args[i] == name {
+            return args.get(i + 1).cloned();
+        }
+        if let Some(rest) = args[i].strip_prefix(&format!("{name}=")) {
+            return Some(rest.to_string());
+        }
+        i += 1;
+    }
+    None
+}
+
 #[tokio::main]
 async fn main() -> ExitCode {
     tracing_subscriber::fmt()
@@ -58,19 +77,67 @@ async fn main() -> ExitCode {
         )
         .init();
 
-    let mut args = env::args().skip(1);
-    let cmd = args.next().unwrap_or_else(|| "start".into());
+    let argv: Vec<String> = env::args().skip(1).collect();
+    if argv.is_empty()
+        || argv.iter().any(|a| a == "-h" || a == "--help" || a == "help")
+    {
+        print!("{}", cli::usage());
+        return ExitCode::SUCCESS;
+    }
+    if argv.iter().any(|a| a == "-V" || a == "--version")
+        || argv.first().map(String::as_str) == Some("version")
+    {
+        cli::print_version(&repo_root());
+        return ExitCode::SUCCESS;
+    }
+
+    let cmd = argv[0].as_str();
+    let rest = &argv[1..];
     let root = repo_root();
     let cfg_path = config_path(&root);
+
+    // Commands that work without a config file.
+    match cmd {
+        "update" => {
+            return cli::run_update(&root, flag(rest, "--check")).await;
+        }
+        "doctor" => {
+            if !cfg_path.exists() {
+                eprintln!("error: missing config at {}", cfg_path.display());
+                eprintln!("hint: copy config/default.yaml and set model.path");
+                return ExitCode::FAILURE;
+            }
+            return cli::run_doctor(&root, &cfg_path, flag(rest, "--fix")).await;
+        }
+        "debug" => {
+            if !cfg_path.exists() {
+                eprintln!("error: missing config at {}", cfg_path.display());
+                return ExitCode::FAILURE;
+            }
+            let logs = flag_value(rest, "--logs")
+                .and_then(|s| s.parse().ok())
+                .or_else(|| if flag(rest, "--logs") { Some(40) } else { None });
+            return cli::run_debug(
+                &root,
+                &cfg_path,
+                logs,
+                flag(rest, "--fix-lock"),
+                flag(rest, "--probe"),
+            )
+            .await;
+        }
+        _ => {}
+    }
 
     if !cfg_path.exists() {
         eprintln!("error: missing config at {}", cfg_path.display());
         eprintln!("hint: copy config/default.yaml and set model.path");
         eprintln!("hint: override with WINSERVE_CONFIG=/path/to.yaml");
+        eprintln!("hint: winserve version | update | help work without config");
         return ExitCode::FAILURE;
     }
 
-    match cmd.as_str() {
+    match cmd {
         "serve" => match run_serve(&root, &cfg_path).await {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
@@ -103,8 +170,7 @@ async fn main() -> ExitCode {
                 Ok(()) => ExitCode::SUCCESS,
                 Err(e) => {
                     eprintln!("error: start failed: {e}");
-                    eprintln!("hint: place pinned llama-server in bin/ (see bin/README.md)");
-                    eprintln!("hint: set model.path in config to an existing .gguf file");
+                    eprintln!("hint: winserve doctor");
                     ExitCode::FAILURE
                 }
             },
@@ -122,43 +188,49 @@ async fn main() -> ExitCode {
                     ExitCode::FAILURE
                 }
             }
-            Err(e) => {
-                // No resident: report config endpoint + Stopped (not an attach failure).
-                match ServerManager::load_config(&root, &cfg_path) {
-                    Ok(mgr) => {
-                        eprintln!("note: {e}");
-                        println!("Stopped  {}", mgr.openai_base());
-                        ExitCode::SUCCESS
-                    }
-                    Err(cfg_err) => {
-                        eprintln!("error: {e}");
-                        eprintln!("{cfg_err}");
-                        ExitCode::FAILURE
-                    }
+            Err(e) => match ServerManager::load_config(&root, &cfg_path) {
+                Ok(mgr) => {
+                    eprintln!("note: {e}");
+                    println!("Stopped  {}", mgr.openai_base());
+                    ExitCode::SUCCESS
                 }
-            }
+                Err(cfg_err) => {
+                    eprintln!("error: {e}");
+                    eprintln!("{cfg_err}");
+                    ExitCode::FAILURE
+                }
+            },
         },
-        "print-config" => match Config::load(&cfg_path) {
-            Ok(c) => {
-                println!("{}", serde_yaml::to_string(&c).unwrap_or_default());
-                ExitCode::SUCCESS
+        "config" | "print-config" | "print-cmd" => {
+            if cmd == "print-cmd" || flag(rest, "--cmd") {
+                return cli::run_config_cmd(&root, &cfg_path);
             }
-            Err(e) => {
-                eprintln!("{e}");
-                ExitCode::FAILURE
+            if rest.first().map(String::as_str) == Some("set") {
+                let key = match rest.get(1) {
+                    Some(k) => k.as_str(),
+                    None => {
+                        eprintln!("usage: winserve config set <key> <value> [--apply]");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                let value = match rest.get(2) {
+                    Some(v) => v.as_str(),
+                    None => {
+                        eprintln!("usage: winserve config set <key> <value> [--apply]");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                return cli::run_config_set(
+                    &root,
+                    &cfg_path,
+                    key,
+                    value,
+                    flag(rest, "--apply"),
+                )
+                .await;
             }
-        },
-        "print-cmd" => match ServerManager::load_config(&root, &cfg_path) {
-            Ok(mgr) => {
-                let (bin, argv) = mgr.build_command();
-                println!("{} {}", bin.display(), argv.join(" "));
-                ExitCode::SUCCESS
-            }
-            Err(e) => {
-                eprintln!("{e}");
-                ExitCode::FAILURE
-            }
-        },
+            cli::run_config_show(&cfg_path, flag(rest, "--path"), flag(rest, "--validate"))
+        }
         "tui" => match run_tui(&root, &cfg_path).await {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
@@ -166,7 +238,7 @@ async fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        "stop" | "restart" => match attach(cmd.as_str()).await {
+        "stop" | "restart" | "reload" => match attach(cmd).await {
             Ok(resp) => {
                 print_attach(&resp);
                 if resp.ok {
@@ -182,9 +254,7 @@ async fn main() -> ExitCode {
         },
         other => {
             eprintln!("unknown command: {other}");
-            eprintln!(
-                "usage: winserve <serve|tui|start|stop|restart|status|print-config|print-cmd>"
-            );
+            eprint!("{}", cli::usage());
             ExitCode::FAILURE
         }
     }

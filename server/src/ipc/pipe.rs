@@ -51,6 +51,7 @@ fn parse_kind(cmd: &str) -> Result<CommandKind, PipeError> {
         "start" => Ok(CommandKind::Start),
         "stop" => Ok(CommandKind::Stop),
         "restart" => Ok(CommandKind::Restart),
+        "reload" => Ok(CommandKind::Reload),
         "health" => Ok(CommandKind::Health),
         "endpoint" => Ok(CommandKind::Endpoint),
         "show" => Ok(CommandKind::Show),

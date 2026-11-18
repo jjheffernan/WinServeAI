@@ -117,6 +117,15 @@ else {
     Write-Host "WARN: config\FIRST_RUN.txt missing"
 }
 
+$ChangelogSrc = Join-Path $Root "CHANGELOG.md"
+if (Test-Path $ChangelogSrc) {
+    Copy-Item -Force $ChangelogSrc -Destination (Join-Path $OutDir "CHANGELOG.md")
+    Write-Host "OK: CHANGELOG.md"
+}
+else {
+    Write-Host "WARN: CHANGELOG.md missing"
+}
+
 if (Test-Path $NoticesSrc) {
     Copy-Item -Force -Recurse (Join-Path $NoticesSrc "*") -Destination (Join-Path $OutDir "notices")
     Write-Host "OK: notices\"

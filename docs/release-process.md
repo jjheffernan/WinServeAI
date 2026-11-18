@@ -110,8 +110,8 @@ Single crate only — package name **`winserve`** (`server/`). There are no `pac
 5. **Installer** — clean install and uninstall ([installer.md](installer.md)); payload includes `winserve.exe`, `bin/llama-server.exe`, `config/default.yaml`, notices.
 6. **Config** — migration notes from previous stable when YAML schema changed (when applicable).
 7. **Notices** — see below; present in installer and any zip/portable artifact.
-8. **Changelog** — winserve version + llama.cpp `b####` + notable changes.
-9. **Tag and publish** — annotated tag, then push it. [`.github/workflows/release.yml`](../.github/workflows/release.yml) fetches the Vulkan pin, builds the setup, and attaches the setup plus `SHA256SUMS`.
+8. **Changelog** — update [`CHANGELOG.md`](../CHANGELOG.md): move `[Unreleased]` items under `## [X.Y.Z] - YYYY-MM-DD` (or leave Unreleased for `vX.Y.Z-rc.N` preview notes). Include llama.cpp `b####` in the release notes footer (workflow appends pin + setup hash).
+9. **Tag and publish** — annotated tag, then push it. [`.github/workflows/release.yml`](../.github/workflows/release.yml) fetches the Vulkan pin, builds the setup, publishes notes from `CHANGELOG.md`, and attaches the setup, `SHA256SUMS`, and `CHANGELOG.md`.
 
 Preview uses the same checklist except the hardware matrix may be partial.
 

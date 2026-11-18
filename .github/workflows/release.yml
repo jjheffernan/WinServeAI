@@ -76,9 +76,21 @@ jobs:
           if (-not $setup) { throw "setup.exe missing" }
           $hash = (Get-FileHash $setup.FullName -Algorithm SHA256).Hash.ToLower()
           Set-Content dist\SHA256SUMS "$hash  $($setup.Name)"
-          $pin = (Get-Content bin/VERSION -Raw).Trim()
-          Set-Content dist\NOTES.md "llama.cpp pin: $pin (Vulkan)`n`n$hash  $($setup.Name)"
           Set-Content dist\setup-path.txt $setup.FullName
+
+      - name: Build release notes from CHANGELOG
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $pin = (Get-Content bin/VERSION -Raw).Trim()
+          $hash = (Get-Content dist\SHA256SUMS | Select-Object -First 1)
+          python scripts/changelog_notes.py $tag | Set-Content -Encoding utf8 dist\NOTES.md
+          if ($LASTEXITCODE -ne 0) { throw "changelog_notes.py failed — update CHANGELOG.md before tagging" }
+          Add-Content dist\NOTES.md ""
+          Add-Content dist\NOTES.md "## Artifacts"
+          Add-Content dist\NOTES.md ""
+          Add-Content dist\NOTES.md "- llama.cpp pin: ``$pin`` (Vulkan)"
+          Add-Content dist\NOTES.md "- ``$hash``"
 
       - name: Publish GitHub release
         env:
@@ -88,7 +100,7 @@ jobs:
           $tag = "${{ github.ref_name }}"
           $setup = Get-Content dist\setup-path.txt
           $ghArgs = @(
-            "release", "create", $tag, $setup, "dist/SHA256SUMS",
+            "release", "create", $tag, $setup, "dist/SHA256SUMS", "CHANGELOG.md",
             "--title", $tag, "--notes-file", "dist/NOTES.md"
           )
           if ($tag -match "-rc\.") { $ghArgs += "--prerelease" }

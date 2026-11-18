@@ -49,12 +49,16 @@ ArchitecturesInstallIn64BitMode=x64compatible
 UninstallDisplayIcon={app}\{#MyAppExeName}
 DisableProgramGroupPage=no
 InfoAfterFile=FIRST_RUN.txt
+; Ask to close running tray/manager so upgrade can replace binaries.
+CloseApplications=yes
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "addpath"; Description: "Add installation folder to user PATH (winserve CLI)"; GroupDescription: "CLI:"; Flags: checkedonce
 Name: "lanfirewall"; Description: "Allow LAN access (Windows Firewall inbound rule for llama-server.exe)"; GroupDescription: "Network:"; Flags: unchecked
 
 [Files]
@@ -63,10 +67,11 @@ Source: "winserve.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "winserve-tray.exe"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 ; Backend + private DLLs
 Source: "bin\*"; DestDir: "{app}\bin"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Default config — do not clobber operator edits on upgrade
+; Default config — do not clobber operator edits on upgrade (host/port/key stay modular)
 Source: "config\default.yaml"; DestDir: "{app}\config"; Flags: onlyifdoesntexist uninsneveruninstall
 ; First-run guidance (also shown after install via InfoAfterFile)
 Source: "FIRST_RUN.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "CHANGELOG.md"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "chat\index.html"; DestDir: "{app}\chat"; Flags: ignoreversion skipifsourcedoesntexist
 ; Notices (MIT / third-party)
 Source: "notices\*"; DestDir: "{app}\notices"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -77,11 +82,22 @@ Source: "logs\*"; DestDir: "{app}\logs"; Flags: ignoreversion recursesubdirs cre
 ; Prefer tray when staged; fallback to CLI manager.
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppTrayName}"; WorkingDir: "{app}"; Check: TrayExists; Comment: "WinServeAI desktop shell"
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Check: not TrayExists; Comment: "WinServeAI manager (CLI)"
-Name: "{group}\{#MyAppName} CLI"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Comment: "winserve CLI (serve/status/stop)"
+Name: "{group}\{#MyAppName} CLI"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Comment: "winserve CLI (doctor/debug/config/serve)"
+Name: "{group}\Changelog"; Filename: "{app}\CHANGELOG.md"; WorkingDir: "{app}"; Check: ChangelogExists
 Name: "{group}\Third-party notices"; Filename: "{app}\notices\THIRD_PARTY_NOTICES.md"; WorkingDir: "{app}\notices"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppTrayName}"; WorkingDir: "{app}"; Tasks: desktopicon; Check: TrayExists
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon; Check: not TrayExists
+
+[Registry]
+; User PATH so `winserve` works from any shell after install (task default on).
+Root: HKCU; Subkey: "Environment"; \
+  ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; \
+  Tasks: addpath; Check: NeedsAddPath(ExpandConstant('{app}'))
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; \
+  ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName}"; Flags: uninsdeletekey
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\App Paths\{#MyAppExeName}"; \
+  ValueType: string; ValueName: "Path"; ValueData: "{app}"
 
 [Run]
 ; Optional LAN firewall — only when task selected (default bind is loopback; no rule needed then).
@@ -101,4 +117,22 @@ Filename: "{sys}\netsh.exe"; \
 function TrayExists: Boolean;
 begin
   Result := FileExists(ExpandConstant('{app}\{#MyAppTrayName}'));
+end;
+
+function ChangelogExists: Boolean;
+begin
+  Result := FileExists(ExpandConstant('{app}\CHANGELOG.md'));
+end;
+
+function NeedsAddPath(Param: string): Boolean;
+var
+  OrigPath: string;
+begin
+  if not RegQueryStringValue(HKEY_CURRENT_USER, 'Environment', 'Path', OrigPath) then
+  begin
+    Result := True;
+    exit;
+  end;
+  { Avoid duplicating {app} on upgrade }
+  Result := Pos(';' + Param + ';', ';' + OrigPath + ';') = 0;
 end;

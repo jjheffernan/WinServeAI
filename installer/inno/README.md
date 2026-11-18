@@ -15,7 +15,8 @@ ISCC.exe installer\inno\WinServeAI.iss
 
 | Section | Behavior |
 | --- | --- |
-| `[Files]` | Installs staged `files\` tree; `config\default.yaml` uses `onlyifdoesntexist` |
+| `[Files]` | Installs staged `files\` tree incl. `winserve.exe` CLI; `config\default.yaml` uses `onlyifdoesntexist`; ships `CHANGELOG.md` when staged |
+| `[Tasks]` `addpath` | Append `{app}` to user PATH so `winserve` works in new shells (default checked once) |
 | `[Icons]` | Start Menu → `winserve-tray.exe` if present, else `winserve.exe`; never `llama-server` |
 | `[Tasks]` `desktopicon` | Optional desktop shortcut (default off) |
 | `[Tasks]` `lanfirewall` | Optional inbound rule for `{app}\bin\llama-server.exe` (default off) |
